@@ -19,19 +19,19 @@ J1939Frame::~J1939Frame() {
 
 void J1939Frame::decode(u32 identifier, const u8* buffer, size_t length) {
 
-	u32 pgn = ((identifier >> 8) & 0x3FF);
+	u32 pgn = ((identifier >> J1939_PGN_OFFSET) & J1939_PGN_MASK);
 
 	if(pgn != mPgn)
 	{
 		throw J1939DecodeException();
 	}
 
-	mSrcAddr = identifier & 0xFF;
-	identifier >>= 26;
+	mSrcAddr = identifier & J1939_SRC_ADDR_MASK;
+	identifier >>= J1939_PRIORITY_OFFSET;
 
-	mPriority = identifier & 0x7;
+	mPriority = identifier & J1939_PRIORITY_MASK;
 
-	decode(buffer, length);
+	decodeData(buffer, length);
 
 }
 void J1939Frame::encode(u32& identifier, u8* buffer, size_t length) {
@@ -44,7 +44,7 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t length) {
 	identifier <<= 8;
 	identifier |= (mSrcAddr & 0xFF);
 
-	encode(buffer, length);
+	encodeData(buffer, length);
 
 }
 

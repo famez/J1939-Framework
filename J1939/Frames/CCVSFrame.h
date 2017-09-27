@@ -10,6 +10,8 @@
 
 #include "../J1939Frame.h"
 
+#define CCVS_SPEED_BITWISE				8
+
 namespace J1939 {
 
 class CCVSFrame: public J1939Frame {
@@ -66,16 +68,16 @@ public:
 	}
 
 	u16 getWheelSpeed() const {
-		return mWheelSpeed;
+		return mWheelSpeed >> CCVS_SPEED_BITWISE;
 	}
 
 	void setWheelSpeed(u16 wheelSpeed) {
-		mWheelSpeed = wheelSpeed;
+		mWheelSpeed = (wheelSpeed << CCVS_SPEED_BITWISE);
 	}
 
 	//Implements J1939Frame methods
-	void decode(const u8* buffer, size_t length);
-	void encode(u8* buffer, size_t length);
+	void decodeData(const u8* buffer, size_t length);
+	void encodeData(u8* buffer, size_t length);
 };
 
 } /* namespace J1939 */

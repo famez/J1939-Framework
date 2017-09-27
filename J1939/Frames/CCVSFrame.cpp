@@ -7,6 +7,8 @@
 
 #include "CCVSFrame.h"
 
+#define CCVS_FRAME_MAX_SIZE			8
+
 #define CLUTCH_PRESSED_MASK			0x40
 #define BRAKE_PRESSED_MASK			0x10
 #define CRUISE_CTRL_ACTIVE_MASK		0x01
@@ -29,11 +31,16 @@ CCVSFrame::~CCVSFrame() {
 
 }
 
-void CCVSFrame::decode(const u8* buffer, size_t length) {
+void CCVSFrame::decodeData(const u8* buffer, size_t length) {
+
+	if(length > CCVS_FRAME_MAX_SIZE) {
+		throw J1939DecodeException();
+	}
+
 
 	buffer++;		//Firt byte not used
 
-	mWheelSpeed = ntohs((buffer[0] << 8) | buffer[1]);
+	mWheelSpeed = (buffer[1] << 8) | buffer[0];
 
 	buffer += 2;
 
@@ -60,7 +67,7 @@ void CCVSFrame::decode(const u8* buffer, size_t length) {
 
 }
 
-void CCVSFrame::encode(u8* buffer, size_t length) {
+void CCVSFrame::encodeData(u8* buffer, size_t length) {
 
 }
 
