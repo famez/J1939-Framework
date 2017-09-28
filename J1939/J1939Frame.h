@@ -43,6 +43,10 @@ class J1939DecodeException : public std::exception {
 
 };
 
+class J1939EncodeException : public std::exception {
+
+};
+
 class J1939Frame {
 
 
@@ -73,10 +77,19 @@ public:
 
 	//Methods to decode/encode data
 	void decode(u32 identifier, const u8* buffer, size_t length);
-	void encode(u32& identifier, u8* buffer, size_t length);
+	void encode(u32& identifier, u8* buffer, size_t& length);
 
+
+	/**
+	 * Decodes the given data
+	 */
 	virtual void decodeData(const u8* buffer, size_t length) = 0;
-	virtual void encodeData(u8* buffer, size_t length) = 0;
+
+	/**
+	 * Encodes the data field in the given buffer
+	 * Length is used as input to check the length of the buffer and then set to the number of encoded bytes (which is always less or equal than the given length)
+	 */
+	virtual void encodeData(u8* buffer, size_t& length) = 0;
 
 	u32 getPGN() const { return mPgn; }
 

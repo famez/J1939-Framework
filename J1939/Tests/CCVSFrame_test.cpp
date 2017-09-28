@@ -13,7 +13,7 @@ TEST(CCVSFrame, decode){
 
 	const u8 data[] = {0x73, 0x66, 0x05, 0x1c, 0x00, 0xff, 0xff, 0x3f};
 
-	CCVSFrame ccvs1, ccvs2, ccvs3;
+	CCVSFrame ccvs1, ccvs2;
 
 	try {
 		ccvs1.decode(identifier, data, sizeof(data));
@@ -23,22 +23,95 @@ TEST(CCVSFrame, decode){
 		EXPECT_FALSE(ccvs1.getExtDataPage());
 		EXPECT_EQ(ccvs1.getPDUFormat(), 254);
 		EXPECT_EQ(ccvs1.getDstAddr(), 241);
+		EXPECT_EQ(ccvs1.getSrcAddr(), 0);
 
-		EXPECT_EQ(ccvs1.getWheelSpeed(), 5);
+		EXPECT_TRUE(ccvs1.getWheelSpeed() >= 5);
+		EXPECT_TRUE(ccvs1.getWheelSpeed() < 6);
 		EXPECT_FALSE(ccvs1.isClucthPressed());
 		EXPECT_TRUE(ccvs1.isBrakePressed());
 		EXPECT_FALSE(ccvs1.isCruiseControlActive());
 		EXPECT_EQ(ccvs1.getPtoState(), CCVSFrame::PTO_NOT_AVAILABLE);
 
 
-	} catch(J1939DecodeException& e) {
+	} catch(J1939DecodeException&) {
 		exceptionThrown = true;
 	}
 
 	EXPECT_FALSE(exceptionThrown);
 
+	exceptionThrown = false;
 
+	identifier = 0x20F00300;		//Wrong PGN for CCVS
+
+	try {
+		ccvs2.decode(identifier, data, sizeof(data));
+
+	} catch(J1939DecodeException&) {
+		exceptionThrown = true;
+	}
+
+	EXPECT_TRUE(exceptionThrown);
 
 }
+
+
+TEST(CCVSFrame, encode){
+
+
+	bool exceptionThrown = false;
+
+	u32 identifier;
+	size_t length = CCVS_FRAME_MAX_SIZE;
+	u8 data[CCVS_FRAME_MAX_SIZE];
+
+
+	CCVSFrame ccvs1;
+
+	ccvs1.setSrcAddr(0x32);
+	ccvs1.setPriority(5);
+
+	ccvs1.setBrakePressed(true);
+	ccvs1.setClucthPressed(true);
+	ccvs1.setCruiseControlActive(false);
+
+	ccvs1.setPtoState(CCVSFrame::PTO_SET);
+	ccvs1.setWheelSpeed(5.39844);
+
+	EXPECT_EQ(ccvs1.getPGN(), (u32)CCVS_PGN);
+
+	try {
+
+		ccvs1.encode(identifier, data, length);
+
+		EXPECT_EQ(length, (size_t)CCVS_FRAME_MAX_SIZE);
+		EXPECT_EQ(identifier, (u32)(0x14FEF132));
+
+		EXPECT_EQ(data[1], 0x66);
+		EXPECT_EQ(data[2], 0x05);
+
+		EXPECT_EQ(data[3], 0x50);
+		EXPECT_EQ(data[6], 0b00101);
+
+
+
+	} catch(J1939EncodeException&) {
+		exceptionThrown = true;
+	}
+	exceptionThrown = false;
+
+	ccvs1.setPriority(0xFF);
+
+	try {
+		ccvs1.encode(identifier, data, length);
+
+	} catch(J1939EncodeException&) {
+		exceptionThrown = true;
+	}
+
+	EXPECT_TRUE(exceptionThrown);
+
+}
+
+
 
 }

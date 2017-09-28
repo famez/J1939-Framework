@@ -10,7 +10,7 @@
 
 #include "../J1939Frame.h"
 
-#define CCVS_SPEED_BITWISE				8
+#define CCVS_FRAME_MAX_SIZE			8
 
 namespace J1939 {
 
@@ -24,11 +24,11 @@ public:
 	};
 
 private:
-	u16 mWheelSpeed;
-	bool mClutchPressed;
-	bool mBrakePressed;
-	bool mCruiseControlActive;
-	EPtoState mPtoState;
+	float 		mWheelSpeed;			//Km/h
+	bool 		mClutchPressed;
+	bool 		mBrakePressed;
+	bool 		mCruiseControlActive;
+	EPtoState 	mPtoState;
 
 public:
 	CCVSFrame();
@@ -67,17 +67,17 @@ public:
 		mPtoState = ptoState;
 	}
 
-	u16 getWheelSpeed() const {
-		return mWheelSpeed >> CCVS_SPEED_BITWISE;
+	float getWheelSpeed() const {
+		return mWheelSpeed;
 	}
 
-	void setWheelSpeed(u16 wheelSpeed) {
-		mWheelSpeed = (wheelSpeed << CCVS_SPEED_BITWISE);
+	void setWheelSpeed(float wheelSpeed) {
+		mWheelSpeed = wheelSpeed;
 	}
 
 	//Implements J1939Frame methods
 	void decodeData(const u8* buffer, size_t length);
-	void encodeData(u8* buffer, size_t length);
+	void encodeData(u8* buffer, size_t& length);
 };
 
 } /* namespace J1939 */

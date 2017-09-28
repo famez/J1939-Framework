@@ -34,15 +34,22 @@ void J1939Frame::decode(u32 identifier, const u8* buffer, size_t length) {
 	decodeData(buffer, length);
 
 }
-void J1939Frame::encode(u32& identifier, u8* buffer, size_t length) {
+void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) {
 
-	identifier = mPriority & 0x7;
+	u8 prio = (mPriority & J1939_PRIORITY_MASK);
 
-	identifier <<= 18;
-	identifier |= (mPgn & 0x3FF);
 
-	identifier <<= 8;
-	identifier |= (mSrcAddr & 0xFF);
+	if(prio != mPriority) {
+		throw J1939EncodeException();
+	}
+
+	identifier = mSrcAddr;
+
+	identifier |= ((mPgn & J1939_PGN_MASK) << J1939_PGN_OFFSET);
+
+	identifier |= (prio << J1939_PRIORITY_OFFSET);
+
+	memset(buffer, 0 , length);
 
 	encodeData(buffer, length);
 
