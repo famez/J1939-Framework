@@ -23,10 +23,11 @@
 
 namespace J1939 {
 
-CCVSFrame::CCVSFrame() : J1939Frame(CCVS_PGN), mWheelSpeed(0), mClutchPressed(false), mBrakePressed(false), mCruiseControlActive(false), mPtoState(PTO_DISABLED) {
+CCVSFrame::CCVSFrame() : J1939Frame(CCVS_PGN), mWheelSpeed(0), mClutchPressed(J1939_STATUS_NOT_AVAILABLE), mBrakePressed(J1939_STATUS_NOT_AVAILABLE), mCruiseControlActive(J1939_STATUS_NOT_AVAILABLE),
+		mPtoState(PTO_DISABLED) {
 
 }
-CCVSFrame::CCVSFrame(u16 wheelSpeed, bool clutchPressed, bool brakePressed, bool cruiseControlActive, EPtoState ptoState) : J1939Frame(CCVS_PGN),
+CCVSFrame::CCVSFrame(u16 wheelSpeed, J1939Status clutchPressed, J1939Status brakePressed, J1939Status cruiseControlActive, EPtoState ptoState) : J1939Frame(CCVS_PGN),
 		mWheelSpeed(wheelSpeed), mClutchPressed(clutchPressed), mBrakePressed(brakePressed), mCruiseControlActive(cruiseControlActive), mPtoState(ptoState) {
 
 }
@@ -36,7 +37,7 @@ CCVSFrame::~CCVSFrame() {
 
 void CCVSFrame::decodeData(const u8* buffer, size_t length) {
 
-	if(length > CCVS_FRAME_MAX_SIZE) {
+	if(length > CCVS_FRAME_SIZE) {
 		throw J1939DecodeException();
 	}
 
@@ -47,9 +48,9 @@ void CCVSFrame::decodeData(const u8* buffer, size_t length) {
 
 	buffer += 2;
 
-	mClutchPressed = (((*buffer >> CLUTCH_PRESSED_OFFSET) & 1) ? true : false);
-	mBrakePressed = (((*buffer >> BRAKE_PRESSED_OFFSET) & 1) ? true : false);
-	mCruiseControlActive = (((*buffer >> CRUISE_CTRL_ACTIVE_OFFSET) & 1) ? true : false);
+	mClutchPressed = (J1939Status)((*buffer >> CLUTCH_PRESSED_OFFSET) & J1939_STATUS_MASK);
+	mBrakePressed = (J1939Status)((*buffer >> BRAKE_PRESSED_OFFSET) & J1939_STATUS_MASK);
+	mCruiseControlActive = (J1939Status)((*buffer >> CRUISE_CTRL_ACTIVE_OFFSET) & J1939_STATUS_MASK);
 
 	buffer += 3;
 
@@ -70,11 +71,7 @@ void CCVSFrame::decodeData(const u8* buffer, size_t length) {
 
 }
 
-void CCVSFrame::encodeData(u8* buffer, size_t& length) {
-
-	if(length < CCVS_FRAME_MAX_SIZE) {
-		throw J1939DecodeException();
-	}
+void CCVSFrame::encodeData(u8* buffer, size_t length) {
 
 	buffer++;
 
@@ -84,7 +81,7 @@ void CCVSFrame::encodeData(u8* buffer, size_t& length) {
 
 	buffer += 2;
 
-	*buffer = ((mCruiseControlActive ? 1 : 0) << CRUISE_CTRL_ACTIVE_OFFSET) | ((mBrakePressed ? 1 : 0) << BRAKE_PRESSED_OFFSET) | ((mClutchPressed ? 1 : 0) << CLUTCH_PRESSED_OFFSET);
+	*buffer = (((u8)mCruiseControlActive) << CRUISE_CTRL_ACTIVE_OFFSET) | (((u8)mBrakePressed) << BRAKE_PRESSED_OFFSET) | (((u8)mClutchPressed) << CLUTCH_PRESSED_OFFSET);
 
 	buffer += 3;
 
@@ -100,8 +97,6 @@ void CCVSFrame::encodeData(u8* buffer, size_t& length) {
 		*buffer = PTO_STATE_NOT_AV_BYTE;
 		break;
 	}
-
-	length = CCVS_FRAME_MAX_SIZE;
 
 }
 

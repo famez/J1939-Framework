@@ -10,7 +10,7 @@
 
 #include "../J1939Frame.h"
 
-#define CCVS_FRAME_MAX_SIZE			8
+#define CCVS_FRAME_SIZE			8
 
 namespace J1939 {
 
@@ -24,38 +24,38 @@ public:
 	};
 
 private:
-	float 		mWheelSpeed;			//Km/h
-	bool 		mClutchPressed;
-	bool 		mBrakePressed;
-	bool 		mCruiseControlActive;
-	EPtoState 	mPtoState;
+	float 				mWheelSpeed;			//Km/h
+	J1939Status 		mClutchPressed;
+	J1939Status 		mBrakePressed;
+	J1939Status 		mCruiseControlActive;
+	EPtoState 			mPtoState;
 
 public:
 	CCVSFrame();
-	CCVSFrame(u16 wheelSpeed, bool clutchPressed, bool brakePressed, bool cruiseControlActive, EPtoState ptoState);
+	CCVSFrame(u16 wheelSpeed, J1939Status clutchPressed, J1939Status brakePressed, J1939Status cruiseControlActive, EPtoState ptoState);
 	virtual ~CCVSFrame();
 
-	bool isBrakePressed() const {
+	J1939Status getBrakePressed() const {
 		return mBrakePressed;
 	}
 
-	void setBrakePressed(bool brakePressed) {
+	void setBrakePressed(J1939Status brakePressed) {
 		mBrakePressed = brakePressed;
 	}
 
-	bool isClucthPressed() const {
+	J1939Status getClucthPressed() const {
 		return mClutchPressed;
 	}
 
-	void setClucthPressed(bool clucthPressed) {
+	void setClucthPressed(J1939Status clucthPressed) {
 		mClutchPressed = clucthPressed;
 	}
 
-	bool isCruiseControlActive() const {
+	J1939Status getCruiseControlActive() const {
 		return mCruiseControlActive;
 	}
 
-	void setCruiseControlActive(bool cruiseControlActive) {
+	void setCruiseControlActive(J1939Status cruiseControlActive) {
 		mCruiseControlActive = cruiseControlActive;
 	}
 
@@ -77,9 +77,19 @@ public:
 
 	//Implements J1939Frame methods
 	void decodeData(const u8* buffer, size_t length);
-	void encodeData(u8* buffer, size_t& length);
+	void encodeData(u8* buffer, size_t length);
+
+	size_t getDataLength() const { return CCVS_FRAME_SIZE; }
+
+	IMPLEMENT_CLONEABLE(J1939Frame,CCVSFrame);
+
 };
 
+REGISTER_CLASS_INTO_FACTORY(CCVSFrame);
+
 } /* namespace J1939 */
+
+
+
 
 #endif /* FRAMES_CCVSFRAME_H_ */

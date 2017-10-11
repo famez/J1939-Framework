@@ -11,6 +11,9 @@
 #include <arpa/inet.h>
 #include <exception>
 
+#include <Types.h>
+#include <ICloneable.h>
+
 #define J1939_PGN_OFFSET			8
 #define J1939_PGN_MASK				0x3FFFF
 
@@ -29,15 +32,31 @@
 #define J1939_PRIORITY_OFFSET		26
 #define J1939_PRIORITY_MASK			7
 
+#define J1939_STATUS_MASK			3
 
+#define J1939_STR_TERMINATOR		'*'
+#define	NULL_TERMINATOR				0
 
-#include "Types.h"
-
-namespace J1939 {
-
+#define BAM_DATA_PACKET_SIZE		7
 
 //			PGN Identifiers			//
 #define CCVS_PGN		0xFEF1
+#define VI_PGN			0xFEEC
+#define BAM_HEADER_PGN	0xECFF
+#define BAM_DATA_PGN	0xEBFF
+
+#define REGISTER_CLASS_INTO_FACTORY(CLASS)		static J1939Frame* __##CLASS##dummy(J1939Frame::registerIntoFactory(new CLASS()));
+
+
+namespace J1939 {
+
+enum J1939Status {
+	J1939_STATUS_OFF = 0,
+	J1939_STATUS_ON = 1,
+	J1939_STATUS_ERROR = 2,
+	J1939_STATUS_NOT_AVAILABLE = 3,
+};
+
 
 class J1939DecodeException : public std::exception {
 
@@ -47,7 +66,7 @@ class J1939EncodeException : public std::exception {
 
 };
 
-class J1939Frame {
+class J1939Frame : public ICloneable<J1939Frame> {
 
 
 private:
@@ -89,9 +108,17 @@ public:
 	 * Encodes the data field in the given buffer
 	 * Length is used as input to check the length of the buffer and then set to the number of encoded bytes (which is always less or equal than the given length)
 	 */
-	virtual void encodeData(u8* buffer, size_t& length) = 0;
+	virtual void encodeData(u8* buffer, size_t length) = 0;
 
 	u32 getPGN() const { return mPgn; }
+
+	/**
+	 * Method to know how long our buffer should be to encode properly this message
+	 */
+	virtual size_t getDataLength() const = 0;
+
+	static J1939Frame* registerIntoFactory(J1939Frame*);
+
 
 };
 

@@ -5,8 +5,10 @@
  *      Author: famez
  */
 
-#include "J1939Frame.h"
 #include <string.h>
+
+#include "J1939Frame.h"
+#include "J1939Factory.h"
 
 namespace J1939 {
 
@@ -16,6 +18,8 @@ J1939Frame::J1939Frame(u32 pgn) :mPriority(0), mSrcAddr(0), mPgn(pgn) {
 
 J1939Frame::~J1939Frame() {
 }
+
+
 
 void J1939Frame::decode(u32 identifier, const u8* buffer, size_t length) {
 
@@ -43,6 +47,10 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) {
 		throw J1939EncodeException();
 	}
 
+	if(length < getDataLength()) {
+		throw J1939EncodeException();
+	}
+
 	identifier = mSrcAddr;
 
 	identifier |= ((mPgn & J1939_PGN_MASK) << J1939_PGN_OFFSET);
@@ -53,6 +61,14 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) {
 
 	encodeData(buffer, length);
 
+	length = getDataLength();
+
+}
+
+
+J1939Frame* J1939Frame::registerIntoFactory(J1939Frame* frame) {
+	J1939Factory::getInstance().registerFrame(frame);
+	return NULL;
 }
 
 

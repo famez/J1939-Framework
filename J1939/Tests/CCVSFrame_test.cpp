@@ -27,10 +27,12 @@ TEST(CCVSFrame, decode){
 
 		EXPECT_TRUE(ccvs1.getWheelSpeed() >= 5);
 		EXPECT_TRUE(ccvs1.getWheelSpeed() < 6);
-		EXPECT_FALSE(ccvs1.isClucthPressed());
-		EXPECT_TRUE(ccvs1.isBrakePressed());
-		EXPECT_FALSE(ccvs1.isCruiseControlActive());
+		EXPECT_EQ(ccvs1.getClucthPressed(), J1939_STATUS_OFF);
+		EXPECT_EQ(ccvs1.getBrakePressed(), J1939_STATUS_ON);
+		EXPECT_EQ(ccvs1.getCruiseControlActive(), J1939_STATUS_OFF);
 		EXPECT_EQ(ccvs1.getPtoState(), CCVSFrame::PTO_NOT_AVAILABLE);
+
+		EXPECT_EQ(ccvs1.getDataLength(), (size_t)CCVS_FRAME_SIZE);
 
 
 	} catch(J1939DecodeException&) {
@@ -61,8 +63,8 @@ TEST(CCVSFrame, encode){
 	bool exceptionThrown = false;
 
 	u32 identifier;
-	size_t length = CCVS_FRAME_MAX_SIZE;
-	u8 data[CCVS_FRAME_MAX_SIZE];
+	size_t length = CCVS_FRAME_SIZE;
+	u8 data[CCVS_FRAME_SIZE];
 
 
 	CCVSFrame ccvs1;
@@ -70,9 +72,9 @@ TEST(CCVSFrame, encode){
 	ccvs1.setSrcAddr(0x32);
 	ccvs1.setPriority(5);
 
-	ccvs1.setBrakePressed(true);
-	ccvs1.setClucthPressed(true);
-	ccvs1.setCruiseControlActive(false);
+	ccvs1.setBrakePressed(J1939_STATUS_ON);
+	ccvs1.setClucthPressed(J1939_STATUS_NOT_AVAILABLE);
+	ccvs1.setCruiseControlActive(J1939_STATUS_OFF);
 
 	ccvs1.setPtoState(CCVSFrame::PTO_SET);
 	ccvs1.setWheelSpeed(5.39844);
@@ -83,13 +85,13 @@ TEST(CCVSFrame, encode){
 
 		ccvs1.encode(identifier, data, length);
 
-		EXPECT_EQ(length, (size_t)CCVS_FRAME_MAX_SIZE);
+		EXPECT_EQ(length, (size_t)CCVS_FRAME_SIZE);
 		EXPECT_EQ(identifier, (u32)(0x14FEF132));
 
 		EXPECT_EQ(data[1], 0x66);
 		EXPECT_EQ(data[2], 0x05);
 
-		EXPECT_EQ(data[3], 0x50);
+		EXPECT_EQ(data[3], 0xD0);
 		EXPECT_EQ(data[6], 0b00101);
 
 
