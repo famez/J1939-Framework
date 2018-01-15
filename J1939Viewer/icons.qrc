@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/SVG">
+        <file>minus.svg</file>
+        <file>plus.svg</file>
+        <file>edit.svg</file>
+    </qresource>
+</RCC>
