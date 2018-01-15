@@ -37,7 +37,7 @@ QVariant StatusSPNItem::data(int column) const {
     case SPN_STATUS_ENUMERATOR_OFFSET:
     {
         StatusMap statuses;
-        std::map<u8, std::string> descriptions = mSpnStatus->getValueDescriptionsMap();
+        SPNStatus::DescMap descriptions = mSpnStatus->getValueDescriptionsMap();
 
         for(auto iter = descriptions.begin(); iter != descriptions.end(); ++iter) {
             statuses[iter->first] = QString::fromStdString(iter->second);

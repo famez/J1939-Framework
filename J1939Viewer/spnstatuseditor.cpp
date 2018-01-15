@@ -79,6 +79,7 @@ void SpnStatusEditor::regionToPaintChanged(const QRect& region) {
     QRect comboboxGeometry = mCombobox->geometry();
     comboboxGeometry.setHeight(region.height());
     mCombobox->setGeometry(comboboxGeometry);
+    //mCombobox->setSizeAdjustPolicy();
 
     //Adjust geometry to region to paint
     QRect buttonGeo;

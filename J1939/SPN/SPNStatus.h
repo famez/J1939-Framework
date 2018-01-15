@@ -16,6 +16,8 @@ namespace J1939 {
 
 class SPNStatus: public SPN {
 
+public:
+    typedef std::map<u8, std::string> DescMap;
 private:
 	u8 mBitOffset;
 	u8 mBitSize;
@@ -24,7 +26,7 @@ private:
     /*
      * Convertion from the status number to its description
      */
-    std::map<u8, std::string> mValueToDesc;
+    DescMap mValueToDesc;
 
 public:
     SPNStatus(u32 number, const std::string& name = "", size_t offset = 0, u8 bitOffset = 0, u8 bitSize = 0);

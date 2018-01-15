@@ -34,6 +34,8 @@
 #define STAT_BIT_OFFSET_KEY			"bitOffset"
 #define STAT_BIT_SIZE_KEY			"bitSize"
 
+#define STAT_DESCRIPTIONS_KEY       "descriptions"
+
 
 
 namespace J1939 {
@@ -261,6 +263,18 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
 
     SPNStatus spnStat(number.asUInt(), name.asString(), offset.asUInt(), bitOffset.asUInt(), bitSize.asUInt());
 
+    //Check for added descriptions
+    if(spn.isMember(STAT_DESCRIPTIONS_KEY)) {
+        const Json::Value& descriptions = spn[STAT_DESCRIPTIONS_KEY];
+
+        for(unsigned int i = 0; i < descriptions.size(); ++i) {
+            if(descriptions[i].isNull()){
+                continue;
+            }
+            spnStat.setValueDescription(i, descriptions[i].asString());
+        }
+    }
+
 	frame.registerSPN(spnStat);
 
 	return true;
@@ -284,6 +298,20 @@ void J1939DataBase::writeSPNStatus(const SPN* spn, Json::Value& jsonSpn) {
 
 	jsonSpn[STAT_BIT_OFFSET_KEY] = spnStat->getBitOffset();
 	jsonSpn[STAT_BIT_SIZE_KEY] = spnStat->getBitSize();
+
+    //Check if there are descriptions defined for the different status numbers
+    SPNStatus::DescMap descriptions = spnStat->getValueDescriptionsMap();
+
+    if(descriptions.empty()) {
+        return;
+    }
+
+    Json::Value& description = jsonSpn[STAT_DESCRIPTIONS_KEY];
+
+    for(auto iter = descriptions.begin(); iter != descriptions.end(); ++iter) {
+        description[iter->first] = iter->second;
+    }
+
 }
 
 void J1939DataBase::addFrame(const GenericFrame& frame) {

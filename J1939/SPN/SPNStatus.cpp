@@ -97,7 +97,7 @@ void SPNStatus::clearValueDescriptions() {
 }
 
 
-std::map<u8, std::string> SPNStatus::getValueDescriptionsMap() const {
+SPNStatus::DescMap SPNStatus::getValueDescriptionsMap() const {
     return mValueToDesc;
 }
 
