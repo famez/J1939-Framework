@@ -2,7 +2,7 @@
 #include <Types.h>
 
 #include "../J1939Factory.h"
-#include "../Frames/VIFrame.h"
+#include "../FMS/VIFrame.h"
 
 namespace J1939 {
 
@@ -105,9 +105,6 @@ TEST(J1939Factory, getJ1939Frame){
 	}
 
 	EXPECT_FALSE(exceptionThrown);
-
-
-
 
 
 }

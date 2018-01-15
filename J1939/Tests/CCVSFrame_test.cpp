@@ -1,6 +1,6 @@
 #include <gtest.h>
 #include "../Types.h"
-#include "../Frames/CCVSFrame.h"
+#include "../FMS/CCVSFrame.h"
 
 namespace J1939 {
 

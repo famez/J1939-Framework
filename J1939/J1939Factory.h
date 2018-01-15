@@ -8,14 +8,14 @@
 #ifndef J1939FACTORY_H_
 #define J1939FACTORY_H_
 
-#include <auto_ptr.h>
+#include <memory>
 #include <map>
+#include <set>
 
 
 #include <Types.h>
 #include <Singleton.h>
 
-#include "BamFrameSet.h"
 
 
 namespace J1939 {
@@ -31,14 +31,20 @@ class J1939Factory : public ISingleton<J1939Factory> {
 private:
 	J1939Factory();
 	std::map<u32, J1939Frame*> mFrames;
-	std::map<u8, BamFrameSet> mBamFrameSets;
 
 
 public:
 
-	std::auto_ptr<J1939Frame> getJ1939Frame(u32 id, const u8* data, size_t length);
+    std::unique_ptr<J1939Frame> getJ1939Frame(u32 id, const u8* data, size_t length);
 
-	void registerFrame(J1939Frame*);
+    bool registerFrame(const J1939Frame&);
+
+	void registerPredefinedFrames();
+
+    void unregisterAllFrames();
+
+	std::set<u32> getAllRegisteredPGNs() const;
+
 };
 
 } /* namespace J1939 */

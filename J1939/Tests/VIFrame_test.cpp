@@ -1,6 +1,6 @@
 #include <gtest.h>
-#include "../Types.h"
-#include "../Frames/VIFrame.h"
+#include <Types.h>
+#include "../FMS/VIFrame.h"
 
 namespace J1939 {
 
@@ -82,6 +82,8 @@ TEST(VIFrame, encode){
 	} catch(J1939EncodeException&) {
 		exceptionThrown = true;
 	}
+
+	EXPECT_FALSE(exceptionThrown);
 
 	delete[] data;
 

@@ -8,8 +8,12 @@
 #include "J1939Factory.h"
 #include "J1939Frame.h"
 
-#include "Frames/BAMHeaderFrame.h"
-#include "Frames/BamDataframe.h"
+#include "Transport/TPCMFrame.h"
+#include "Transport/TPDTFrame.h"
+#include "Diagnosis/Frames/DM1.h"
+#include "Addressing/AdressClaimFrame.h"
+#include "FMS/VIFrame.h"
+
 
 
 namespace J1939 {
@@ -22,79 +26,96 @@ J1939Factory::J1939Factory() {
 
 J1939Factory::~J1939Factory() {
 
+    unregisterAllFrames();
+
 }
 
-std::auto_ptr<J1939Frame> J1939Factory::getJ1939Frame(u32 id, const u8* data, size_t length) {
+void J1939Factory::unregisterAllFrames() {
+    for(std::map<u32, J1939Frame*>::const_iterator iter = mFrames.begin(); iter != mFrames.end(); iter++) {
+        if(iter->second)
+            delete iter->second;
+    }
+    mFrames.clear();
+}
 
-	u32 pgn = ((id >> J1939_PGN_OFFSET) & J1939_PGN_MASK);
-	u8 src = id & J1939_SRC_ADDR_MASK;
+std::unique_ptr<J1939Frame> J1939Factory::getJ1939Frame(u32 id, const u8* data, size_t length) {
+
 	J1939Frame* frame = NULL, *retFrame = NULL;
 
+	u32 pgn = ((id >> J1939_PGN_OFFSET) & J1939_PGN_MASK);
 
-
-
-	if(mFrames.find(pgn) == mFrames.end() || ((frame = mFrames[pgn]) == NULL)) {
-		printf("Pgn: %u not found", pgn);
-		return std::auto_ptr<J1939Frame>(NULL);
+	//Check if PDU format belongs to the first group
+	if(((pgn >> J1939_PDU_FMT_OFFSET) & J1939_PDU_FMT_MASK) < PDU_FMT_DELIMITER) {
+		pgn &= (J1939_PDU_FMT_MASK << J1939_PDU_FMT_OFFSET);
 	}
 
-	switch(frame->getPGN()) {
-	case BAM_HEADER_PGN:
-	{
-		BAMHeaderFrame header;
-		header.decode(id, data, length);
-		if(mBamFrameSets.find(src) != mBamFrameSets.end()) {
-			mBamFrameSets.erase(src);
-		}
+	std::map<u32, J1939Frame*>::iterator iter = mFrames.find(pgn);
 
-		mBamFrameSets[src].setHeader(header);
-
-	} 	break;
-
-	case BAM_DATA_PGN:
-	{
-		BamDataframe dataFrame;
-
-		if(mBamFrameSets.find(src) == mBamFrameSets.end()) {
-			break;
-		}
-
-		dataFrame.decode(id, data, length);
-		BamFrameSet& bamFrameSet = mBamFrameSets[src];
-		bamFrameSet.addDataFrame(dataFrame);
-		if(bamFrameSet.isComplete()) {		//It is complete and ok, we can get the complete raw data
-			u8* fullData;
-			size_t length;
-			if(bamFrameSet.getRawData(&fullData, length)) {
-				u32 newId = ((id & (J1939_PRIORITY_MASK << J1939_PRIORITY_OFFSET)) | (bamFrameSet.getHeader().getDataPgn() << J1939_PGN_OFFSET) | src);
-
-				std::auto_ptr<J1939Frame> retVal = getJ1939Frame(newId, fullData, length);
-				delete[] fullData;
-
-				return retVal;
-			}
-
-		}
-
-	}	break;
-	default:
-		retFrame = frame->clone();
-		break;
+	if(iter == mFrames.end() || ((frame = iter->second) == NULL)) {
+        //printf("Pgn: %u not found", pgn);
+        return std::unique_ptr<J1939Frame>(nullptr);
 	}
+
+	retFrame = frame->clone();
 
 	if(retFrame) {
 		retFrame->decode(id, data, length);
 	}
-	std::auto_ptr<J1939Frame> frameAutoPtr(retFrame);
-	return frameAutoPtr;
+    return std::unique_ptr<J1939Frame>(retFrame);
 
 }
 
-void J1939Factory::registerFrame(J1939Frame* frame) {
+bool J1939Factory::registerFrame(const J1939Frame& frame) {
 
-	if(mFrames.find(frame->getPGN()) == mFrames.end()) {
-		mFrames[frame->getPGN()] = frame;
+	if(mFrames.find(frame.getPGN()) == mFrames.end()) {
+		mFrames[frame.getPGN()] = frame.clone();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void J1939Factory::registerPredefinedFrames() {
+
+	{
+		TPCMFrame frame;
+		registerFrame(frame);
 	}
+
+	{
+		TPDTFrame frame;
+		registerFrame(frame);
+	}
+
+    {
+        VIFrame frame;
+        registerFrame(frame);
+    }
+
+//	{
+//		DM1 frame;
+//		registerFrame(frame);
+//	}
+
+//	{
+//		AdressClaimFrame frame;
+//		registerFrame(frame);
+//	}
+
+
+}
+
+std::set<u32> J1939Factory::getAllRegisteredPGNs() const {
+
+	std::set<u32> pgns;
+
+
+	for(std::map<u32, J1939Frame*>::const_iterator iter = mFrames.begin(); iter != mFrames.end(); iter++) {
+		pgns.insert(iter->first);
+	}
+
+	return pgns;
+
 }
 
 } /* namespace J1939 */

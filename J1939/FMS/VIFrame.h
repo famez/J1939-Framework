@@ -12,6 +12,8 @@
 
 #include "../J1939Frame.h"
 
+#define VI_PGN			0x00FEEC
+
 namespace J1939 {
 
 class VIFrame : public J1939Frame {
@@ -30,7 +32,7 @@ public:
 
 	//Implements J1939Frame methods
 	void decodeData(const u8* buffer, size_t length);
-	void encodeData(u8* buffer, size_t length);
+	void encodeData(u8* buffer, size_t length) const;
 
 	size_t getDataLength() const { return mId.size() + 1; }	//At the end, it is necessary to add "*"
 
@@ -38,7 +40,6 @@ public:
 
 };
 
-REGISTER_CLASS_INTO_FACTORY(VIFrame);
 
 } /* namespace J1939 */
 

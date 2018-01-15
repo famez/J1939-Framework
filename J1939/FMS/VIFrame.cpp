@@ -62,14 +62,14 @@ void VIFrame::decodeData(const u8* buffer, size_t length) {
 	}
 
 	if(!mValidId) {
-		throw J1939DecodeException();
+        throw J1939DecodeException("[VIFrame::decodeData] Invalid id");
 	}
 
 }
 
-void VIFrame::encodeData(u8* buffer, size_t length) {
+void VIFrame::encodeData(u8* buffer, size_t ) const{
 	if(!mValidId) {
-		throw J1939EncodeException();
+        throw J1939EncodeException("[VIFrame::encodeData] Invalid id");
 	}
 
 	memcpy(buffer, mId.c_str(), mId.size());

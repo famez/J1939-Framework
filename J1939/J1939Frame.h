@@ -8,63 +8,32 @@
 #ifndef J1939FRAME_H_
 #define J1939FRAME_H_
 
-#include <arpa/inet.h>
-#include <exception>
+
+#include <string>
 
 #include <Types.h>
 #include <ICloneable.h>
 
-#define J1939_PGN_OFFSET			8
-#define J1939_PGN_MASK				0x3FFFF
 
-#define J1939_DST_ADDR_MASK			0xFF
-#define J1939_SRC_ADDR_MASK			0xFF
+#include "J1939Common.h"
 
-#define J1939_PDU_FMT_MASK			0xFF
-#define J1939_PDU_FMT_OFFSET		8
-
-#define J1939_DATA_PAGE_MASK		1
-#define J1939_DATA_PAGE_OFFSET		16
-
-#define J1939_EXT_DATA_PAGE_MASK	1
-#define J1939_EXT_DATA_PAGE_OFFSET	17
-
-#define J1939_PRIORITY_OFFSET		26
-#define J1939_PRIORITY_MASK			7
-
-#define J1939_STATUS_MASK			3
-
-#define J1939_STR_TERMINATOR		'*'
-#define	NULL_TERMINATOR				0
-
-#define BAM_DATA_PACKET_SIZE		7
-
-//			PGN Identifiers			//
-#define CCVS_PGN		0xFEF1
-#define VI_PGN			0xFEEC
-#define BAM_HEADER_PGN	0xECFF
-#define BAM_DATA_PGN	0xEBFF
-
-#define REGISTER_CLASS_INTO_FACTORY(CLASS)		static J1939Frame* __##CLASS##dummy(J1939Frame::registerIntoFactory(new CLASS()));
 
 
 namespace J1939 {
 
-enum J1939Status {
+enum EJ1939Status {
 	J1939_STATUS_OFF = 0,
 	J1939_STATUS_ON = 1,
 	J1939_STATUS_ERROR = 2,
 	J1939_STATUS_NOT_AVAILABLE = 3,
 };
 
-
-class J1939DecodeException : public std::exception {
-
+enum EJ1939PduFormat {
+	PDU_FORMAT_1,
+	PDU_FORMAT_2
 };
 
-class J1939EncodeException : public std::exception {
 
-};
 
 class J1939Frame : public ICloneable<J1939Frame> {
 
@@ -73,14 +42,16 @@ private:
 	u8 mPriority;
 	u8 mSrcAddr;
 	u32 mPgn;
-
+	u8 mDstAddr;
+protected:
+    std::string mName;
 
 public:
 	J1939Frame(u32 pgn);
 	virtual ~J1939Frame();
 
 	u8 getPriority() const { return mPriority; }
-	void setPriority(u8 priority) { mPriority = priority; }
+    bool setPriority(u8 priority) { mPriority = (priority & J1939_PRIORITY_MASK); return (mPriority == priority); }
 
 	u8 getExtDataPage() const { return ((mPgn >> J1939_EXT_DATA_PAGE_OFFSET) & J1939_EXT_DATA_PAGE_MASK); }
 
@@ -88,17 +59,37 @@ public:
 
 	u8 getPDUFormat() const { return ((mPgn >> J1939_PDU_FMT_OFFSET) & J1939_PDU_FMT_MASK); }
 
-	u8 getDstAddr() const { return mPgn & J1939_DST_ADDR_MASK; }
+	u8 getPDUSpecific() const { return mPgn & J1939_PDU_SPECIFIC_MASK; }
 
 	u8 getSrcAddr() const { return mSrcAddr; }
 	void setSrcAddr(u8 src) { mSrcAddr = src; }
 
 
+	/*
+	 * If the value in the PDU Format segment is < 240, the content of PDU Specific is interpreted as the destination address.
+	 * One speaks here of a PGN in PDU Format 1 or of a specific PGN. A PGN in PDU Format 1 can be sent explicitly to a destination address
+	 * using point-to-point communication, but the global address (255) can also be used. In this way a specific PGN can also be transmitted globally, i.e., to all network nodes.
+	 * If the PDU Format segment has a value >= 240, the PDU Specific segment is interpreted as a group extension.
+	 * This means that there is no destination address and the message will always be transmitted to all network nodes.
+	 * PDU Format and PDU Specific represent a 16-bit value that corresponds to the PGN. In this case, the PGN has PDU Format 2 and is called global PGN.
+	 */
+
+	EJ1939PduFormat getPDUFormatGroup() const
+	{
+		if(getPDUFormat() < PDU_FMT_DELIMITER) {
+			return PDU_FORMAT_1;
+		}
+		return PDU_FORMAT_2;
+	}
+
+	u8 getDstAddr() const { return mDstAddr; }
+    bool setDstAddr(u8 dst) { if(getPDUFormatGroup() == PDU_FORMAT_1) { mDstAddr = dst; return true; } return false; }
+
 	//Methods to decode/encode data
 	void decode(u32 identifier, const u8* buffer, size_t length);
-	void encode(u32& identifier, u8* buffer, size_t& length);
+	void encode(u32& identifier, u8* buffer, size_t& length) const;
 
-
+protected:
 	/**
 	 * Decodes the given data
 	 */
@@ -108,8 +99,9 @@ public:
 	 * Encodes the data field in the given buffer
 	 * Length is used as input to check the length of the buffer and then set to the number of encoded bytes (which is always less or equal than the given length)
 	 */
-	virtual void encodeData(u8* buffer, size_t length) = 0;
+	virtual void encodeData(u8* buffer, size_t length) const = 0;
 
+public:
 	u32 getPGN() const { return mPgn; }
 
 	/**
@@ -117,8 +109,22 @@ public:
 	 */
 	virtual size_t getDataLength() const = 0;
 
-	static J1939Frame* registerIntoFactory(J1939Frame*);
 
+
+    /**
+     * Method to get the frame name
+     */
+    const std::string& getName() const { return mName; }
+
+    /**
+     * Method to copy one frame to another. The frames must be exactly of the same type
+     *
+     *
+     */
+
+    void copy(const J1939Frame& other);
+
+    virtual bool isGenericFrame() const { return false; }
 
 };
 
