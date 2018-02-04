@@ -4,6 +4,8 @@
 
 #include <J1939Frame.h>
 #include <SPN/SPNNumeric.h>
+#include <SPN/SPNStatus.h>
+#include <GenericFrame.h>
 
 
 
@@ -16,6 +18,7 @@
 #include "spnchart.h"
 #include "spnloader.h"
 #include "colouredrangesarea.h"
+#include "scrollzoomstatusrangearea.h"
 
 using namespace J1939;
 
@@ -115,18 +118,53 @@ void TRCInspector::itemClicked(QModelIndex index) {
 
     StatusSPNItem* statSpnItem = dynamic_cast<StatusSPNItem*>(item);
 
+
+    QMap<unsigned int, Qt::GlobalColor> colors;
+
+    colors[0] = Qt::GlobalColor::blue;
+    colors[1] = Qt::GlobalColor::red;
+    colors[2] = Qt::GlobalColor::green;
+    colors[3] = Qt::GlobalColor::yellow;
+    colors[4] = Qt::GlobalColor::blue;
+    colors[5] = Qt::GlobalColor::red;
+    colors[6] = Qt::GlobalColor::green;
+    colors[7] = Qt::GlobalColor::yellow;
+
+
+    bool initialized = false;
+    u8 lastStatus = 0;
+    int count = 0;
+
     if(statSpnItem) {
 
         //Calculate the last timestamp
         u32 time = mFrameList.back().first;
+        StatusRangesArea* area = new StatusRangesArea(time);
 
-        ColouredRangesArea* area = new ColouredRangesArea(time);
-        area->addRange(0, QColor(Qt::GlobalColor::blue));
-        area->addRange(10000000, QColor(Qt::GlobalColor::red));
-        area->addRange(30000000, QColor(Qt::GlobalColor::green));
-        area->addRange(50000000, QColor(Qt::GlobalColor::yellow));
+        ScrollZoomWidget* widget = new ScrollZoomWidget(area);
 
-        area->show();
+        for(auto iter = mFrameList.begin(); iter != mFrameList.end(); ++iter) {
+            if(iter->second->isGenericFrame()) {
+                GenericFrame* frame = static_cast<GenericFrame*>(iter->second);
+                u32 spnNumber = statSpnItem->getSPNNumber();
+
+                if(frame->hasSPN(spnNumber)) {
+                    SPNStatus* status = static_cast<SPNStatus*>(frame->getSPN(spnNumber));
+                    u8 currentStatus = status->getValue();
+                    if(!initialized || lastStatus != currentStatus) {
+                        area->addRange(iter->first, colors[currentStatus % 4]);
+                        initialized = true;
+                        lastStatus = currentStatus;
+                        count++;
+                    }
+
+                }
+            }
+        }
+
+        qDebug() << "[TRCInspector::itemClicked] Number of items: " << count;
+
+        widget->show();
     }
 
 }

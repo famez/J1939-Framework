@@ -64,7 +64,7 @@ QModelIndex FrameModel::index(int row, int column, const QModelIndex &parent)
 
     TreeItem *childItem = parentItem->child(row);
     if (childItem) {
-        qDebug() << "[FrameModel::index] Item added:" << childItem;
+//        qDebug() << "[FrameModel::index] Item added:" << childItem;
         return createIndex(row, column, childItem);
     } else {
         return QModelIndex();
@@ -82,7 +82,7 @@ QModelIndex FrameModel::parent(const QModelIndex &index) const
     if (parentItem == mRootItem)
         return QModelIndex();
 
-    qDebug() << "[FrameModel::parent] Item added:" << parentItem;
+//    qDebug() << "[FrameModel::parent] Item added:" << parentItem;
     return createIndex(parentItem->row(), 0, parentItem);
 }
 

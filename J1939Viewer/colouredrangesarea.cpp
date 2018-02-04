@@ -1,32 +1,44 @@
 #include <QPainter>
+#include <QDebug>
+#include <qevent.h>
 
 #include "colouredrangesarea.h"
 
+#define ALPHA_WEIGHT            80
 
 
-ColouredRangeItem::ColouredRangeItem(unsigned int start, const QColor& color) : mStart(start),
-    mColor(color){
+StatusRangeItem::StatusRangeItem(unsigned int start, const QColor& color) : mStart(start),
+    mColor(color) {
 
 
 
 }
 
-ColouredRangeItem::~ColouredRangeItem() {
+StatusRangeItem::~StatusRangeItem() {
 
 }
 
 
 
-ColouredRangesArea::ColouredRangesArea(unsigned int end, QWidget *parent) : QWidget(parent), mEnd(end)
+StatusRangesArea::StatusRangesArea(unsigned int end, QWidget *parent, int rectHeight) : QWidget(parent), mEnd(end), mRectHeight(rectHeight)
 {
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
+
+    mSelectedItem = mItems.end();
 }
 
-void ColouredRangesArea::paintEvent(QPaintEvent */*event*/) {
+void StatusRangesArea::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
-    int width = size().width();
-    int height = size().height();
+    QColor transColor;          //To paint the content of the rectangles with an alpha
+
+    int rectStart, rectWidth;
+
+    int width = this->width();
+
+//    int visibleWidth = event->rect().width();
+
+    int height = mRectHeight;
 
     if(mItems.empty())
         return;
@@ -35,7 +47,15 @@ void ColouredRangesArea::paintEvent(QPaintEvent */*event*/) {
     unsigned int lastStart = start;
     unsigned int areaWidth = mEnd - start;
 
-    QBrush brush(mItems.begin()->getColor());
+    transColor = mItems.begin()->getColor();
+
+    //If the item to paint is the current selected one, we draw it opaque
+    if(mItems.begin() != mSelectedItem) {
+        transColor.setAlpha(ALPHA_WEIGHT);
+    }
+
+
+    QBrush brush(transColor);
     painter.setBrush(brush);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
@@ -43,37 +63,100 @@ void ColouredRangesArea::paintEvent(QPaintEvent */*event*/) {
 
     if(mItems.size() > 1) {
         for(auto iter = mItems.begin() + 1; iter != mItems.end(); ++iter) {
-            int rectWidth = ((unsigned long long)(iter->getStart() - lastStart)) * width / areaWidth;
-            int rectStart = ((unsigned long long)(lastStart - start)) * width / areaWidth;
+            rectWidth = ((unsigned long long)(iter->getStart() - lastStart)) * width / areaWidth;
+            rectStart = ((unsigned long long)(lastStart - start)) * width / areaWidth;
 
-            QRect rect(rectStart, 0, rectWidth, height);
+
+            QRect rect(rectStart, 0, rectWidth ? rectWidth : 1, height);
+
             painter.drawRect(rect);
+
+
             lastStart = iter->getStart();
             painter.setPen(iter->getColor());
-            brush.setColor(iter->getColor());
+            transColor = iter->getColor();
+
+            //If the item to paint is the current selected one, we draw it opaque
+            if(iter != mSelectedItem) {
+                transColor.setAlpha(ALPHA_WEIGHT);
+            }
+
+            brush.setColor(transColor);
             painter.setBrush(brush);
 
         }
     }
 
-    QRect rect(lastStart, 0, mEnd - lastStart, height);
+    rectWidth = ((unsigned long long)(mEnd - lastStart)) * width / areaWidth;
+    rectStart = ((unsigned long long)(lastStart - start)) * width / areaWidth;
+
+    QRect rect(rectStart, 0, rectWidth ? rectWidth : 1, height);
 
     painter.drawRect(rect);
 
 }
 
-QSize ColouredRangesArea::minimumSizeHint() const
-{
-    return QSize(50, 50);
+
+void StatusRangesArea::mousePressEvent(QMouseEvent *event) {
+
+
+    if(event->button() != Qt::MouseButton::LeftButton || event->x() < 0) {
+        return;
+    }
+
+    if(mItems.empty()) {
+        mSelectedItem = mItems.end();
+        return;
+    }
+
+    //TODO check height
+
+
+    int width = size().width();
+    unsigned int start = mItems.begin()->getStart();
+    unsigned int areaWidth = mEnd - start;
+    int count = 0;
+
+    unsigned int rangePosition = ((unsigned long long)(event->x())) * areaWidth / width + start;
+
+    auto iter = mItems.begin();
+
+    for(iter = mItems.begin(); iter != mItems.end(); ++iter) {
+
+        if(rangePosition < iter->getStart()) {
+            qDebug() << "[ColouredRangesArea::mousePressEvent] Item " << count << "pressed";
+
+            break;
+        }
+
+        count++;
+    }
+
+    if(mSelectedItem != mItems.end()) {
+        emit rangeDeselected(*mSelectedItem);
+    }
+
+
+    mSelectedItem = iter - 1;
+
+    emit rangeSelected(*mSelectedItem);
+
+
+    update();
+
 }
 
-QSize ColouredRangesArea::sizeHint() const
+QSize StatusRangesArea::minimumSizeHint() const
 {
-    return QSize(100, 100);
+    return QSize(50, mRectHeight);
 }
 
+QSize StatusRangesArea::sizeHint() const
+{
+    return QSize(100, mRectHeight);
+}
 
-const ColouredRangeItem* ColouredRangesArea::addRange(unsigned int start, const QColor& color) {
+const StatusRangeItem* StatusRangesArea::addRange(unsigned int start, const QColor& color) {
 
     auto iter = mItems.find(start);
 
@@ -81,13 +164,13 @@ const ColouredRangeItem* ColouredRangesArea::addRange(unsigned int start, const 
         return NULL;
     }
 
-    mItems[start] = ColouredRangeItem(start, color);
+    mItems[start] = StatusRangeItem(start, color);
 
     return &(mItems[start]);
 
 }
 
-void ColouredRangesArea::deleteRange(const ColouredRangeItem *item) {
+void StatusRangesArea::deleteRange(const StatusRangeItem *item) {
 
     for(auto iter = mItems.begin(); iter != mItems.end(); ++iter) {
         if(item == &(*iter)) {
@@ -97,6 +180,6 @@ void ColouredRangesArea::deleteRange(const ColouredRangeItem *item) {
     }
 }
 
-void ColouredRangesArea::clear() {
+void StatusRangesArea::clear() {
     mItems.clear();
 }

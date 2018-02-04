@@ -45,7 +45,8 @@ SOURCES += \
     customeditor.cpp \
     spnstatuseditor.cpp \
     form.cpp \
-    spnstatusdialog.cpp
+    spnstatusdialog.cpp \
+    scrollzoomstatusrangearea.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -69,7 +70,8 @@ HEADERS += \
     customeditor.h \
     spnstatuseditor.h \
     form.h \
-    spnstatusdialog.h
+    spnstatusdialog.h \
+    scrollzoomstatusrangearea.h
 
 FORMS += \
         mainwindow.ui \
