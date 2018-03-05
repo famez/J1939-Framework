@@ -172,7 +172,7 @@ void SpnStatusEditor::editButtonClicked() {
 
     if(code == QDialog::Accepted) {
 
-        u8 number = statusDialog.getNumber();
+//        u8 number = statusDialog.getNumber();
         QString desc = statusDialog.getDescription();
         iter.value() = desc;
         commitData();

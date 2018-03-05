@@ -52,7 +52,7 @@ public:
     void setValueDescription(u8 value, const std::string& desc);
     std::string getValueDescription(u8 value) const;
     void clearValueDescriptions();
-    std::map<u8, std::string> getValueDescriptionsMap() const;
+    DescMap getValueDescriptionsMap() const;
 
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 

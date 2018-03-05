@@ -40,7 +40,7 @@ private:
 	size_t mTotalFrames;
 	size_t mSeekPos;
 	std::ifstream mFileStream;
-	std::pair<u32, CanFrame> mLastReadFrameTimePair;
+    std::pair<u64, CanFrame> mLastReadFrameTimePair;
 
 	void readNextLine(bool& error, bool& empty);
 
@@ -60,7 +60,7 @@ public:
 	size_t getCurrentPos() const { return mCurrentPos; }
 	bool seekPosition(size_t pos);
 	void seekTime(u32 millis);
-	const std::pair<u32, CanFrame>& getLastCanFrame();
+    std::pair<u64, CanFrame> getLastCanFrame();
 	void readNextCanFrame();
 
 

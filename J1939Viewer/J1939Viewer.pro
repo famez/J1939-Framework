@@ -43,10 +43,16 @@ SOURCES += \
     colouredrangesarea.cpp \
     customdelegate.cpp \
     customeditor.cpp \
-    spnstatuseditor.cpp \
     form.cpp \
     spnstatusdialog.cpp \
-    scrollzoomstatusrangearea.cpp
+    scrollzoomstatusrangearea.cpp \
+    spnstatusedition.cpp \
+    spnstatuseditor.cpp \
+    statusdescriptor.cpp \
+    flowlayout.cpp \
+    statusresumeframe.cpp \
+    utils.cpp \
+    keyvaluelabel.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -68,10 +74,16 @@ HEADERS += \
     customdelegate.h \
     common.h \
     customeditor.h \
-    spnstatuseditor.h \
     form.h \
     spnstatusdialog.h \
-    scrollzoomstatusrangearea.h
+    scrollzoomstatusrangearea.h \
+    spnstatusedition.h \
+    spnstatuseditor.h \
+    statusdescriptor.h \
+    flowlayout.h \
+    statusresumeframe.h \
+    utils.h \
+    keyvaluelabel.h
 
 FORMS += \
         mainwindow.ui \
@@ -79,7 +91,8 @@ FORMS += \
     framedialog.ui \
     trcinspector.ui \
     spnstatuseditor.ui \
-    spnstatusdialog.ui
+    spnstatusdialog.ui \
+    statusresumeframe.ui
 
 INCLUDEPATH += $$PWD/../Common
 DEPENDPATH += $$PWD/../Common

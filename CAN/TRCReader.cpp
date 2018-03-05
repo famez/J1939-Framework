@@ -118,12 +118,9 @@ bool TRCReader::seekPosition(size_t pos) {
 
 }
 
-const std::pair<u32, CanFrame>& TRCReader::getLastCanFrame() {
-
+std::pair<u64, CanFrame> TRCReader::getLastCanFrame() {
 
 	return mLastReadFrameTimePair;
-
-
 }
 
 
@@ -134,7 +131,8 @@ void TRCReader::readNextLine(bool& error, bool& empty) {
 	
 	double timeAux;
 
-	u32 position, time, id, length;
+    u32 position, id, length;
+    u64 time;
 
 	std::string type;
 
@@ -194,7 +192,7 @@ void TRCReader::readNextLine(bool& error, bool& empty) {
 
 			mFileStream >> std::dec >> timeAux;
 			timeAux *= 1000;
-			time = (u32)timeAux;
+            time = (u64)timeAux;
 
 			break;
 

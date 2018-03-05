@@ -1,6 +1,10 @@
 #ifndef COLOUREDRANGESAREA_H
 #define COLOUREDRANGESAREA_H
 
+//J1939 includes
+#include <Types.h>
+
+//QT includes
 #include <QWidget>
 #include <QMap>
 
@@ -12,20 +16,29 @@ private:
     /*
      * The end is determined by the start of the following range
      */
-    unsigned int mStart;
+    u64 mStart;
+    u8 mStatus;
     QColor mColor;
 
 public:
     StatusRangeItem() {}
-    StatusRangeItem(unsigned int start, const QColor& color);
+    StatusRangeItem(unsigned int start, u8 status, const QColor& color);
     virtual ~StatusRangeItem();
 
 
     const QColor& getColor() const { return mColor; }
     void setColor(const QColor& color) { mColor = color; }
 
-    qreal getStart() const { return mStart; }
-    void setStart(qreal start) { mStart = start; }
+    u64 getStart() const { return mStart; }
+    void setStart(u64 start) { mStart = start; }
+
+    u8 getStatus() const { return mStatus; }
+    void setStatus(u8 status) { mStatus = status; }
+
+    bool operator ==(const StatusRangeItem& other) {
+        return ((mColor == other.mColor) && (mStatus == other.mStatus) && (mStart == other.mStart));
+    }
+
 
 };
 
@@ -36,13 +49,45 @@ class StatusRangesArea : public QWidget
 {
     Q_OBJECT
 public:
-    explicit StatusRangesArea(unsigned int end, QWidget *parent = nullptr, int rectHeight = DEFAULT_RECT_HEIGHT);
+    explicit StatusRangesArea(u64 end, QWidget *parent = nullptr, int rectHeight = DEFAULT_RECT_HEIGHT);
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
-    const StatusRangeItem* addRange(unsigned int start, const QColor& color);
+    /*
+     * Returns true if added, false otherwise
+     */
+    bool addStatusRange(u64 start, u8 status, const QColor& color);
     void deleteRange(const StatusRangeItem* item);
+
+
+    /*
+     * Checks if the range is valid
+     */
+    bool isValidRange(StatusRangeItem);
+
+    /*
+     * It tells us if this is the first range or otherwise there are more ranges from the beggining
+     */
+    bool isFirstRange(StatusRangeItem);
+
+    /*
+     * It tells us if there are more ranges until the end or otherwise this is the last range
+     */
+    bool isLastRange(StatusRangeItem);
+
+    /*
+     * Returns the following range concerning the passed StatusRangeItem as argument
+     *
+     */
+    StatusRangeItem getFollowingRange(StatusRangeItem);
+
+    /*
+     * Returns the previous range concerning the passed StatusRangeItem as argument
+     *
+     */
+    StatusRangeItem getPreviousRange(StatusRangeItem);
+
     void clear();
 
     void setRectangleHeight(int height);
@@ -52,12 +97,14 @@ public:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+
 
 private:
-    QMap<unsigned int, StatusRangeItem> mItems;
-    QMap<unsigned int, StatusRangeItem>::iterator mSelectedItem;
+    QMap<u64, StatusRangeItem> mItems;
+    QMap<u64, StatusRangeItem>::iterator mSelectedItem;
 
-    unsigned int mEnd;     //Necessary to know where to stop to paint for the last range
+    u64 mEnd;     //Necessary to know where to stop to paint for the last range
 
 
     /*

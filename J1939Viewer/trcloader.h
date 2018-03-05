@@ -20,11 +20,11 @@ class TRCLoader : public QThread
 private:
     QString mFileName;
     int mProgress;
-    QList< QPair< u32, J1939::J1939Frame* > >* mFramesList;
+    QList< QPair< u64, J1939::J1939Frame* > >* mFramesList;
 protected:
     void run() final;
 public:
-    TRCLoader(const QString &file, QList< QPair< u32, J1939::J1939Frame* > >* frameList);
+    TRCLoader(const QString &file, QList< QPair< u64, J1939::J1939Frame* > >* frameList);
 
 signals:
 

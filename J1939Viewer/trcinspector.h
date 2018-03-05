@@ -36,7 +36,7 @@ private:
     Ui::TRCInspector *ui;
     TRCLoader* mLoader;
 
-    QList< QPair< u32, J1939::J1939Frame* > > mFrameList;
+    QList< QPair< u64, J1939::J1939Frame* > > mFrameList;
     void startBackgroundLoader(const QString& file);
     void showNumericSPNViewer(NumericSPNItem*);
 };

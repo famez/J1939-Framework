@@ -17,8 +17,9 @@
 #include "statusspnitem.h"
 #include "spnchart.h"
 #include "spnloader.h"
-#include "colouredrangesarea.h"
-#include "scrollzoomstatusrangearea.h"
+//#include "colouredrangesarea.h"
+//#include "scrollzoomstatusrangearea.h"
+#include "spnstatusedition.h"
 
 using namespace J1939;
 
@@ -112,24 +113,11 @@ void TRCInspector::itemClicked(QModelIndex index) {
 
     if(numSpnItem) {
 
-        showNumericSPNViewer(numSpnItem);
+        //showNumericSPNViewer(numSpnItem);
 
     }
 
     StatusSPNItem* statSpnItem = dynamic_cast<StatusSPNItem*>(item);
-
-
-    QMap<unsigned int, Qt::GlobalColor> colors;
-
-    colors[0] = Qt::GlobalColor::blue;
-    colors[1] = Qt::GlobalColor::red;
-    colors[2] = Qt::GlobalColor::green;
-    colors[3] = Qt::GlobalColor::yellow;
-    colors[4] = Qt::GlobalColor::blue;
-    colors[5] = Qt::GlobalColor::red;
-    colors[6] = Qt::GlobalColor::green;
-    colors[7] = Qt::GlobalColor::yellow;
-
 
     bool initialized = false;
     u8 lastStatus = 0;
@@ -138,12 +126,17 @@ void TRCInspector::itemClicked(QModelIndex index) {
     if(statSpnItem) {
 
         //Calculate the last timestamp
-        u32 time = mFrameList.back().first;
-        StatusRangesArea* area = new StatusRangesArea(time);
+        u64 time = mFrameList.back().first;
+//        StatusRangesArea* area = new StatusRangesArea(time);
 
-        ScrollZoomWidget* widget = new ScrollZoomWidget(area);
+        SPNStatus* spn = (SPNStatus*)(statSpnItem->getSPN());
+
+        SpnStatusEdition* statEditor = new SpnStatusEdition(*spn, time);
+
+//        ScrollZoomWidget* widget = new ScrollZoomWidget(statEditor);
 
         for(auto iter = mFrameList.begin(); iter != mFrameList.end(); ++iter) {
+
             if(iter->second->isGenericFrame()) {
                 GenericFrame* frame = static_cast<GenericFrame*>(iter->second);
                 u32 spnNumber = statSpnItem->getSPNNumber();
@@ -152,7 +145,7 @@ void TRCInspector::itemClicked(QModelIndex index) {
                     SPNStatus* status = static_cast<SPNStatus*>(frame->getSPN(spnNumber));
                     u8 currentStatus = status->getValue();
                     if(!initialized || lastStatus != currentStatus) {
-                        area->addRange(iter->first, colors[currentStatus % 4]);
+                        statEditor->addStatusRange(iter->first, currentStatus);
                         initialized = true;
                         lastStatus = currentStatus;
                         count++;
@@ -164,7 +157,10 @@ void TRCInspector::itemClicked(QModelIndex index) {
 
         qDebug() << "[TRCInspector::itemClicked] Number of items: " << count;
 
-        widget->show();
+//        widget->show();
+
+        statEditor->show();
+
     }
 
 }
@@ -191,7 +187,7 @@ void TRCInspector::showNumericSPNViewer(NumericSPNItem* spnItem) {
 
     int top = spnCopy.getFormatedValue();
 
-    QRect ranges;
+    /*QRect ranges;
 
     ranges.setLeft(0);
     ranges.setRight(mFrameList.back().first);       //Last timestamp
@@ -205,6 +201,6 @@ void TRCInspector::showNumericSPNViewer(NumericSPNItem* spnItem) {
     SPNLoader* loader = new SPNLoader(chart, &mFrameList);
 
 
-    loader->start();
+    loader->start();*/
 
 }

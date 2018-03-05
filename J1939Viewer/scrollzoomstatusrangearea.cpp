@@ -10,6 +10,8 @@ ScrollZoomWidget::ScrollZoomWidget(QWidget* scrolledWidget, QWidget *parent) : Q
     setViewport(scrolledWidget);
     viewport()->setFixedWidth(width());
 
+    setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
     connect(horizontalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(moveViewport(int)), Qt::QueuedConnection);
 
 }
@@ -47,7 +49,13 @@ bool ScrollZoomWidget::viewportEvent(QEvent *event) {
         break;
     }
 
-    return QAbstractScrollArea::viewportEvent(event);
+    bool retVal = QAbstractScrollArea::viewportEvent(event);
+
+    if(event->type() == QEvent::Resize) {
+        return false;       //Delegate also the event to the child if it has to do some work
+    }
+
+    return retVal;
 }
 
 

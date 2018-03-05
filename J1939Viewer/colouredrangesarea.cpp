@@ -7,7 +7,7 @@
 #define ALPHA_WEIGHT            80
 
 
-StatusRangeItem::StatusRangeItem(unsigned int start, const QColor& color) : mStart(start),
+StatusRangeItem::StatusRangeItem(unsigned int start, u8 status, const QColor& color) : mStart(start), mStatus(status),
     mColor(color) {
 
 
@@ -20,12 +20,15 @@ StatusRangeItem::~StatusRangeItem() {
 
 
 
-StatusRangesArea::StatusRangesArea(unsigned int end, QWidget *parent, int rectHeight) : QWidget(parent), mEnd(end), mRectHeight(rectHeight)
+StatusRangesArea::StatusRangesArea(u64 end, QWidget *parent, int rectHeight) : QWidget(parent), mEnd(end), mRectHeight(rectHeight)
 {
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
 
     mSelectedItem = mItems.end();
+
+
+
 }
 
 void StatusRangesArea::paintEvent(QPaintEvent *event) {
@@ -36,6 +39,7 @@ void StatusRangesArea::paintEvent(QPaintEvent *event) {
 
     int width = this->width();
 
+    Q_UNUSED(event);
 //    int visibleWidth = event->rect().width();
 
     int height = mRectHeight;
@@ -43,9 +47,9 @@ void StatusRangesArea::paintEvent(QPaintEvent *event) {
     if(mItems.empty())
         return;
 
-    unsigned int start = mItems.begin()->getStart();
-    unsigned int lastStart = start;
-    unsigned int areaWidth = mEnd - start;
+    u64 start = mItems.begin()->getStart();
+    u64 lastStart = start;
+    u64 areaWidth = mEnd - start;
 
     transColor = mItems.begin()->getColor();
 
@@ -63,8 +67,8 @@ void StatusRangesArea::paintEvent(QPaintEvent *event) {
 
     if(mItems.size() > 1) {
         for(auto iter = mItems.begin() + 1; iter != mItems.end(); ++iter) {
-            rectWidth = ((unsigned long long)(iter->getStart() - lastStart)) * width / areaWidth;
-            rectStart = ((unsigned long long)(lastStart - start)) * width / areaWidth;
+            rectWidth = ((u64)(iter->getStart() - lastStart)) * width / areaWidth;
+            rectStart = ((u64)(lastStart - start)) * width / areaWidth;
 
 
             QRect rect(rectStart, 0, rectWidth ? rectWidth : 1, height);
@@ -87,8 +91,8 @@ void StatusRangesArea::paintEvent(QPaintEvent *event) {
         }
     }
 
-    rectWidth = ((unsigned long long)(mEnd - lastStart)) * width / areaWidth;
-    rectStart = ((unsigned long long)(lastStart - start)) * width / areaWidth;
+    rectWidth = ((u64)(mEnd - lastStart)) * width / areaWidth;
+    rectStart = ((u64)(lastStart - start)) * width / areaWidth;
 
     QRect rect(rectStart, 0, rectWidth ? rectWidth : 1, height);
 
@@ -96,6 +100,32 @@ void StatusRangesArea::paintEvent(QPaintEvent *event) {
 
 }
 
+void StatusRangesArea::keyPressEvent(QKeyEvent *event) {
+
+    bool update = false;
+    if(mSelectedItem == mItems.end()) {
+        event->ignore();
+        return;
+    }
+
+    if(event->matches(QKeySequence::MoveToPreviousChar) && !isFirstRange(*mSelectedItem)) {
+
+        --mSelectedItem;
+        update = true;
+    }
+
+    if(event->matches(QKeySequence::MoveToNextChar) && !isLastRange(*mSelectedItem)) {
+        ++mSelectedItem;
+        update = true;
+    }
+
+    if(update) {
+        emit rangeSelected(*mSelectedItem);
+        this->update();
+        event->accept();
+    }
+
+}
 
 void StatusRangesArea::mousePressEvent(QMouseEvent *event) {
 
@@ -113,11 +143,11 @@ void StatusRangesArea::mousePressEvent(QMouseEvent *event) {
 
 
     int width = size().width();
-    unsigned int start = mItems.begin()->getStart();
-    unsigned int areaWidth = mEnd - start;
+    u64 start = mItems.begin()->getStart();
+    u64 areaWidth = mEnd - start;
     int count = 0;
 
-    unsigned int rangePosition = ((unsigned long long)(event->x())) * areaWidth / width + start;
+    u64  rangePosition = ((u64)(event->x())) * areaWidth / width + start;
 
     auto iter = mItems.begin();
 
@@ -140,8 +170,6 @@ void StatusRangesArea::mousePressEvent(QMouseEvent *event) {
     mSelectedItem = iter - 1;
 
     emit rangeSelected(*mSelectedItem);
-
-
     update();
 
 }
@@ -156,17 +184,17 @@ QSize StatusRangesArea::sizeHint() const
     return QSize(100, mRectHeight);
 }
 
-const StatusRangeItem* StatusRangesArea::addRange(unsigned int start, const QColor& color) {
+bool StatusRangesArea::addStatusRange(u64 start, u8 status, const QColor& color) {
 
     auto iter = mItems.find(start);
 
     if(iter != mItems.end()) {
-        return NULL;
+        return false;
     }
 
-    mItems[start] = StatusRangeItem(start, color);
+    mItems[start] = StatusRangeItem(start, status, color);
 
-    return &(mItems[start]);
+    return true;
 
 }
 
@@ -182,4 +210,56 @@ void StatusRangesArea::deleteRange(const StatusRangeItem *item) {
 
 void StatusRangesArea::clear() {
     mItems.clear();
+    mSelectedItem = mItems.end();
+}
+
+bool StatusRangesArea::isValidRange(StatusRangeItem item) {
+
+    auto iter = mItems.find(item.getStart());
+
+    return (iter != mItems.end() && iter.value() == item);
+
+}
+
+bool StatusRangesArea::isFirstRange(StatusRangeItem item) {
+
+    return (mItems.find(item.getStart()) == mItems.begin());
+}
+
+bool StatusRangesArea::isLastRange(StatusRangeItem item) {
+
+    auto iter = mItems.find(item.getStart());
+
+    return ((iter != mItems.end()) && (iter + 1 == mItems.end()));
+
+}
+
+StatusRangeItem StatusRangesArea::getFollowingRange(StatusRangeItem item) {
+
+    StatusRangeItem retVal = item;
+
+    if(isValidRange(item) && !isLastRange(item)) {
+
+        retVal = *(mItems.find(item.getStart()) + 1);
+
+    }
+
+    return retVal;
+
+}
+
+
+StatusRangeItem StatusRangesArea::getPreviousRange(StatusRangeItem item) {
+
+    StatusRangeItem retVal = item;
+
+    if(isValidRange(item) && !isFirstRange(item)) {
+
+        retVal = *(mItems.find(item.getStart()) - 1);
+
+    }
+
+    return retVal;
+
+
 }

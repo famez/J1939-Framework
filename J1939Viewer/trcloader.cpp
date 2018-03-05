@@ -15,7 +15,7 @@
 using namespace Can;
 using namespace J1939;
 
-TRCLoader::TRCLoader(const QString &file, QList< QPair< u32, J1939::J1939Frame* > >* frameList) : mFileName(file), mProgress(0), mFramesList(frameList)
+TRCLoader::TRCLoader(const QString &file, QList< QPair< u64, J1939::J1939Frame* > >* frameList) : mFileName(file), mProgress(0), mFramesList(frameList)
 {
 
 }
@@ -36,9 +36,11 @@ void TRCLoader::run() {
 
         reader.readNextCanFrame();
 
-        u32 timeStamp = reader.getLastCanFrame().first;
+        std::pair<u64, CanFrame> pairTStampFrame = reader.getLastCanFrame();
 
-        CanFrame frame(reader.getLastCanFrame().second);
+        u64 timeStamp = pairTStampFrame.first;
+
+        CanFrame frame(pairTStampFrame.second);
 
         try {
 
