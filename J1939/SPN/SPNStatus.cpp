@@ -6,8 +6,14 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <string>
+#include <sstream>
+#include <iostream>
+
+
 #include "SPNStatus.h"
-#include "J1939Common.h"
+#include "../J1939Common.h"
 
 namespace J1939 {
 
@@ -99,6 +105,29 @@ void SPNStatus::clearValueDescriptions() {
 
 SPNStatus::DescMap SPNStatus::getValueDescriptionsMap() const {
     return mValueToDesc;
+}
+
+std::string SPNStatus::toString() {
+
+	std::string retval = SPN::toString();
+
+	std::stringstream sstr;
+
+	sstr << " -> Status: " << ((mValueToDesc.find(mValue) != mValueToDesc.end()) ? mValueToDesc[mValue] : "") <<
+			" (" << static_cast<u32>(mValue) << ")" << std::endl;
+
+	retval += sstr.str();
+	return retval;
+
+}
+
+bool SPNStatus::setValue(u8 value) {
+
+	if(value < (1 << mBitSize)) {
+		mValue = value;
+		return true;
+	}
+	return false;
 }
 
 } /* namespace J1939 */

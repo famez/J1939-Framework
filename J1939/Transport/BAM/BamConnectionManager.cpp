@@ -8,14 +8,11 @@
 #include <string.h>
 #include "../../J1939Factory.h"
 #include "BamConnectionManager.h"
-
-
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
+#include <Utils.h>
 
 namespace J1939 {
 
-BamConnectionManager::BamConnectionManager() : mSessionInCourse(false), mLastSq(0) {
+BamConnectionManager::BamConnectionManager() : mSessionInCourse(false), mLastSq(0), mStatus(SESSION_STAT_NOT_STARTED) {
 
 }
 
@@ -30,7 +27,7 @@ bool BamConnectionManager::getRawData(u8** data, size_t& length) {
 	*data = new u8[length];
 
 	for(std::vector<TPDTFrame>::const_iterator iter = mDTFrames.begin(); iter != mDTFrames.end(); iter++) {
-		memcpy((void*)(*data + offset), (void*)iter->getData(), min(length - offset, TP_DT_PACKET_SIZE));
+		memcpy((void*)(*data + offset), (void*)iter->getData(), MIN(length - offset, TP_DT_PACKET_SIZE));
 		offset += TP_DT_PACKET_SIZE;
 		if(offset >= length)
 		{
@@ -92,7 +89,7 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
 		if(mSessionInCourse) {
 
 			clearSession();
-            finishSession(SESSION_STAT_INCOMPLETE_FRAME);
+            setStatus(SESSION_STAT_INCOMPLETE_FRAME);
 
 			return;
 		}
@@ -100,7 +97,7 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
 		if(conn->getCtrlType() != CTRL_TPCM_BAM) {
 
 			clearSession();
-            finishSession(SESSION_STAT_UNEXPECTED_FRAME);
+            setStatus(SESSION_STAT_UNEXPECTED_FRAME);
 			return;
 
 		}
@@ -116,7 +113,7 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
 	if((data = dynamic_cast<const TPDTFrame*>(&frame))) {
 
 		if(!mSessionInCourse) {
-            finishSession(SESSION_STAT_UNEXPECTED_FRAME);
+            setStatus(SESSION_STAT_UNEXPECTED_FRAME);
 			return;
 		}
 
@@ -128,7 +125,7 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
 			mLastSq = sq;
 		} else {
 			clearSession();
-            finishSession(SESSION_STAT_UNEXPECTED_FRAME);
+            setStatus(SESSION_STAT_UNEXPECTED_FRAME);
 		}
 
 		if(sq == mCMFrame.getTotalPackets()) {
@@ -146,13 +143,13 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
                     enqueueFrame(*decodedFrame, LAYER_DATA);
 				} else {
 					clearSession();
-                    finishSession(SESSION_STAT_OK);
+                    setStatus(SESSION_STAT_OK);
 					return;
 				}
 			}
 
 			clearSession();
-            finishSession(SESSION_STAT_OK);
+            setStatus(SESSION_STAT_OK);
 		}
 
 		return;
@@ -161,7 +158,7 @@ void BamConnectionManager::consumeFrame(const J1939Frame& frame) {
 
 	//Not a frame for this connection manager
 	clearSession();
-    finishSession(SESSION_STAT_UNEXPECTED_FRAME);
+    setStatus(SESSION_STAT_UNEXPECTED_FRAME);
 
 }
 
@@ -171,7 +168,6 @@ void BamConnectionManager::clearSession() {
 	mDTFrames.clear();
 	mSessionInCourse = false;
 	mLastSq = 0;
-    mStatus = SESSION_STAT_OK;
 
 }
 

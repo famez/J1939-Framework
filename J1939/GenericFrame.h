@@ -18,6 +18,7 @@ namespace J1939 {
 
 class GenericFrame : public J1939Frame {
 private:
+	size_t mLength;
 	std::map<u32, SPN*> mSPNs;
 protected:
 	void decodeData(const u8* buffer, size_t length);
@@ -41,9 +42,13 @@ public:
 
 	size_t getDataLength() const;
 
+	void setLength(size_t length) { mLength = length; }
+
     void setName(const std::string& name) { mName = name; }
 
     bool isGenericFrame() const { return true; }
+
+    std::string toString() override;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,GenericFrame);
 };

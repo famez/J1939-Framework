@@ -53,7 +53,7 @@ private:
 
 public:
     J1939DecodeException(const std::string& msg) : mMsg(msg) {}
-    ~J1939DecodeException() {}
+    ~J1939DecodeException() throw() {}
 
     const std::string& getMessage() const { return mMsg; }
 
@@ -66,7 +66,7 @@ private:
 
 public:
     J1939EncodeException(const std::string& msg) : mMsg(msg) {}
-    ~J1939EncodeException() {}
+    ~J1939EncodeException() throw() {}
 
     const std::string& getMessage() const { return mMsg; }
 };

@@ -15,7 +15,7 @@ namespace J1939 {
 class SPNNumeric: public SPN {
 private:
 	double mFormatGain;
-    s32 mFormatOffset;
+	double mFormatOffset;
 	u8 mByteSize;
 	std::string mUnits;
 	u32 mValue;
@@ -26,6 +26,8 @@ public:
 	virtual ~SPNNumeric();
 
 	double getFormatedValue() const ;
+
+	bool setFormattedValue(double value);
 
     void decode(const u8* buffer, size_t length);
     void encode(u8* buffer, size_t length) const;
@@ -46,11 +48,11 @@ public:
 
     void setFormatGain(double gain) { mFormatGain = gain; }
 
-    s32 getFormatOffset() const {
+    double getFormatOffset() const {
 		return mFormatOffset;
 	}
 
-    void setFormatOffset(s32 formatOffset) { mFormatOffset = formatOffset; }
+    void setFormatOffset(double formatOffset) { mFormatOffset = formatOffset; }
 
 	const std::string& getUnits() const {
 		return mUnits;
@@ -71,6 +73,9 @@ public:
      * Returns the maximum value for the given spn
      */
     u32 getMaxValue() const;
+
+    std::string toString() override;
+
 
 	IMPLEMENT_CLONEABLE(SPN, SPNNumeric);
 

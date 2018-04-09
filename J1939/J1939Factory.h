@@ -60,10 +60,30 @@ private:
 
 public:
 
+	/*
+	 * Returns the corresponding frame (if registered) from the given id and decodes the information from data and length
+	 */
     std::unique_ptr<J1939Frame> getJ1939Frame(u32 id, const u8* data, size_t length);
+    /*
+     * Returns the corresponding frame (if registered) from the given PGN
+     */
+    std::unique_ptr<J1939Frame> getJ1939Frame(u32 pgn);
 
+
+    /*
+	 * Returns the corresponding frame (if registered) from the given name
+	 */
+    std::unique_ptr<J1939Frame> getJ1939Frame(const std::string& name);
+
+
+    /*
+     * Registers the given frame in the factory letting the factory to create a copy of it and, if neccesary, decoding it.
+     */
     bool registerFrame(const J1939Frame&);
 
+    /*
+     * Registers the predefined frames that we can fing in J1939Protocol
+     */
 	void registerPredefinedFrames();
 
     void unregisterAllFrames();

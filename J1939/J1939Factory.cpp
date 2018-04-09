@@ -13,6 +13,7 @@
 #include "Diagnosis/Frames/DM1.h"
 #include "Addressing/AdressClaimFrame.h"
 #include "FMS/VIFrame.h"
+#include "FMS/TellTale/FMS1Frame.h"
 
 
 
@@ -65,6 +66,40 @@ std::unique_ptr<J1939Frame> J1939Factory::getJ1939Frame(u32 id, const u8* data, 
 
 }
 
+
+std::unique_ptr<J1939Frame> J1939Factory::getJ1939Frame(u32 pgn) {
+
+
+	J1939Frame* frame = nullptr, *retFrame = nullptr;
+
+	std::map<u32, J1939Frame*>::iterator iter = mFrames.find(pgn);
+
+	if(iter == mFrames.end() || ((frame = iter->second) == NULL)) {
+		//printf("Pgn: %u not found", pgn);
+		return std::unique_ptr<J1939Frame>(nullptr);
+	}
+
+	retFrame = frame->clone();
+
+	return std::unique_ptr<J1939Frame>(retFrame);
+
+}
+
+std::unique_ptr<J1939Frame> J1939Factory::getJ1939Frame(const std::string& name) {
+
+
+	for(auto iter = mFrames.begin(); iter != mFrames.end(); ++iter) {
+		if(iter->second != nullptr && iter->second->getName() == name) {
+
+			return std::unique_ptr<J1939Frame>(iter->second->clone());
+
+		}
+	}
+
+	return std::unique_ptr<J1939Frame>(nullptr);
+}
+
+
 bool J1939Factory::registerFrame(const J1939Frame& frame) {
 
 	if(mFrames.find(frame.getPGN()) == mFrames.end()) {
@@ -91,6 +126,12 @@ void J1939Factory::registerPredefinedFrames() {
         VIFrame frame;
         registerFrame(frame);
     }
+
+    {
+    	FMS1Frame frame;
+    	registerFrame(frame);
+    }
+
 
 //	{
 //		DM1 frame;

@@ -24,8 +24,13 @@ TPCMFrame::~TPCMFrame() {
 
 }
 
-void TPCMFrame::decodeData(const u8* buffer, size_t) {
+void TPCMFrame::decodeData(const u8* buffer, size_t length) {
 
+
+	if(length != TP_CM_SIZE) {
+		throw J1939DecodeException("[TPCMFrame::decodeData] Buffer length does not match the expected "
+				"length. Buffer length:" + std::to_string(length) + ". Expected length: " + std::to_string(TP_CM_SIZE));
+	}
 
 	mCtrlType = buffer[0];
 

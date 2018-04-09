@@ -52,7 +52,7 @@ public:
 	void consumeFrame(const J1939Frame&);
 
 	void clearSession();
-    void finishSession(ESessionStatus status) { mStatus = status; }
+    void setStatus(ESessionStatus status) { mStatus = status; }
 
     bool sessionInCourse() { return mSessionInCourse; }
 

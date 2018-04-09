@@ -23,7 +23,7 @@
 #define NUMBER_KEY					"number"
 #define TYPE_KEY					"type"
 #define OFFSET_KEY					"offset"
-
+#define LENGTH_KEY					"length"
 
 
 #define NUM_FORMAT_GAIN_KEY			"formatGain"
@@ -35,6 +35,8 @@
 #define STAT_BIT_SIZE_KEY			"bitSize"
 
 #define STAT_DESCRIPTIONS_KEY       "descriptions"
+
+
 
 
 
@@ -82,6 +84,10 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 
         if(jsonFrame.isMember(NAME_KEY) && jsonFrame[NAME_KEY].isString()) {      //Optional
             frame.setName(jsonFrame[NAME_KEY].asString());
+        }
+
+        if(jsonFrame.isMember(LENGTH_KEY) && jsonFrame[LENGTH_KEY].isUInt()) {		//Optional
+        	frame.setLength(jsonFrame[LENGTH_KEY].asUInt());
         }
 
 
@@ -165,6 +171,7 @@ bool J1939DataBase::writeJsonFile(const std::string& file) {
 
 		jsonFrame[PGN_KEY] = frame->getPGN();
         jsonFrame[NAME_KEY] = frame->getName();
+        jsonFrame[LENGTH_KEY] = frame->getDataLength();
 
 
 
@@ -231,11 +238,11 @@ bool J1939DataBase::parseSPNNumeric(GenericFrame& frame, const Json::Value& spn)
 	const Json::Value& byteSize = 			spn[NUM_BYTE_SIZE_KEY];
 	const Json::Value& units = 				spn[NUM_UNITS_KEY];
 
-	if(!formatGain.isDouble() || !formatOffset.isInt() || !byteSize.isUInt() || !units.isString()) {
+	if(!formatGain.isDouble() || !formatOffset.isDouble() || !byteSize.isUInt() || !units.isString()) {
 		return false;
 	}
 
-    SPNNumeric spnNum(number.asUInt(), name.asString(), offset.asUInt(), formatGain.asDouble(), formatOffset.asInt(), byteSize.asUInt(), units.asString());
+    SPNNumeric spnNum(number.asUInt(), name.asString(), offset.asUInt(), formatGain.asDouble(), formatOffset.asDouble(), byteSize.asUInt(), units.asString());
 
 	frame.registerSPN(spnNum);
 

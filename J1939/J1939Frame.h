@@ -155,6 +155,8 @@ public:
 
     virtual bool isGenericFrame() const { return false; }
 
+    virtual std::string toString();
+
 };
 
 } /* namespace J1939 */

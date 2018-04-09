@@ -64,6 +64,10 @@ public:
 	void setName(const std::string& name) {
 		mName = name;
 	}
+
+	virtual std::string toString();
+
+
 };
 
 } /* namespace J1939 */

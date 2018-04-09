@@ -45,6 +45,8 @@ public:
     void setBitSize(u8 size) { mBitSize = size; }
 
 	u8 getValue() const { return mValue; }
+	bool setValue(u8 value);
+
 
     /*
      * Methods to add/get descriptions over the different status numbers
@@ -53,6 +55,8 @@ public:
     std::string getValueDescription(u8 value) const;
     void clearValueDescriptions();
     DescMap getValueDescriptionsMap() const;
+
+    std::string toString() override;
 
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 

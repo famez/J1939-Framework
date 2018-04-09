@@ -10,7 +10,7 @@
 
 #include <Types.h>
 
-#define FORMAT_FLAG_OFFSET		31
+#include "CanCommon.h"
 
 namespace Can {
 

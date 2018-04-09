@@ -5,8 +5,17 @@
  *      Author: root
  */
 
+
+#include <string.h>
+#include <string>
+#include <sstream>
+#include <iostream>
+
+#include <Utils.h>
+
+
 #include "SPNNumeric.h"
-#include "J1939Common.h"
+#include "../J1939Common.h"
 
 namespace J1939 {
 
@@ -52,8 +61,33 @@ double SPNNumeric::getFormatedValue() const {
 	return aux * mFormatGain + mFormatOffset;
 }
 
+bool SPNNumeric::setFormattedValue(double value) {
+
+	double aux = (value - mFormatOffset) / mFormatGain;
+
+	if(aux >= 0 && (aux < (1 << (mByteSize*8)))) {
+		mValue = static_cast<u32>(aux);
+		return true;
+	}
+	return false;
+}
+
 u32 SPNNumeric::getMaxValue() const {
     return 0xFFFFFFFF >> (4 - mByteSize) * 8;
+}
+
+
+std::string SPNNumeric::toString() {
+
+	std::string retval = SPN::toString();
+
+	std::stringstream sstr;
+
+	sstr << " -> Value: " << getFormatedValue() << " " << mUnits << std::endl;
+
+	retval += sstr.str();
+	return retval;
+
 }
 
 

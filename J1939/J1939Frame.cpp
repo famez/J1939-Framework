@@ -6,6 +6,11 @@
  */
 
 #include <string.h>
+#include <string>
+#include <sstream>
+#include <iostream>
+
+#include <Utils.h>
 
 #include "J1939Frame.h"
 
@@ -44,7 +49,7 @@ void J1939Frame::decode(u32 identifier, const u8* buffer, size_t length) {
 	mPriority = identifier & J1939_PRIORITY_MASK;
 
 
-	//Leave data decoding to derived class
+	//Leave data decoding to inherited class
 	decodeData(buffer, length);
 
 }
@@ -98,5 +103,41 @@ void J1939Frame::copy(const J1939Frame& other) {
 
 }
 
+
+std::string J1939Frame::toString() {
+
+
+	std::stringstream sstr;
+
+	sstr << "Name" << std::tab <<
+			"PGN" << std::tab <<
+			"Source Address" << std::tab <<
+			"PDU format" << std::tab;
+
+	if(getPDUFormatGroup() == PDU_FORMAT_1) {
+		sstr << "Dest Address" << std::tab;
+	}
+
+	sstr << "Priority" << std::tab;
+
+	sstr << std::endl;
+
+
+	sstr << mName << std::tab <<
+			std::uppercase << std::hex << mPgn << std::tab <<
+			static_cast<u32>(mSrcAddr) << std::tab << std::tab <<
+			((getPDUFormatGroup() == PDU_FORMAT_1) ? "1" : "2") << std::tab << std::tab;
+
+	if(getPDUFormatGroup() == PDU_FORMAT_1) {
+		sstr << static_cast<u32>(mDstAddr) << std::tab;
+	}
+
+	sstr << static_cast<u32>(mPriority) << std::tab;
+
+	sstr << std::endl;
+
+	return sstr.str();
+
+}
 
 } /* namespace J1939 */
