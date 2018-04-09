@@ -1,0 +1,204 @@
+[
+	{
+		"name" : "DD",
+		"pgn" : 65276,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.40000000000000002,
+				"formatOffset" : 0,
+				"name" : "Fuel Level",
+				"number" : 96,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "%"
+			}
+		]
+	},
+	{
+		"name" : "CCVS",
+		"pgn" : 65265,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0,
+				"name" : "Wheel Speed",
+				"number" : 84,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "km/h"
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Pedal released",
+					"Pedal depressed",
+					"Error",
+					"Not available"
+				],
+				"name" : "Brake Switch",
+				"number" : 597,
+				"offset" : 3,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 6,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Pedal released",
+					"Pedal depressed",
+					"Error",
+					"Not available"
+				],
+				"name" : "Clutch Switch",
+				"number" : 598,
+				"offset" : 3,
+				"type" : 1
+			}
+		]
+	},
+	{
+		"name" : "EEC1",
+		"pgn" : 61444,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.125,
+				"formatOffset" : 0,
+				"name" : "Engine Speed",
+				"number" : 190,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "rpm"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 1.0,
+				"formatOffset" : -125,
+				"name" : "Percent Torque",
+				"number" : 513,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "%"
+			}
+		]
+	},
+	{
+		"name" : "AMB",
+		"pgn" : 65269,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.5,
+				"formatOffset" : 0,
+				"name" : "Barometric Pressure",
+				"number" : 108,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kPa"
+			}
+		]
+	},
+	{
+		"name" : "VDC2",
+		"pgn" : 61449,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00048828125,
+				"formatOffset" : -15,
+				"name" : "Lateral Acceleration",
+				"number" : 1809,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "m/s2"
+			}
+		]
+	},
+	{
+		"name" : "EBC2",
+		"pgn" : 65215,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0,
+				"name" : "Front Axe Speed",
+				"number" : 904,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Front Axle, Left Wheel",
+				"number" : 905,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Front Axle, Right Wheel",
+				"number" : 906,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Rear Axle 1, Left Wheel",
+				"number" : 907,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Rear Axle 1, Right Wheel",
+				"number" : 908,
+				"offset" : 5,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Rear Axle 2, Left Wheel",
+				"number" : 909,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "kph"
+			},{
+				"byteSize" : 1,
+				"formatGain" : 0.0625,
+				"formatOffset" : -7.18125,
+				"name" : "Relative Speed; Rear Axle 2, Right Wheel",
+				"number" : 910,
+				"offset" : 7,
+				"type" : 0,
+				"units" : "kph"
+			}
+		]
+	}
+]

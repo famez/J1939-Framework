@@ -1,0 +1,6 @@
+create frame name: wheel_speed title: CCVS
+create frame name: engine_speed title: EEC1
+set frame wheel_speed period: 100 priority: 2 source: 20 spn: 84 value: 50
+set frame engine_speed period: 100 priority: 2 source: 20 spn: 190 value: 200
+send frame wheel_speed interface: can0
+send frame engine_speed interface: can0
