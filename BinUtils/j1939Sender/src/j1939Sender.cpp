@@ -49,6 +49,8 @@
 #define SEND_TOKEN			"send"
 #define UNSEND_TOKEN		"unsend"
 
+#define EXEC_TOKEN			"exec"
+
 #define LIST_TOKEN			"list"
 #define PRINT_TOKEN			"print"
 #define SET_TOKEN			"set"
@@ -137,6 +139,8 @@ std::map<std::string, ICanSender*> senders;
 //Backend to determine the available interfaces
 ICanHelper* canHelper;
 
+bool silent;
+
 
 void registerCommands();
 const CommandHelper& findSubCommand(const CommandHelper&, std::list<std::string>&);
@@ -155,23 +159,27 @@ void processCreateFrameCommand(std::list<std::string> arguments);
 void parseListFramesCommand();
 void parseListInterfacesCommand();
 void parseSendFrameCommand(std::list<std::string> arguments);
+void parseExecCommand(std::list<std::string> arguments);
+
+
+void execScript(const std::string& file);
+
 //void parseUnsendFrameCommand(std::list<std::string> arguments);
 
 
 
 int main(int argc, char **argv) {
 
-	//Print the version
-	std::cout << "Version: " << VERSION_STR << std::endl;
-
 
 	//Get options
 	int c;
 	std::string file;
+	silent = false;
 
 	static struct option long_options[] =
 	{
 		{"file", required_argument, NULL, 'f'},
+		{"silent", no_argument, NULL, 's'},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -179,7 +187,7 @@ int main(int argc, char **argv) {
 	while (1)
 	{
 
-		c = getopt_long (argc, argv, "f:",
+		c = getopt_long (argc, argv, "f:s:",
 				   long_options, NULL);
 
 		/* Detect the end of the options. */
@@ -191,6 +199,10 @@ int main(int argc, char **argv) {
 		case 'f':
 			file = optarg;
 			break;
+		case 's':
+			silent = true;
+			break;
+
 		default:
 			break;
 		}
@@ -198,6 +210,11 @@ int main(int argc, char **argv) {
 
 
 	std::string line;
+
+	//Print the version
+	if(!silent) {
+		std::cout << "Version: " << VERSION_STR << std::endl;
+	}
 
 
 	//Register possible commands to execute by the user
@@ -224,7 +241,7 @@ int main(int argc, char **argv) {
 	canHelper = new Sockets::SocketCanHelper;
 
 	if(canHelper->isCompatible()) {
-		std::cout << "Detected SocketCan framework... Using SocketCan backend" << std::endl;
+		if(!silent) std::cout << "Detected SocketCan framework... Using SocketCan backend" << std::endl;
 	} else {
 		delete canHelper;
 		canHelper = nullptr;
@@ -250,35 +267,16 @@ int main(int argc, char **argv) {
 
 	//If any file is defined, first execute commands from it
 	if(!file.empty()) {
-
-		std::cout << "Script file passed as argument" << std::endl;
-
-		std::ifstream fileScript;
-		fileScript.open(file);
-
-		if(fileScript.is_open()) {
-
-			std::cout << "Executing commands..." << std::endl;
-
-			while (std::getline(fileScript, line)) {
-
-				std::cout << SENDER_PROMPT << line << std::endl;		//Feedback of read command in the file
-
-				parseLine(line);
-			}
-		} else {
-			std::cerr << "Could not open the script file..." << std::endl;
-		}
-
+		execScript(file);
 	}
 
 
 	//Read from standard input
-	std::cout << SENDER_PROMPT;
+	if(!silent) std::cout << SENDER_PROMPT;
 
 	while (std::getline(std::cin, line)) {
 		parseLine(line);
-		std::cout << SENDER_PROMPT;
+		if(!silent) std::cout << SENDER_PROMPT;
 	}
 
 
@@ -302,6 +300,8 @@ void registerCommands() {
 			CommandHelper(SET_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSetFrameCommand))
 	).addSubCommand(
 			CommandHelper(SEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSendFrameCommand))
+	).addSubCommand(
+			CommandHelper(EXEC_TOKEN, parseExecCommand)
 	)/*.addSubCommand(
 			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand))
 	)*/;
@@ -466,6 +466,7 @@ void parseListFramesCommand() {
 
 		J1939Frame* frame = iter->second;
 		size_t size = frame->getDataLength();
+		std::vector<std::string> txInterfaces;
 
 		//Add the given name when the frame was created
 		str << iter->first << ": ";
@@ -490,6 +491,14 @@ void parseListFramesCommand() {
 			}
 
 
+			//Check if the frame is being sent through an interface
+			for(auto iter = senders.begin(); iter != senders.end(); ++iter) {
+				if(iter->second->isSent(id)) {
+					txInterfaces.push_back(iter->first);
+				}
+			}
+
+
 
 		} catch (J1939EncodeException& e) {
 
@@ -503,6 +512,15 @@ void parseListFramesCommand() {
 
 		if(periodIter != framePeriods.end()) {
 			str << " Period: " << std::dec << periodIter->second << " ms";
+		}
+
+		//Print if the frame is being sent
+		if(!txInterfaces.empty()) {
+
+			str << " Sent from: ";
+			for(auto iter = txInterfaces.begin(); iter != txInterfaces.end(); ++iter) {
+				str << *iter << " ";
+			}
 		}
 
 		str << std::endl;
@@ -896,3 +914,42 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 
 }
 
+void execScript(const std::string& file) {
+
+	std::string line;
+
+	//If any file is defined, execute commands from it
+//	if(!silent) std::cout << "Script file passed as argument" << std::endl;
+
+	std::ifstream fileScript;
+	fileScript.open(file);
+
+	if(fileScript.is_open()) {
+
+		if(!silent) std::cout << "Executing commands..." << std::endl;
+
+		while (std::getline(fileScript, line)) {
+
+			std::cout << (!silent ? SENDER_PROMPT : "") << line << std::endl;		//Feedback of read command in the file
+
+			parseLine(line);
+		}
+	} else {
+		std::cerr << "Could not open the script file..." << std::endl;
+	}
+
+
+}
+
+void parseExecCommand(std::list<std::string> arguments) {
+
+	std::string file = arguments.front();
+	arguments.pop_front();
+
+	if(arguments.empty()) {
+		execScript(file);
+	} else {
+		std::cerr << "Too many arguments..." << std::endl;
+	}
+
+}

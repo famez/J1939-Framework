@@ -5,6 +5,7 @@
 	<projects>
 		<project>CAN</project>
 		<project>J1939</project>
+		<project>Threads</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
