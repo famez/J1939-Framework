@@ -72,7 +72,7 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 		return false;
 	}
 
-	for(size_t i = 0; i < data.size(); ++i) {
+	for(unsigned int i = 0; i < data.size(); ++i) {
 
 		const Json::Value& jsonFrame = data[i];
 
@@ -99,7 +99,7 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 				return false;
 			}
 
-			for(size_t j = 0; j < spns.size(); ++j) {
+			for(unsigned int j = 0; j < spns.size(); ++j) {
 				const Json::Value& spn = spns[j];
 
 				if(!spn.isMember(NAME_KEY) || !spn.isMember(NUMBER_KEY) || !spn.isMember(TYPE_KEY) || !spn.isMember(OFFSET_KEY) ) {
@@ -165,9 +165,13 @@ bool J1939DataBase::writeJsonFile(const std::string& file) {
 		return false;
 	}
 
+	unsigned int pos;
+
 	for(std::vector<GenericFrame>::const_iterator frame = mFrames.begin(); frame != mFrames.end(); ++frame) {
 
-		Json::Value& jsonFrame = data[frame - mFrames.begin()];
+
+		pos = frame - mFrames.begin();
+		Json::Value& jsonFrame = data[pos];
 
 		jsonFrame[PGN_KEY] = frame->getPGN();
         jsonFrame[NAME_KEY] = frame->getName();

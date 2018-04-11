@@ -78,14 +78,17 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 
 bool SocketCanHelper::isCompatible() {
 
-	int sock;
+	/*int sock;
 
 	if((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) >= 0) {
 		close(sock);		//We can open a socket of type CAN. Kernel has support for SocketCan.
 		return true;
 	}
 
-	return false;
+	return false;*/
+
+
+	return !getCanIfaces().empty();		//No interfaces available
 
 }
 

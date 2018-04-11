@@ -227,6 +227,7 @@ int main(int argc, char **argv) {
 		std::cout << "Detected SocketCan framework... Using SocketCan backend" << std::endl;
 	} else {
 		delete canHelper;
+		canHelper = nullptr;
 		std::cerr << "SocketCan framework not detected..." << std::endl;
 	}
 
@@ -237,6 +238,7 @@ int main(int argc, char **argv) {
 			std::cout << "Detected PeakCan framework... Using PeakCan backend" << std::endl;
 		} else {
 			delete canHelper;
+			canHelper = nullptr;
 			std::cerr << "PeakCan framework not detected..." << std::endl;
 		}
 	}

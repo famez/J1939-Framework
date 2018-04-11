@@ -3,6 +3,7 @@
 	<name>J1939</name>
 	<comment></comment>
 	<projects>
+		<project>Common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

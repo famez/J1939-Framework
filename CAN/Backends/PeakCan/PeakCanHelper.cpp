@@ -63,7 +63,7 @@ std::set<std::string> PeakCanHelper::getCanIfaces() {
 		TPCANStatus status = PeakCanSymbols::getInstance().CAN_GetValue(channel->second.getIndex(), PCAN_CHANNEL_CONDITION,
 														&value, sizeof(value));
 
-		if((status == PCAN_ERROR_OK) && (value & PCAN_CHANNEL_AVAILABLE)) {		//The channel is available, we add to the set
+		if((status == PCAN_ERROR_OK) && (value & PCAN_CHANNEL_PCANVIEW)) {		//The channel is available or occupied, we add to the set
 
 			retVal.insert(channel->second.getName());
 
