@@ -38,6 +38,8 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 	int sock;
 	struct sockaddr_can addr;
 
+	memset(&addr, 0, sizeof(sockaddr_can));
+
 	std::set<std::string> retVal;
 
 	if((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
@@ -60,7 +62,7 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 		addr.can_ifindex = ifr.ifr_ifindex;
 
 		//Only Can Interfaces will succeed to do a proper bind of an address family of type CAN
-		if(bind(sock, (struct sockaddr *)&addr, sizeof(addr)) >= 0) {
+		if(bind(sock, (sockaddr *)&addr, sizeof(addr)) >= 0) {
 			retVal.insert(tmp->ifa_name);
 		}
 

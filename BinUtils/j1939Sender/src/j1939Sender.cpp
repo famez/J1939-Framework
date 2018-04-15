@@ -163,6 +163,8 @@ void parseExecCommand(std::list<std::string> arguments);
 
 
 void execScript(const std::string& file);
+void uninitializeVariables();
+
 
 //void parseUnsendFrameCommand(std::list<std::string> arguments);
 
@@ -764,6 +766,7 @@ void processCommandParameters(std::list<std::string> arguments, ParamParserFunc 
 
 
 void parseQuitCommand() {
+	uninitializeVariables();
 	std::cout << "Exiting..." << std::endl;
 	exit(0);
 }
@@ -951,5 +954,28 @@ void parseExecCommand(std::list<std::string> arguments) {
 	} else {
 		std::cerr << "Too many arguments..." << std::endl;
 	}
+
+}
+
+void uninitializeVariables() {
+
+
+	//Dealloc allocated frames
+	for(auto iter = framesToSend.begin(); iter != framesToSend.end(); ++iter) {
+		delete iter->second;
+	}
+
+	//Stop and delete senders
+	for(auto iter = senders.begin(); iter != senders.end(); ++iter) {
+		iter->second->finalize();		//Finish threads
+		delete iter->second;
+	}
+
+	//Dealloc canHelper
+	delete canHelper;
+
+	J1939Factory::getInstance().unregisterAllFrames();
+
+
 
 }

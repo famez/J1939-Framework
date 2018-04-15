@@ -36,8 +36,10 @@ SocketCanSender::~SocketCanSender() {
 
 bool SocketCanSender::_initialize(std::string interface, u32 bitrate) {
 
-	struct ifreq ifr;
-	struct sockaddr_can addr;
+	ifreq ifr;
+	sockaddr_can addr;
+
+	memset(&addr, 0, sizeof(sockaddr_can));
 
 	/* open socket */
 	mSock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -89,6 +91,7 @@ void SocketCanSender::_sendFrame(const CanFrame& frame) const {
 	int retval;
 
 	can_frame frameToSend;
+	memset(&frameToSend, 0, sizeof(can_frame));
 
 	frameToSend.can_id = frame.getId();
 	frameToSend.can_id |= (frame.isExtendedFormat() ? 1 : 0) << FORMAT_FLAG_OFFSET;
