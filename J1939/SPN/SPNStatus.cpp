@@ -11,6 +11,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <Assert.h>
+
 
 #include "SPNStatus.h"
 #include "../J1939Common.h"
@@ -19,25 +21,8 @@ namespace J1939 {
 
 SPNStatus::SPNStatus(u32 number, const std::string& name, size_t offset, u8 bitOffset, u8 bitSize) : SPN(number, name, offset), mBitOffset(bitOffset), mBitSize(bitSize), mValue(0) {
 
-
-	if(mBitOffset > 7) {
-		mBitOffset = 7;
-		printf("[SPNStatus::SPNStatus] Bad bitOffset");
-	}
-
-
-	if(mBitSize > 8) {
-		mBitSize = 8;
-		printf("[SPNStatus::SPNStatus] Bad bitSize");
-	}
-
-
-	if(mBitOffset + mBitSize > 8) {
-		mBitSize = 0;
-		mBitOffset = 0;
-		printf("[SPNStatus::SPNStatus] Bad bitSize + bitOffset");
-	}
-
+	ASSERT(mBitSize > 0)
+	ASSERT(mBitOffset + mBitSize <= 8)
 }
 
 SPNStatus::~SPNStatus() {

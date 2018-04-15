@@ -42,7 +42,7 @@
 
 namespace J1939 {
 
-J1939DataBase::J1939DataBase() {
+J1939DataBase::J1939DataBase() : mErrorCode(ERROR_OK) {
 
 }
 
@@ -57,6 +57,7 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 
 
 	if(!fileStream.is_open()) {
+		mErrorCode = ERROR_FILE_NOT_FOUND;
 		return false;
 	}
 
@@ -65,8 +66,13 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 
 	std::string errs;
 	if(!Json::parseFromStream(rbuilder, fileStream, &data, &errs)) {
+		mErrorCode = ERROR_JSON_SYNTAX;
 		return false;
 	}
+
+
+	//If we return in the middle of the method, there was a problem with some of the tokens
+	mErrorCode = ERROR_UNEXPECTED_TOKENS;
 
 	if(!data.isArray()) {
 		return false;
@@ -137,7 +143,8 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 
 
 				default:
-
+					mErrorCode = ERROR_UNKNOWN_SPN_TYPE;
+					return false;
 					break;
 				}
 
@@ -149,6 +156,8 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 
 
 	}
+
+	mErrorCode = ERROR_OK;
 
 	return true;
 
@@ -246,6 +255,13 @@ bool J1939DataBase::parseSPNNumeric(GenericFrame& frame, const Json::Value& spn)
 		return false;
 	}
 
+	//Check if bytesize does not exceed the permitted values
+	if(byteSize.asUInt() > SPN_NUMERIC_MAX_BYTE_SYZE || byteSize.asUInt() == 0) {
+		mErrorCode = ERROR_OUT_OF_RANGE;
+		return false;
+	}
+
+
     SPNNumeric spnNum(number.asUInt(), name.asString(), offset.asUInt(), formatGain.asDouble(), formatOffset.asDouble(), byteSize.asUInt(), units.asString());
 
 	frame.registerSPN(spnNum);
@@ -268,7 +284,13 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
 	const Json::Value& bitSize = spn[STAT_BIT_SIZE_KEY];
 
 
-	if(!bitOffset.isUInt() || !bitSize.isInt()) {
+	if(!bitOffset.isUInt() || !bitSize.isUInt()) {
+		return false;
+	}
+
+	//Check the limits of the input values
+	if(bitSize.asUInt() == 0 || (bitSize.asUInt() + bitOffset.asUInt()) > 8) {
+		mErrorCode = ERROR_OUT_OF_RANGE;
 		return false;
 	}
 

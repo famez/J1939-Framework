@@ -10,6 +10,7 @@
 
 #include "SPN.h"
 
+
 namespace J1939 {
 
 class SPNNumeric: public SPN {

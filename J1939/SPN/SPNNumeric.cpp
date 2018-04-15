@@ -12,16 +12,20 @@
 #include <iostream>
 
 #include <Utils.h>
-
+#include <Assert.h>
 
 #include "SPNNumeric.h"
 #include "../J1939Common.h"
+
 
 namespace J1939 {
 
 SPNNumeric::SPNNumeric(u32 number, const std::string& name, size_t offset, double formatGain, s32 formatOffset, u8 byteSize, const std::string& units) :
     SPN(number, name, offset),
 	 mFormatGain(formatGain), mFormatOffset(formatOffset), mByteSize(byteSize), mUnits(units), mValue(0) {
+
+	ASSERT(byteSize > 0)
+	ASSERT(byteSize <= SPN_NUMERIC_MAX_BYTE_SYZE)
 
 }
 
@@ -32,7 +36,7 @@ SPNNumeric::~SPNNumeric() {
 
 void SPNNumeric::decode(const u8* buffer, size_t length) {
 
-    if(mByteSize > length || mByteSize > 4) {       //mValue can hold only 4 bytes cause it is of type u32
+    if(mByteSize > length || mByteSize > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
         throw J1939DecodeException("[SPNNumeric::decode] Spn length is bigger than expected");
     }
 	mValue = 0;
@@ -44,7 +48,7 @@ void SPNNumeric::decode(const u8* buffer, size_t length) {
 
 void SPNNumeric::encode(u8* buffer, size_t length) const {
 
-    if(mByteSize > length || mByteSize > 4) {       //mValue can hold only 4 bytes cause it is of type u32
+    if(mByteSize > length || mByteSize > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
         throw J1939EncodeException("[SPNNumeric::encode] Spn length is bigger than expected");
     }
 
