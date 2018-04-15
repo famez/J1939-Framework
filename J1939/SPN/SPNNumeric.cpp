@@ -69,7 +69,9 @@ bool SPNNumeric::setFormattedValue(double value) {
 
 	double aux = (value - mFormatOffset) / mFormatGain;
 
-	if(aux >= 0 && (aux < (1 << (mByteSize*8)))) {
+	u64 threshold = (((u64)(1)) << (mByteSize*8));
+
+	if(aux >= 0 && (aux < threshold)) {
 		mValue = static_cast<u32>(aux);
 		return true;
 	}
