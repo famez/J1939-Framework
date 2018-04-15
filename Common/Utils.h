@@ -25,7 +25,6 @@ u32 getElapsedMillis(timespec* start, timespec* end);
 }
 
 
-u32 getElapsedMillis(timespec* start, timespec* end);
 
 
 

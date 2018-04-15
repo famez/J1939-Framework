@@ -27,7 +27,7 @@ bool BamConnectionManager::getRawData(u8** data, size_t& length) {
 	*data = new u8[length];
 
 	for(std::vector<TPDTFrame>::const_iterator iter = mDTFrames.begin(); iter != mDTFrames.end(); iter++) {
-		memcpy((void*)(*data + offset), (void*)iter->getData(), MIN(length - offset, TP_DT_PACKET_SIZE));
+		memcpy((void*)(*data + offset), (void*)iter->getData(), J1939_MIN(length - offset, TP_DT_PACKET_SIZE));
 		offset += TP_DT_PACKET_SIZE;
 		if(offset >= length)
 		{

@@ -121,7 +121,7 @@ void CommonCanSender::run() {
 
 			timespec start = iter->getTxTimestamp();
 
-			if((start.tv_nsec == 0 && start.tv_sec == 0) || (getElapsedMillis(&start, &now) >= iter->getPeriod())) {
+			if((start.tv_nsec == 0 && start.tv_sec == 0) || (Utils::getElapsedMillis(&start, &now) >= iter->getPeriod())) {
 				_sendFrame(iter->getFrame());
 				iter->setTxTimestamp(now);
 				//printf("Frame dispatched!! Time: %lld. sec, %.9ld nanos\n", (long long)now.tv_sec, now.tv_nsec);
