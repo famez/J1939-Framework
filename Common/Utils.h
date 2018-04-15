@@ -13,15 +13,15 @@
 
 #include "Types.h"
 
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)>(b)?(a):(b))
+#define J1939_MIN(a,b) ((a)<(b)?(a):(b))
+#define J1939_MAX(a,b) ((a)>(b)?(a):(b))
 
-namespace std {
-  template <typename _CharT, typename _Traits>
-  inline basic_ostream<_CharT, _Traits> &
-  tab(basic_ostream<_CharT, _Traits> &__os) {
-    return __os.put(__os.widen('\t'));
-  }
+namespace Utils {
+
+u32 getElapsedMillis(timespec* start, timespec* end);
+
+
+
 }
 
 

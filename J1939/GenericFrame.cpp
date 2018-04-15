@@ -101,7 +101,7 @@ size_t GenericFrame::getDataLength() const {
 
     //If we have specified a length, return the maximum value between the real size and the specified one.
     //This is done if not all spns for this frame are defined and we can have a length smaller than the one necessary to transmit the frame.
-	return MAX(mLength, maxOffset + sizeLastSpn);
+	return J1939_MAX(mLength, maxOffset + sizeLastSpn);
 }
 
 
