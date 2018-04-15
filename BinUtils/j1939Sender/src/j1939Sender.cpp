@@ -155,7 +155,7 @@ void parseListCommandsCommand();
 void processCommandParameters(std::list<std::string> arguments, ParamParserFunc func);
 void parsePrintFrameCommand(std::list<std::string> arguments);
 void parseQuitCommand();
-void processCreateFrameCommand(std::list<std::string> arguments);
+void parseCreateFrameCommand(std::list<std::string> arguments);
 void parseListFramesCommand();
 void parseListInterfacesCommand();
 void parseSendFrameCommand(std::list<std::string> arguments);
@@ -223,9 +223,30 @@ int main(int argc, char **argv) {
 	registerCommands();
 
 	//Load database
-	J1939::J1939DataBase ddbb;
+	J1939DataBase ddbb;
 	if(!ddbb.parseJsonFile(DATABASE_PATH)) {
-		std::cerr << "Json database not found in " DATABASE_PATH << std::endl;
+
+		switch (ddbb.getLastError()) {
+			case J1939DataBase::ERROR_FILE_NOT_FOUND:
+				std::cerr << "Json database not found in " DATABASE_PATH << std::endl;
+				break;
+			case J1939DataBase::ERROR_JSON_SYNTAX:
+				std::cerr << "Json file has syntax errors" << std::endl;
+				break;
+			case J1939DataBase::ERROR_UNEXPECTED_TOKENS:
+				std::cerr << "Json file has tokens not identified by the application" << std::endl;
+				break;
+			case J1939DataBase::ERROR_OUT_OF_RANGE:
+				std::cerr << "Json file has some values that exceed the permitted ranges" << std::endl;
+				break;
+			case J1939DataBase::ERROR_UNKNOWN_SPN_TYPE:
+				std::cerr << "Json file has undefined type for SPN" << std::endl;
+				break;
+			default:
+				std::cerr << "Something in the database is not working" << std::endl;
+				break;
+		}
+
 		return -1;
 	}
 
@@ -247,7 +268,7 @@ int main(int argc, char **argv) {
 	} else {
 		delete canHelper;
 		canHelper = nullptr;
-		std::cerr << "SocketCan framework not detected..." << std::endl;
+		//std::cerr << "SocketCan framework not detected..." << std::endl;
 	}
 
 	if(canHelper == nullptr) {
@@ -258,7 +279,7 @@ int main(int argc, char **argv) {
 		} else {
 			delete canHelper;
 			canHelper = nullptr;
-			std::cerr << "PeakCan framework not detected..." << std::endl;
+			//std::cerr << "PeakCan framework not detected..." << std::endl;
 		}
 	}
 
@@ -289,7 +310,7 @@ int main(int argc, char **argv) {
 void registerCommands() {
 
 	baseCommand.addSubCommand(
-			CommandHelper(CREATE_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, processCreateFrameCommand))
+			CommandHelper(CREATE_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseCreateFrameCommand))
 	).addSubCommand(
 			CommandHelper(QUIT_TOKEN, parseQuitCommand)
 	).addSubCommand(
@@ -387,7 +408,7 @@ void parseListCommandsCommand() {
 }
 
 
-void processCreateFrameCommand(std::list<std::string> arguments) {
+void parseCreateFrameCommand(std::list<std::string> arguments) {
 
 	std::string name;
 	std::string pgn;
