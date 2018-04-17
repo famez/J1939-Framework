@@ -18,6 +18,140 @@
 		]
 	},
 	{
+		"name" : "VDHR",
+		"pgn" : 65217,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 4,
+				"formatGain" : 5,
+				"formatOffset" : 0,
+				"name" : "High resolution total vehicle distance",
+				"number" : 917,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "m"
+			}
+		]
+	},
+	{
+		"name" : "LFE",
+		"pgn" : 65266,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 4,
+				"formatGain" : 0.05,
+				"formatOffset" : 0,
+				"name" : "Fuel Rate",
+				"number" : 183,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "L/h"
+			}
+		]
+	},
+	{
+		"name" : "HRLFC",
+		"pgn" : 64777,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 4,
+				"formatGain" : 0.001,
+				"formatOffset" : 0,
+				"name" : "High resolution engine total fuel used",
+				"number" : 5054,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "L"
+			}
+		]
+	},
+	{
+		"name" : "EEC2",
+		"pgn" : 61443,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0,
+				"name" : "Accelerator pedal position 1",
+				"number" : 91,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "%"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 1,
+				"formatOffset" : 0,
+				"name" : "Engine Percent Load At Current Speed",
+				"number" : 92,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "%"
+			}
+		]
+	},
+	{
+		"name" : "DC1",
+		"pgn" : 65102,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"bitOffset" : 6,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"all bus doors disabled",
+					"at least 1 bus door enabled",
+					"Error",
+					"Not available"
+				],
+				"name" : "Status 2 of doors",
+				"number" : 3411,
+				"offset" : 0,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"inside bus",
+					"outside bus",
+					"Error",
+					"Not available"
+				],
+				"name" : "Ramp/Wheel chairlift",
+				"number" : 1820,
+				"offset" : 0,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 0,
+				"bitSize" : 4,
+				"descriptions" : 
+				[
+					"at least 1 door is open",
+					"closing last door",
+					"all doors closed"
+				],
+				"name" : "Position of doors",
+				"number" : 1821,
+				"offset" : 0,
+				"type" : 1
+			}
+		]
+	},
+	{
 		"name" : "CCVS",
 		"pgn" : 65265,
 		"length" : 8,
