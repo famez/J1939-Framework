@@ -128,7 +128,7 @@ std::map<std::string, J1939Frame*> framesToSend;
 std::map<std::string, u32> framePeriods;
 
 //Take all the tokens from a line (separated by spaces) and introduces them in the list
-std::list<std::string> splitArguments(std::string);
+std::list<std::string> splitTokens(std::string);
 
 
 //Backends in charge of sending the corresponding frames
@@ -324,7 +324,10 @@ void parseLine(const std::string& line) {
 		return;		//Nothing to do
 	}
 
-	std::list<std::string> tokens = splitArguments(line);
+	//If there is the character #, omit every character until the end of line (including the # character)
+	size_t found = line.find_first_of('#');
+
+	std::list<std::string> tokens = splitTokens(line.substr(0, found));
 
 	const CommandHelper& cmd = findSubCommand(baseCommand, tokens);
 
@@ -349,13 +352,13 @@ void parseLine(const std::string& line) {
 }
 
 
-std::list<std::string> splitArguments(std::string arguments) {
+std::list<std::string> splitTokens(std::string arguments) {
 
 	std::list<std::string> retVal;
 
 	size_t startArgPos = 0, endArgPos = 0;
 
-	while(endArgPos != arguments.size()) {
+	while(startArgPos != std::string::npos) {
 
 
 		endArgPos = arguments.find_first_of(' ', startArgPos);
@@ -366,7 +369,7 @@ std::list<std::string> splitArguments(std::string arguments) {
 
 		retVal.push_back(arguments.substr(startArgPos, endArgPos - startArgPos));
 
-		startArgPos = endArgPos + 1;
+		startArgPos = arguments.find_first_not_of(' ', endArgPos);
 
 	}
 
