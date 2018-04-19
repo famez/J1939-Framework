@@ -28,7 +28,7 @@ public:
 
 	bool isCompatible();
 
-	ICanHelper::EBackends getBackend() const override { return BACKEND_PEAKCAN; }
+	std::string getBackend() const override { return "PeakCan"; }
 
 	ICanSender* allocateCanSender() const override;
 

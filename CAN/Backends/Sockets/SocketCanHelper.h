@@ -25,7 +25,7 @@ public:
 
 	bool isCompatible() override;
 
-	ICanHelper::EBackends getBackend() const override { return BACKEND_SOCKET_CAN; }
+	std::string getBackend() const override { return "SocketCan"; }
 
 	ICanSender* allocateCanSender() const override;
 

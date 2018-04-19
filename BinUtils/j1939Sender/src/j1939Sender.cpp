@@ -30,8 +30,7 @@
 #include <SPN/SPNStatus.h>
 
 //CAN includes
-#include <Backends/Sockets/SocketCanHelper.h>		//SocketCan backend
-#include <Backends/PeakCan/PeakCanHelper.h>			//PeakCan backend
+#include <ICanHelper.h>
 
 
 
@@ -136,8 +135,8 @@ std::list<std::string> splitArguments(std::string);
 std::map<std::string, ICanSender*> senders;
 
 
-//Backend to determine the available interfaces
-ICanHelper* canHelper;
+//Backends to determine the available interfaces
+std::set<ICanHelper*> canHelpers;
 
 bool silent;
 
@@ -260,31 +259,12 @@ int main(int argc, char **argv) {
 	}
 
 
-	//Determine the backend to use (SocketCan/PeakCan)
-	canHelper = new Sockets::SocketCanHelper;
+	//Determine the possible backends
 
-	if(canHelper->isCompatible()) {
-		if(!silent) std::cout << "Detected SocketCan framework... Using SocketCan backend" << std::endl;
-	} else {
-		delete canHelper;
-		canHelper = nullptr;
-		//std::cerr << "SocketCan framework not detected..." << std::endl;
-	}
+	canHelpers = ICanHelper::getCanHelpers();
 
-	if(canHelper == nullptr) {
-
-		canHelper = new PeakCan::PeakCanHelper;
-		if(canHelper->isCompatible()) {
-			std::cout << "Detected PeakCan framework... Using PeakCan backend" << std::endl;
-		} else {
-			delete canHelper;
-			canHelper = nullptr;
-			//std::cerr << "PeakCan framework not detected..." << std::endl;
-		}
-	}
-
-	if(canHelper == nullptr) {
-		std::cerr << "Can transmission is disabled due to inexistent layer that supports can transmission" << std::endl;
+	for(auto iter = canHelpers.begin(); iter != canHelpers.end(); ++iter) {
+		if(!silent)	std::cout << (*iter)->getBackend() << " backend detected" << std::endl;
 	}
 
 
@@ -836,11 +816,13 @@ std::list<std::string> getSubCommandNames(const CommandHelper& command) {
 
 void parseListInterfacesCommand() {
 
+	for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
 
-	std::set<std::string> interfaces = canHelper->getCanIfaces();
+		std::set<std::string> interfaces = (*helper)->getCanIfaces();
 
-	for(auto iter = interfaces.begin(); iter != interfaces.end(); ++iter) {
-		std::cout << *iter << std::endl;
+		for(auto iter = interfaces.begin(); iter != interfaces.end(); ++iter) {
+			std::cout << *iter << std::endl;
+		}
 	}
 
 }
@@ -861,17 +843,23 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 	}
 
 	J1939Frame* j1939Frame = frameIter->second;
+	ICanHelper* canHelper = nullptr;		//Backend to use
 
-	auto func = [&interface](const std::string& key, const std::string& value) {
+	auto func = [&interface, &canHelper](const std::string& key, const std::string& value) {
 
 		if(key == INTERFACE_TOKEN) {
 
-			//Check that the corresponding interface really exists
-			std::set<std::string> interfaces = canHelper->getCanIfaces();
+			for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
 
-			if(interfaces.find(value) != interfaces.end()) {
-				interface = value;
-				return;
+
+				//Check that the corresponding interface really exists
+				std::set<std::string> interfaces = (*helper)->getCanIfaces();
+
+				if(interfaces.find(value) != interfaces.end()) {
+					interface = value;
+					canHelper = *helper;
+					return;
+				}
 			}
 		}
 
@@ -992,11 +980,13 @@ void uninitializeVariables() {
 		delete iter->second;
 	}
 
-	//Dealloc canHelper
-	delete canHelper;
 
+	//Dealloc canHelpers
+	ICanHelper::deallocateCanHelpers();
+
+
+	//Deallocate frames
 	J1939Factory::getInstance().unregisterAllFrames();
-
 
 
 }
