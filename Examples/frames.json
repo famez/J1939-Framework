@@ -36,6 +36,130 @@
 		]
 	},
 	{
+		"name" : "EFL",
+		"pgn" : 65263,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 4,
+				"formatOffset" : 0,
+				"name" : "Engine Fuel Delivery Pressure",
+				"number" : 94,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "KPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.05,
+				"formatOffset" : 0,
+				"name" : "Engine Extended Crankcase Blow-by Pressure",
+				"number" : 22,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "KPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0,
+				"name" : "Engine Oil Level",
+				"number" : 98,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "%"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 4,
+				"formatOffset" : 0,
+				"name" : "Engine Oil Pressure",
+				"number" : 100,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "KPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.0078125,
+				"formatOffset" : -250,
+				"name" : "Engine Crankcase Pressure",
+				"number" : 101,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "KPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 2,
+				"formatOffset" : 0,
+				"name" : "Engine Coolant Pressure",
+				"number" : 109,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "KPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0,
+				"name" : "Engine Coolant Level",
+				"number" : 111,
+				"offset" : 7,
+				"type" : 0,
+				"units" : "%"
+			}
+		]
+	},
+	{
+		"name" : "LFC",
+		"pgn" : 65257,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 4,
+				"formatGain" : 0.5,
+				"formatOffset" : 0,
+				"name" : "Engine total fuel used",
+				"number" : 250,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "L"
+			}
+		]
+	},
+	{
+		"name" : "ET1",
+		"pgn" : 65262,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 1,
+				"formatOffset" : -40,
+				"name" : "Engine Coolant Temperature",
+				"number" : 110,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "°C"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.03125,
+				"formatOffset" : -273,
+				"name" : "Engine Oil Temperature 1",
+				"number" : 175,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "°C"
+			}
+		]
+	},
+	{
 		"name" : "LFE",
 		"pgn" : 65266,
 		"length" : 8,
