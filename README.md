@@ -90,8 +90,11 @@ A CLI utility to create frames, configure them and send them through the CAN bus
     wheel_speed: 08fef120 00 00 32 00 00 00 00 00  Period: 100 ms Sent from: can0 
 
 ```
-### Examples/
+### Database/
 Contains a database with some frames defined in FMS standard. This database is used by the utilities.
+
+### Scripts/
+Scripts to execute with j1939Sender utility
 
 
 ### J1939Viewer/
