@@ -118,6 +118,8 @@ public:
 	void decode(u32 identifier, const u8* buffer, size_t length);
 	void encode(u32& identifier, u8* buffer, size_t& length) const;
 
+	u32 getIdentifier() const;
+
 protected:
 	/**
 	 * Decodes the given data

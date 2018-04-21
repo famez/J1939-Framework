@@ -165,7 +165,7 @@ void execScript(const std::string& file);
 void uninitializeVariables();
 
 
-//void parseUnsendFrameCommand(std::list<std::string> arguments);
+void parseUnsendFrameCommand(std::list<std::string> arguments);
 
 
 
@@ -305,9 +305,9 @@ void registerCommands() {
 			CommandHelper(SEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSendFrameCommand))
 	).addSubCommand(
 			CommandHelper(EXEC_TOKEN, parseExecCommand)
-	)/*.addSubCommand(
+	).addSubCommand(
 			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand))
-	)*/;
+	);
 
 }
 
@@ -690,50 +690,46 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 	};
 
-
 	processCommandParameters(arguments, func);
 
+	u32 id;
+	size_t length = frame->getDataLength();
+	u8* buff = new u8[length];
+
+	frame->encode(id, buff, length);
+
+	auto period = framePeriods.find(name);
+
+
+
+	CanFrame canFrame;
+
+	//J1939 data is always transmitted in extended format
+	canFrame.setExtendedFormat(true);
+
+	//Set identifier
+	canFrame.setId(id);
+
+	//Set data
+	std::string data;
+	data.append((char*)buff, length);
+
+	canFrame.setData(data);
+
+	delete[] buff;
+
+
+	if(period == framePeriods.end()) {
+		return;
+	}
 
 	//If the frame is being sent, refresh the information to the sender
 	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-		u32 id;
-		size_t length = frame->getDataLength();
-		u8* buff = new u8[length];
-
-		frame->encode(id, buff, length);
-
-
 		if(sender->second->isSent(id)) {
 
-			auto period = framePeriods.find(name);
-
-			if(period == framePeriods.end()) {
-				std::cerr << "Period not defined..." << std::endl;
-				delete[] buff;
-				continue;
-			}
-
-			CanFrame canFrame;
-
-			//J1939 data is always transmitted in extended format
-			canFrame.setExtendedFormat(true);
-
-			//Set identifier
-			canFrame.setId(id);
-
-			//Set data
-			std::string data;
-			data.append((char*)buff, length);
-
-			canFrame.setData(data);
-
-
 			sender->second->sendFrame(canFrame, period->second);
-
 		}
-
-		delete[] buff;
 
 	}
 
@@ -953,6 +949,41 @@ void execScript(const std::string& file) {
 		std::cerr << "Could not open the script file..." << std::endl;
 	}
 
+}
+
+void parseUnsendFrameCommand(std::list<std::string> arguments) {
+
+	std::string name = arguments.front();
+	arguments.pop_front();
+	auto frameIter = framesToSend.find(name);
+
+
+	if(frameIter == framesToSend.end()) {
+		std::cerr << "Frame not defined..." << std::endl;
+		return;
+	}
+
+	J1939Frame* frame = frameIter->second;
+	std::string interface;
+
+	auto func = [&interface](const std::string& key, const std::string& value) {
+
+		if(key == INTERFACE_TOKEN) {
+
+			interface = value;
+		}
+
+	};
+
+	processCommandParameters(arguments, func);
+
+	u32 id = frame->getIdentifier();
+
+	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+
+		if(interface.empty() || interface == sender->first) sender->second->unSendFrame(id);
+
+	}
 
 }
 

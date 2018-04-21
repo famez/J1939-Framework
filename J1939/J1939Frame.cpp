@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include <Utils.h>
+#include <Assert.h>
 
 #include "J1939Frame.h"
 
@@ -27,6 +28,8 @@ namespace std {
 namespace J1939 {
 
 J1939Frame::J1939Frame(u32 pgn) : mPriority(0), mSrcAddr(J1939_INVALID_ADDRESS), mPgn(pgn), mDstAddr(J1939_INVALID_ADDRESS), mName(UNKNOWN_FRAME) {
+
+	ASSERT((getPDUFormatGroup() == PDU_FORMAT_2) ? true : ((((mPgn & J1939_DST_ADDR_MASK)) >> J1939_DST_ADDR_OFFSET) != 0))
 
 }
 
@@ -90,6 +93,26 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) const {
 	encodeData(buffer, length);
 
 	length = getDataLength();
+
+}
+
+u32 J1939Frame::getIdentifier() const {
+
+	u32 identifier;
+
+	identifier = mSrcAddr;
+
+	u32 aux = mPgn;
+
+	if(getPDUFormatGroup() == PDU_FORMAT_1) {							//Group 1
+		aux = mPgn | ((mDstAddr & J1939_DST_ADDR_MASK) << J1939_DST_ADDR_OFFSET);
+	}
+
+	identifier |= ((aux & J1939_PGN_MASK) << J1939_PGN_OFFSET);
+
+	identifier |= (mPriority << J1939_PRIORITY_OFFSET);
+
+	return identifier;
 
 }
 
