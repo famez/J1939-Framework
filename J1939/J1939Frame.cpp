@@ -29,7 +29,7 @@ namespace J1939 {
 
 J1939Frame::J1939Frame(u32 pgn) : mPriority(0), mSrcAddr(J1939_INVALID_ADDRESS), mPgn(pgn), mDstAddr(J1939_INVALID_ADDRESS), mName(UNKNOWN_FRAME) {
 
-	ASSERT((getPDUFormatGroup() == PDU_FORMAT_2) ? true : ((((mPgn & J1939_DST_ADDR_MASK)) >> J1939_DST_ADDR_OFFSET) != 0))
+	ASSERT((getPDUFormatGroup() == PDU_FORMAT_2) ? true : ((((mPgn & J1939_DST_ADDR_MASK)) >> J1939_DST_ADDR_OFFSET) == 0))
 
 }
 

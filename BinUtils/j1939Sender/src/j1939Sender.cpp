@@ -692,15 +692,19 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 	processCommandParameters(arguments, func);
 
+
+
+	auto period = framePeriods.find(name);
+
+	if(period == framePeriods.end()) {
+		return;
+	}
+
 	u32 id;
 	size_t length = frame->getDataLength();
 	u8* buff = new u8[length];
 
 	frame->encode(id, buff, length);
-
-	auto period = framePeriods.find(name);
-
-
 
 	CanFrame canFrame;
 
@@ -717,11 +721,6 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 	canFrame.setData(data);
 
 	delete[] buff;
-
-
-	if(period == framePeriods.end()) {
-		return;
-	}
 
 	//If the frame is being sent, refresh the information to the sender
 	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
