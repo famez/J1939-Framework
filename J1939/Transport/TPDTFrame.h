@@ -24,8 +24,9 @@ private:
 
 public:
 	TPDTFrame();
-	TPDTFrame(u8 sq, u8* data);
+	TPDTFrame(u8 sq, u8* data, size_t length);
 	virtual ~TPDTFrame();
+
 
 	//Implements J1939Frame methods
 	void decodeData(const u8* buffer, size_t length);

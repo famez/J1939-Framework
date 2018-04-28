@@ -9,18 +9,21 @@
 
 #include <string.h>
 
+#include <Utils.h>
+
 #define TPDT_NAME      "Transport Data"
 
 namespace J1939 {
 
 TPDTFrame::TPDTFrame() : J1939Frame(TP_DT_PGN), mSQ(0) {
-	memset(mData, 0, TP_DT_PACKET_SIZE);
+	memset(mData, 0xFF, TP_DT_PACKET_SIZE);
     mName = TPDT_NAME;
 }
 
 
-TPDTFrame::TPDTFrame(u8 sq, u8* data) : J1939Frame(TP_DT_PGN), mSQ(sq) {
-	memcpy(mData, data, TP_DT_PACKET_SIZE);
+TPDTFrame::TPDTFrame(u8 sq, u8* data, size_t length) : TPDTFrame() {
+	mSQ = sq;
+	memcpy(mData, data, J1939_MIN(length, TP_DT_PACKET_SIZE));
 }
 
 TPDTFrame::~TPDTFrame() {
