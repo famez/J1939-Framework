@@ -6,27 +6,34 @@
  */
 
 #include <string.h>
+#include <sstream>
+#include <iostream>
 
 #include "VIFrame.h"
 
 #define VI_MAX_SIZE		200
 
+#define VIN_STR			"Vehicle Identification Number (VIN)"
+#define VIN_FRAME_NAME	"VIN"
+
 namespace J1939 {
 
-VIFrame::VIFrame() : J1939Frame(VI_PGN), mValidId(false) {
+VIFrame::VIFrame() : J1939Frame(VI_PGN) {
+
+	mName = VIN_FRAME_NAME;
 
 }
 
-VIFrame::VIFrame(const std::string& id) : J1939Frame(VI_PGN), mValidId(false) {
-	setID(id);
+VIFrame::VIFrame(const std::string& id) : VIFrame() {
+	setVIN(id);
 }
 
 VIFrame::~VIFrame() {
 }
 
-void VIFrame::setID(const std::string& id) {
+void VIFrame::setVIN(const std::string& id) {
 
-	mValidId = false;
+	mId.clear();
 
 	if(id.size() > VI_MAX_SIZE) {
 		return;
@@ -38,14 +45,14 @@ void VIFrame::setID(const std::string& id) {
 		}
 	}
 	mId = id;
-	mValidId = true;
 }
 
 void VIFrame::decodeData(const u8* buffer, size_t length) {
 	//Not using strchr because buffer is not null terminated
 	char aux[length];
 	size_t strLength = 0;
-	mValidId = false;
+	bool validId = false;
+	validId = false;
 
 	for(size_t i = 0; i < length; i++) {
 		if(buffer[i] == J1939_STR_TERMINATOR) {
@@ -58,24 +65,31 @@ void VIFrame::decodeData(const u8* buffer, size_t length) {
 		memcpy(aux, buffer, strLength);
 		aux[strLength] = NULL_TERMINATOR;
 		mId = aux;
-		mValidId = true;
+		validId = true;
 	}
 
-	if(!mValidId) {
+	if(!validId) {
         throw J1939DecodeException("[VIFrame::decodeData] Invalid id");
 	}
 
 }
 
 void VIFrame::encodeData(u8* buffer, size_t ) const{
-	if(!mValidId) {
-        throw J1939EncodeException("[VIFrame::encodeData] Invalid id");
-	}
 
 	memcpy(buffer, mId.c_str(), mId.size());
 
 	buffer[mId.size()] = J1939_STR_TERMINATOR;
 }
 
+std::string VIFrame::toString() {
+
+	std::stringstream sstr;
+	sstr << J1939Frame::toString();
+
+	sstr << VIN_STR << ": " << mId << std::endl;
+
+	return sstr.str();
+
+}
 
 } /* namespace J1939 */
