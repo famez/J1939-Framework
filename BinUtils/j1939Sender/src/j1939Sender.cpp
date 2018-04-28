@@ -28,6 +28,9 @@
 #include <GenericFrame.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
+#include <FMS/VIFrame.h>
+#include <Transport/BAM/BamFragmenter.h>
+
 
 //CAN includes
 #include <ICanHelper.h>
@@ -37,7 +40,7 @@
 #define VERSION_STR			"1.0"
 
 //Bitrate for J1939 protocol
-#define BAUD_250K		250000
+#define BAUD_250K			250000
 
 
 
@@ -74,6 +77,8 @@
 
 #define SPN_TOKEN			"spn"
 #define VALUE_TOKEN			"value"
+
+#define VIN_TOKEN			"vin"
 
 
 #define DATABASE_PATH		"/etc/j1939/frames.json"
@@ -159,13 +164,22 @@ void parseListFramesCommand();
 void parseListInterfacesCommand();
 void parseSendFrameCommand(std::list<std::string> arguments);
 void parseExecCommand(std::list<std::string> arguments);
+void parseUnsendFrameCommand(std::list<std::string> arguments);
+
+
 
 
 void execScript(const std::string& file);
 void uninitializeVariables();
 
 
-void parseUnsendFrameCommand(std::list<std::string> arguments);
+
+bool parseSetGenericParams(const std::string& name, J1939Frame* frame, const std::string& key, const std::string& value);
+
+void sendFrameThroughInterface(const J1939Frame* frame, u32 period, const std::string& interface);
+void unsendFrameThroughInterface(const J1939Frame* frame, const std::string& interface);
+bool isFrameSent(const J1939Frame* frame, const std::string& interface);
+
 
 
 
@@ -250,7 +264,6 @@ int main(int argc, char **argv) {
 	}
 
 	//Register frames in the factory
-	J1939Factory::getInstance().registerPredefinedFrames();
 
 	const std::vector<GenericFrame>& frames = ddbb.getParsedFrames();
 
@@ -499,7 +512,7 @@ void parseListFramesCommand() {
 
 			//Check if the frame is being sent through an interface
 			for(auto iter = senders.begin(); iter != senders.end(); ++iter) {
-				if(iter->second->isSent(id)) {
+				if(isFrameSent(frame, iter->first)) {
 					txInterfaces.push_back(iter->first);
 				}
 			}
@@ -570,38 +583,9 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 	SPN* spn = nullptr;
 
-	auto func = [name, &frame, &spn](const std::string& key, const std::string& value) {
+	auto paramParser = [name, &frame, &spn](const std::string& key, const std::string& value) {
 
-		if(key == PRIORITY_TOKEN) {
-
-			try {
-
-				u32 priority = std::stoul(value);
-
-
-				if(priority == (priority & J1939_PRIORITY_MASK)) {
-					frame->setPriority(static_cast<u8>(priority));
-				} else {
-					std::cerr << "Priority out of range" << std::endl;
-				}
-
-
-			} catch (std::invalid_argument& e) {
-				std::cerr << "Priority is not a number..." << std::endl;
-			}
-
-		} else if(key == PERIOD_TOKEN) {
-			try {
-
-				u32 period = std::stoul(value);
-
-				framePeriods[name] = period;
-
-
-			} catch (std::invalid_argument& e) {
-				std::cerr << "Period is not a number..." << std::endl;
-			}
-		} else if(key == SPN_TOKEN) {
+		if(key == SPN_TOKEN) {		//Setting a SPN
 
 			if(!frame->isGenericFrame()) {
 				std::cerr << "This frame does not have standard SPNs..." << std::endl;
@@ -622,7 +606,7 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 				std::cerr << "spn is not a number..." << std::endl;
 			}
 
-		} else if(key == VALUE_TOKEN) {
+		} else if(key == VALUE_TOKEN) {		//The value used to set the SPN
 
 			if(!spn) {
 				std::cerr << "Not spn to which assign this value..." << std::endl;
@@ -668,29 +652,33 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 			spn = nullptr;
 
-		} else if(key == SOURCE_TOKEN) {
+		} else {		//If we are not setting a SPN, maybe we are setting generic parameters of a frame...
 
-			try {
+			//Parse generic parameters as the period to send the frames, the priority, the source address, dst address and so on
+			if(!parseSetGenericParams(name, frame, key, value)) {
 
-				u32 src = std::stoul(value, nullptr, 16);
 
-				if(src == (src & J1939_SRC_ADDR_MASK)) {
-					frame->setSrcAddr(static_cast<u8>(src));
+				//If this function returns false, it means that the given key is not a generic parameter, but it is particular of certain frame
+				if(key == VIN_TOKEN) {
+
+					if(frame->getPGN() == VI_PGN) {
+
+						VIFrame* viFrame = static_cast<VIFrame*>(frame);
+
+						viFrame->setVIN(value);
+					}
+
 				} else {
-					std::cerr << "Source address out of range" << std::endl;
+					std::cerr << "Unknown parameter..." << std::endl;
 				}
 
-			} catch (std::invalid_argument& e) {
-				std::cerr << "Source address is not a number..." << std::endl;
-			}
 
-		} else {
-			std::cerr << "Unknown parameter..." << std::endl;
+			}
 		}
 
 	};
 
-	processCommandParameters(arguments, func);
+	processCommandParameters(arguments, paramParser);
 
 
 
@@ -725,13 +713,12 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 	//If the frame is being sent, refresh the information to the sender
 	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-		if(sender->second->isSent(id)) {
+		if(isFrameSent(frame, sender->first)) {
 
-			sender->second->sendFrame(canFrame, period->second);
+			sendFrameThroughInterface(frame, period->second, sender->first);
 		}
 
 	}
-
 
 }
 
@@ -840,7 +827,7 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 		return;
 	}
 
-	J1939Frame* j1939Frame = frameIter->second;
+	const J1939Frame* j1939Frame = frameIter->second;
 	ICanHelper* canHelper = nullptr;		//Backend to use
 
 	auto func = [&interface, &canHelper](const std::string& key, const std::string& value) {
@@ -893,34 +880,171 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 		return;
 	}
 
+	sendFrameThroughInterface(j1939Frame, period->second, interface);
+
+}
+
+void sendFrameThroughInterface(const J1939Frame* j1939Frame, u32 period, const std::string& interface) {
+
 
 	//Send the frame with the configured periodicity
 	ICanSender* sender = senders[interface];
 
-	//Encode the J1939 frame into raw can frame
-	u32 id;
+
 	size_t length = j1939Frame->getDataLength();
-	u8* buff = new u8[length];
-
-	j1939Frame->encode(id, buff, length);
-
 	CanFrame canFrame;
+	u32 id;
+	u8* buff;
+	std::string data;
 
 	//J1939 data is always transmitted in extended format
 	canFrame.setExtendedFormat(true);
 
-	//Set identifier
-	canFrame.setId(id);
+	//If the frame is bigger than 8 bytes, we use BAM
+	if(length > MAX_CAN_DATA_SIZE) {
 
-	//Set data
-	std::string data;
-	data.append((char*)buff, length);
+		std::vector<CanFrame> canFrames;
+		BamFragmenter fragmenter;
+		fragmenter.fragment(*j1939Frame);
 
-	canFrame.setData(data);
+		const TPCMFrame& connFrame = fragmenter.getConnFrame();
+		length = connFrame.getDataLength();
 
-	delete[] buff;
+		buff = new u8[length];
 
-	sender->sendFrame(canFrame, period->second);
+		connFrame.encode(id, buff, length);
+
+		//Set identifier
+		canFrame.setId(id);
+
+		//Set data
+		std::string data;
+		data.append((char*)buff, length);
+
+		canFrame.setData(data);
+
+		delete[] buff;
+
+		canFrames.push_back(canFrame);
+
+		std::vector<TPDTFrame> dataFrames = fragmenter.getDataFrames();
+
+		for(auto iter = dataFrames.begin(); iter != dataFrames.end(); ++iter) {
+
+			length = iter->getDataLength();
+			buff = new u8[length];
+			iter->encode(id, buff, length);
+
+			//Set identifier
+			canFrame.setId(id);
+
+			//Set data
+			std::string data;
+			data.append((char*)buff, length);
+
+			canFrame.setData(data);
+
+			delete[] buff;
+
+			canFrames.push_back(canFrame);
+
+		}
+
+		sender->sendFrames(canFrames, period);
+
+
+	} else {			//Can be sent in one frame
+
+		buff = new u8[length];
+
+		j1939Frame->encode(id, buff, length);
+
+		//Set identifier
+		canFrame.setId(id);
+
+		//Set data
+		std::string data;
+		data.append((char*)buff, length);
+
+		canFrame.setData(data);
+
+		delete[] buff;
+
+		sender->sendFrame(canFrame, period);
+
+	}
+
+
+}
+
+
+void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string& interface) {
+
+
+	std::vector<u32> ids;
+
+
+	//If the frame is bigger than 8 bytes, we use BAM
+	if(j1939Frame->getDataLength() > MAX_CAN_DATA_SIZE) {
+
+		BamFragmenter fragmenter;
+		fragmenter.fragment(*j1939Frame);
+
+		const TPCMFrame& connFrame = fragmenter.getConnFrame();
+
+		ids.push_back(connFrame.getIdentifier());
+
+		std::vector<TPDTFrame> dataFrames = fragmenter.getDataFrames();
+
+		for(auto iter = dataFrames.begin(); iter != dataFrames.end(); ++iter) {
+
+			ids.push_back(iter->getIdentifier());
+
+		}
+
+
+	} else {			//Can be sent in one frame
+
+		ids.push_back(j1939Frame->getIdentifier());
+	}
+
+	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+
+		if(interface.empty() || interface == sender->first) sender->second->unSendFrames(ids);
+
+	}
+
+}
+
+bool isFrameSent(const J1939Frame* frame, const std::string& interface) {
+
+	std::vector<u32> ids;
+	ICanSender* sender = senders[interface];
+
+	//If the frame is bigger than 8 bytes, we use BAM
+	if(frame->getDataLength() > MAX_CAN_DATA_SIZE) {
+
+		BamFragmenter fragmenter;
+		fragmenter.fragment(*frame);
+
+		const TPCMFrame& connFrame = fragmenter.getConnFrame();
+
+		ids.push_back(connFrame.getIdentifier());
+
+		std::vector<TPDTFrame> dataFrames = fragmenter.getDataFrames();
+
+		for(auto iter = dataFrames.begin(); iter != dataFrames.end(); ++iter) {
+
+			ids.push_back(iter->getIdentifier());
+
+		}
+
+	} else {			//Can be sent in one frame
+
+		ids.push_back(frame->getIdentifier());
+	}
+
+	return sender->isSent(ids);
 
 }
 
@@ -976,13 +1100,7 @@ void parseUnsendFrameCommand(std::list<std::string> arguments) {
 
 	processCommandParameters(arguments, func);
 
-	u32 id = frame->getIdentifier();
-
-	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
-
-		if(interface.empty() || interface == sender->first) sender->second->unSendFrame(id);
-
-	}
+	unsendFrameThroughInterface(frame, interface);
 
 }
 
@@ -1019,7 +1137,65 @@ void uninitializeVariables() {
 
 
 	//Deallocate frames
-	J1939Factory::getInstance().unregisterAllFrames();
+	J1939Factory::getInstance().releaseInstance();
 
 
+}
+
+
+bool parseSetGenericParams(const std::string& name, J1939Frame* frame, const std::string& key, const std::string& value) {
+
+
+	bool retVal = true;
+
+	if(key == PRIORITY_TOKEN) {
+
+		try {
+
+			u32 priority = std::stoul(value);
+
+
+			if(priority == (priority & J1939_PRIORITY_MASK)) {
+				frame->setPriority(static_cast<u8>(priority));
+			} else {
+				std::cerr << "Priority out of range" << std::endl;
+			}
+
+
+		} catch (std::invalid_argument& e) {
+			std::cerr << "Priority is not a number..." << std::endl;
+		}
+
+	} else if(key == PERIOD_TOKEN) {
+		try {
+
+			u32 period = std::stoul(value);
+
+			framePeriods[name] = period;
+
+
+		} catch (std::invalid_argument& e) {
+			std::cerr << "Period is not a number..." << std::endl;
+		}
+	} else if(key == SOURCE_TOKEN) {
+
+		try {
+
+			u32 src = std::stoul(value, nullptr, 16);
+
+			if(src == (src & J1939_SRC_ADDR_MASK)) {
+				frame->setSrcAddr(static_cast<u8>(src));
+			} else {
+				std::cerr << "Source address out of range" << std::endl;
+			}
+
+		} catch (std::invalid_argument& e) {
+			std::cerr << "Source address is not a number..." << std::endl;
+		}
+
+	} else {
+		retVal = false;
+	}
+
+	return retVal;
 }
