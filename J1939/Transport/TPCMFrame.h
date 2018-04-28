@@ -237,6 +237,38 @@ public:
 		return mTotalPackets;
 	}
 
+	void setAbortReason(u8 abortReason) {
+		mAbortReason = abortReason;
+	}
+
+	void setCtrlType(u8 ctrlType) {
+		mCtrlType = ctrlType;
+	}
+
+	void setDataPgn(u32 dataPgn) {
+		mDataPgn = dataPgn;
+	}
+
+	void setMaxPackets(u8 maxPackets) {
+		mMaxPackets = maxPackets;
+	}
+
+	void setNextPacket(u8 nextPacket) {
+		mNextPacket = nextPacket;
+	}
+
+	void setPacketsToTx(u8 packetsToTx) {
+		mPacketsToTx = packetsToTx;
+	}
+
+	void setTotalMsgSize(u16 totalMsgSize) {
+		mTotalMsgSize = totalMsgSize;
+	}
+
+	void setTotalPackets(u8 totalPackets) {
+		mTotalPackets = totalPackets;
+	}
+
 	IMPLEMENT_CLONEABLE(J1939Frame,TPCMFrame);
 
 };

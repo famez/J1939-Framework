@@ -113,6 +113,11 @@ void TPCMFrame::clear() {
 	mAbortReason = 0;
 
 	mDataPgn = 0;
+
+	setPriority(0);
+	setSrcAddr(0);
+	setDstAddr(J1939_BROADCAST_ADDRESS);
+
 }
 
 
@@ -165,7 +170,7 @@ void TPCMFrame::encodeEndOfMsgACK(u8* buffer) const {
 
 	buffer[0] = mTotalMsgSize & 0xFF;
 	buffer[1] = (mTotalMsgSize >> 8) & 0xFF;
-	buffer[2] = mMaxPackets;
+	buffer[2] = mTotalPackets;
 
 }
 void TPCMFrame::encodeConnAbort(u8* buffer) const {
@@ -177,7 +182,7 @@ void TPCMFrame::encodeBAM(u8* buffer) const {
 
 	buffer[0] = mTotalMsgSize & 0xFF;
 	buffer[1] = (mTotalMsgSize >> 8) & 0xFF;
-	buffer[2] = mMaxPackets;
+	buffer[2] = mTotalPackets;
 
 }
 
