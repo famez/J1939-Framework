@@ -73,7 +73,7 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) const {
 	}
 
 	if(length < getDataLength()) {
-        throw J1939EncodeException("[J1939Frame::encode] Length bigger than expected");
+        throw J1939EncodeException("[J1939Frame::encode] Length smaller than expected");
 	}
 
 	identifier = mSrcAddr;
