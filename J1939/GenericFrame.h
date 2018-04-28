@@ -28,6 +28,13 @@ public:
 	GenericFrame(const GenericFrame& other);
 	virtual ~GenericFrame();
 
+
+	/**
+	 * The copy-assingment and move-assignment are forbidden here. Use clone instead.
+	 */
+	GenericFrame& operator=(const GenericFrame& other) = delete;
+	GenericFrame& operator=(GenericFrame&& other) = delete;
+
     SPN* registerSPN(const SPN& spn);
 
     bool deleteSPN(u32 number);
