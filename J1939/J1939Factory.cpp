@@ -21,7 +21,7 @@ namespace J1939 {
 
 
 J1939Factory::J1939Factory() {
-
+	registerPredefinedFrames();
 }
 
 
@@ -109,6 +109,8 @@ bool J1939Factory::registerFrame(const J1939Frame& frame) {
         return false;
     }
 }
+
+
 
 void J1939Factory::registerPredefinedFrames() {
 

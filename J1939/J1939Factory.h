@@ -57,6 +57,11 @@ private:
 	J1939Factory();
 	std::map<u32, J1939Frame*> mFrames;
 
+	 /*
+	 * Registers the predefined frames that we can find in J1939Protocol
+	 */
+	void registerPredefinedFrames();
+
 
 public:
 
@@ -81,10 +86,6 @@ public:
      */
     bool registerFrame(const J1939Frame&);
 
-    /*
-     * Registers the predefined frames that we can fing in J1939Protocol
-     */
-	void registerPredefinedFrames();
 
     void unregisterAllFrames();
 
