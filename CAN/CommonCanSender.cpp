@@ -1,5 +1,5 @@
 /*
- * CanSender.cpp
+ * CommonCanSender.cpp
  *
  *  Created on: Apr 1, 2018
  *      Author: famez
@@ -20,6 +20,45 @@
 #include "CanCommon.h"
 
 namespace Can {
+
+void CommonCanSender::CanFrameRing::setFrames(const std::vector<CanFrame>& frames) {
+
+	mFrames = frames;
+
+	mCurrentpos = 0;
+
+}
+
+void CommonCanSender::CanFrameRing::pushFrame(const CanFrame& frame) {
+
+	mFrames.push_back(frame);
+	mCurrentpos = 0;
+
+}
+
+void CommonCanSender::CanFrameRing::shift() {
+
+	if(mCurrentpos == mFrames.size())		return;
+
+	if(++mCurrentpos == mFrames.size())		mCurrentpos = 0;
+
+}
+
+u32 CommonCanSender::CanFrameRing::getCurrentPeriod() const {
+
+	if(mFrames.empty())				return 0;
+
+	u32 period;
+
+	//Little algorithm to compensate the loss of accuracy when dividing the period by the number of frames
+	if(mCurrentpos + 1 == mFrames.size()) {			//Last frame. The period is slightly different to compensate the loss of the decimal part for the other frames which is accumulated
+		period = mPeriod - (mPeriod  / mFrames.size()) * (mFrames.size() - 1);
+	} else {										//Any other frame.
+		period = mPeriod / mFrames.size();
+	}
+
+	return period;
+}
 
 CommonCanSender::CommonCanSender() : mFinished(false) {
 
@@ -51,58 +90,66 @@ bool CommonCanSender::finalize() {
 
 bool CommonCanSender::sendFrame(CanFrame frame, u32 period) {
 
+	std::vector<CanFrame> frames;
+	frames.push_back(frame);
 
-	CanFramePeriod framePeriod(frame, period);
+	sendFrames(frames, period);
+
+	return true;
+
+}
+
+bool CommonCanSender::sendFrames(std::vector<CanFrame> frames, u32 period) {
+
+
+	if(frames.empty())	return false;
+
+	CanFrameRing ring(period);
+
+	ring.setFrames(frames);
 
 	//Check if a frame with the same id is being sent
-	auto found = mFrames.end();
+	auto found = mFrameRings.end();
 
 	//The access is concurrent but only for reading, not necessary to lock the mutex.
-	for(auto iter = mFrames.begin(); iter != mFrames.end(); ++iter) {
-		if(frame.getId() == iter->getFrame().getId()) {
-			found = iter;
-			break;
-		}
-	}
+	for(auto iter = mFrameRings.begin(); iter != mFrameRings.end(); ++iter) {
+		if(iter->getFrames().size() != ring.getFrames().size())		continue;
 
+		found = iter;
+
+		for(auto iter2 = iter->getFrames().begin(); iter2 != iter->getFrames().end(); ++iter2) {
+			if(iter2->getId() != (ring.getFrames())[iter2 - iter->getFrames().begin()].getId()) {
+				found = mFrameRings.end();
+				break;
+			}
+		}
+
+		if(found != mFrameRings.end()) 	break;
+
+	}
 
 	//To modify, lock the mutex
 	mFramesLock.lock();
 
-	if(found != mFrames.end()) {
-		mFrames.erase(found);
+	if(found != mFrameRings.end()) {
+		mFrameRings.erase(found);
 	}
 
-	mFrames.push_back(framePeriod);
+	mFrameRings.push_back(ring);
 
 	mFramesLock.unLock();
 
 	return true;
 
-
 }
+
 
 void CommonCanSender::unSendFrame(u32 id) {
 
-	//Check if a frame with the same id is being sent
-	auto found = mFrames.end();
+	std::vector<u32> ids;
+	ids.push_back(id);
 
-	//The access is concurrent but only for reading, not necessary to lock the mutex.
-	for(auto iter = mFrames.begin(); iter != mFrames.end(); ++iter) {
-		if(id == iter->getFrame().getId()) {
-			found = iter;
-			break;
-		}
-	}
-
-	//To modify, lock the mutex
-	mFramesLock.lock();
-
-	if(found != mFrames.end()) {
-		mFrames.erase(found);
-	}
-
-	mFramesLock.unLock();
+	unSendFrames(ids);
 
 
 }
@@ -117,14 +164,14 @@ void CommonCanSender::run() {
 
 		mFramesLock.lock();
 
-		for(auto iter = mFrames.begin(); iter != mFrames.end(); ++iter) {
+		for(auto ring = mFrameRings.begin(); ring != mFrameRings.end(); ++ring) {
 
-			timespec start = iter->getTxTimestamp();
+			timespec start = ring->getTxTimestamp();
 
-			if((start.tv_nsec == 0 && start.tv_sec == 0) || (Utils::getElapsedMillis(&start, &now) >= iter->getPeriod())) {
-				_sendFrame(iter->getFrame());
-				iter->setTxTimestamp(now);
-				//printf("Frame dispatched!! Time: %lld. sec, %.9ld nanos\n", (long long)now.tv_sec, now.tv_nsec);
+			if((start.tv_nsec == 0 && start.tv_sec == 0) || (Utils::getElapsedMillis(&start, &now) >= ring->getCurrentPeriod())) {
+				_sendFrame(ring->getCurrentFrame());		//Backend in charge of sending the frame
+				ring->shift();		//Move to the next frame
+				ring->setTxTimestamp(now);
 			}
 		}
 
@@ -140,14 +187,67 @@ void CommonCanSender::run() {
 
 }
 
+void CommonCanSender::unSendFrames(const std::vector<u32>& ids) {
+
+	//Check if a frame with the same id is being sent
+	auto found = mFrameRings.end();
+
+	//The access is concurrent but only for reading, not necessary to lock the mutex.
+	for(auto iter = mFrameRings.begin(); iter != mFrameRings.end(); ++iter) {
+		if(iter->getFrames().size() != ids.size())		continue;
+
+			found = iter;
+
+			for(auto iter2 = iter->getFrames().begin(); iter2 != iter->getFrames().end(); ++iter2) {
+				if(iter2->getId() != ids[iter2 - iter->getFrames().begin()]) {
+					found = mFrameRings.end();
+					break;
+				}
+			}
+
+			if(found != mFrameRings.end()) 	break;
+	}
+
+	//To modify, lock the mutex
+	mFramesLock.lock();
+
+	if(found != mFrameRings.end()) {
+		mFrameRings.erase(found);
+	}
+
+	mFramesLock.unLock();
+
+}
+
+bool CommonCanSender::isSent(const std::vector<u32>& ids) {
+
+	bool found = false;
+
+	for(auto iter = mFrameRings.begin(); iter != mFrameRings.end(); ++iter) {
+		if(iter->getFrames().size() != ids.size())		continue;
+
+		found = true;
+
+		for(auto iter2 = iter->getFrames().begin(); iter2 != iter->getFrames().end(); ++iter2) {
+			if(iter2->getId() != ids[iter2 - iter->getFrames().begin()]) {
+				found = false;
+				break;
+			}
+		}
+
+		if(found)		return true;
+	}
+
+	return false;
+
+}
+
 bool CommonCanSender::isSent(u32 id) {
 
-	for(auto iter = mFrames.begin(); iter != mFrames.end(); ++iter) {
-		if(iter->getFrame().getId() == id) {
-			return true;
-		}
-	}
-	return false;
+	std::vector<u32> ids;
+	ids.push_back(id);
+
+	return isSent(ids);
 
 }
 
