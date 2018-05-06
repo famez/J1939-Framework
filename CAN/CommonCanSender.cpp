@@ -156,7 +156,8 @@ void CommonCanSender::unSendFrame(u32 id) {
 
 void CommonCanSender::run() {
 
-	timespec now;
+	timespec now, current;
+	u32 elapsed;
 
 	while(!mFinished) {
 
@@ -168,10 +169,24 @@ void CommonCanSender::run() {
 
 			timespec start = ring->getTxTimestamp();
 
-			if((start.tv_nsec == 0 && start.tv_sec == 0) || (Utils::getElapsedMillis(&start, &now) >= ring->getCurrentPeriod())) {
+			elapsed = abs(Utils::getElapsedMillis(&start, &now));
+
+			if((start.tv_nsec == 0 && start.tv_sec == 0) || (elapsed >= ring->getCurrentPeriod())) {
 				_sendFrame(ring->getCurrentFrame());		//Backend in charge of sending the frame
 				ring->shift();		//Move to the next frame
-				ring->setTxTimestamp(now);
+
+				current = Utils::addMillis(&start, ring->getCurrentPeriod());		//Calculate the time in which the frame should have been sent
+
+				elapsed = abs(Utils::getElapsedMillis(&current, &now));	
+
+				//Does the calculated time (current) differ from the current one (now) more than the period?
+
+				if(elapsed < ring->getCurrentPeriod()) {		
+					ring->setTxTimestamp(current);		//If not, the calculated time will be the timestamp
+				} else {
+					ring->setTxTimestamp(now);		//If so, the current time will be the timestamp
+				}
+
 			}
 		}
 
