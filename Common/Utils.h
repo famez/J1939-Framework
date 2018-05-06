@@ -21,6 +21,8 @@ namespace Utils {
 u32 getElapsedMillis(timespec* start, timespec* end);
 
 
+timespec addMillis(timespec* time, u32 millis);
+
 
 }
 
