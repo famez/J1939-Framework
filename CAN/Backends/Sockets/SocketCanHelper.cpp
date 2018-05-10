@@ -9,6 +9,7 @@
 #include "SocketCanHelper.h"
 
 #include <unistd.h>
+#include <stdio.h>
 
 
 #include <net/if.h>
@@ -20,6 +21,10 @@
 
 
 #include "SocketCanSender.h"
+
+
+#define SYS_CLASS_NET_PATH		"/sys/class/net/"
+#define BITRATE_SUBPATH			"/can_bittiming/bitrate"
 
 namespace Can {
 namespace Sockets {
@@ -80,22 +85,125 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 
 bool SocketCanHelper::isCompatible() {
 
-	/*int sock;
-
-	if((sock = socket(PF_CAN, SOCK_RAW, CAN_RAW)) >= 0) {
-		close(sock);		//We can open a socket of type CAN. Kernel has support for SocketCan.
-		return true;
-	}
-
-	return false;*/
-
-
 	return !getCanIfaces().empty();		//No interfaces available
 
 }
 
-ICanSender* SocketCanHelper::allocateCanSender() const {
+ICanSender* SocketCanHelper::allocateCanSender() {
 	return new SocketCanSender;
+}
+
+
+bool SocketCanHelper::getIfFlag(std::string interface, short flag) {
+
+	ifreq ifr;
+
+	memset(&ifr, 0, sizeof(ifreq));
+
+
+	/* open socket */
+	int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
+	if(sock < 0)
+	{
+		return false;
+	}
+
+
+	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
+
+	if(ioctl(sock, SIOCGIFFLAGS, &ifr))
+	{
+		close(sock);
+		return false;
+	}
+
+	close(sock);
+
+	return (ifr.ifr_flags & flag);
+
+}
+
+bool SocketCanHelper::setIfFlag(std::string interface, short flag, bool value) {
+
+	ifreq ifr;
+
+	memset(&ifr, 0, sizeof(ifreq));
+
+
+	/* open socket */
+	int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
+	if(sock < 0)
+	{
+		return false;
+	}
+
+
+	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
+
+	if(ioctl(sock, SIOCGIFFLAGS, &ifr))
+	{
+		close(sock);
+		return false;
+	}
+
+	if(value)
+	{
+		ifr.ifr_flags |= flag;
+	}else{
+		ifr.ifr_flags &= ~(flag);
+	}
+
+	if(ioctl(sock, SIOCSIFFLAGS, &ifr))
+	{
+		close(sock);
+		return false;
+	}
+
+	close(sock);
+
+	return true;
+}
+
+
+bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
+
+	if(!getIfFlag(interface, IFF_UP)) {		//Interface is down?
+
+		//Up interface
+		if(!setIfFlag(interface, IFF_UP, true)) {		//Try to set the interface up
+			return false;	//Something went wrong
+		}
+	}
+
+
+	//Set bitrate
+	std::string bitratePath = SYS_CLASS_NET_PATH + interface + BITRATE_SUBPATH;
+
+	FILE* fp = fopen(bitratePath.c_str(), "w");
+
+	if(fp == nullptr) {
+	} else {		//Can write bitrate
+		fprintf(fp, "%u\n", bitrate);
+		fclose(fp);
+	}
+
+	return true;
+
+}
+
+void SocketCanHelper::finalize(std::string interface) {
+
+	//Down interface
+	setIfFlag(interface, IFF_UP, false);
+
+}
+
+bool SocketCanHelper::initialized(std::string interface) {
+
+	return getIfFlag(interface, IFF_UP);		//If the interface is already up, means that it has been already initialized by
+												//another application or by ourselves
 }
 
 } /* namespace Can */

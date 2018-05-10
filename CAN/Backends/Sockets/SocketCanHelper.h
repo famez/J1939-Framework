@@ -17,6 +17,10 @@ namespace Can {
 namespace Sockets {
 
 class SocketCanHelper : public Can::ICanHelper {
+private:
+	bool setIfFlag(std::string interface, short flag, bool value);
+	bool getIfFlag(std::string interface, short flag);
+
 public:
 	SocketCanHelper();
 	virtual ~SocketCanHelper();
@@ -25,9 +29,15 @@ public:
 
 	bool isCompatible() override;
 
-	std::string getBackend() const override { return "SocketCan"; }
+	std::string getBackend() override { return "SocketCan"; }
 
-	ICanSender* allocateCanSender() const override;
+	ICanSender* allocateCanSender() override;
+
+	bool initialize(std::string interface, u32 bitrate) override;
+
+	void finalize(std::string interface) override;
+
+	bool initialized(std::string interface) override;
 
 };
 

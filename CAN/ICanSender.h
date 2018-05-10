@@ -23,7 +23,7 @@ public:
 	ICanSender() {}
 	virtual ~ICanSender() {}
 
-	virtual bool initialize(std::string interface, u32 bitrate) = 0;
+	virtual bool initialize(std::string interface) = 0;
 	virtual bool finalize() = 0;
 	
 	/**

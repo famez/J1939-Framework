@@ -20,10 +20,6 @@
 
 #include "../../CanCommon.h"
 
-#define SYS_CLASS_NET_PATH		"/sys/class/net/"
-#define BITRATE_SUBPATH			"/can_bittiming/bitrate"
-
-
 namespace Can {
 namespace Sockets {
 
@@ -34,12 +30,14 @@ SocketCanSender::SocketCanSender() : mSock(-1) {
 SocketCanSender::~SocketCanSender() {
 }
 
-bool SocketCanSender::_initialize(std::string interface, u32 bitrate) {
+bool SocketCanSender::_initialize(std::string interface) {
 
 	ifreq ifr;
 	sockaddr_can addr;
 
+	memset(&ifr, 0, sizeof(ifreq));
 	memset(&addr, 0, sizeof(sockaddr_can));
+
 
 	/* open socket */
 	mSock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -50,7 +48,7 @@ bool SocketCanSender::_initialize(std::string interface, u32 bitrate) {
 	}
 
 	addr.can_family = AF_CAN;
-	strcpy(ifr.ifr_name, interface.c_str());
+	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
 
 	if (ioctl(mSock, SIOCGIFINDEX, &ifr) < 0)
 	{
@@ -60,19 +58,6 @@ bool SocketCanSender::_initialize(std::string interface, u32 bitrate) {
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	fcntl(mSock, F_SETFL, O_NONBLOCK);
-
-	//Set bitrate
-
-	std::string bitratePath = SYS_CLASS_NET_PATH + interface + BITRATE_SUBPATH;
-
-	FILE* fp = fopen(bitratePath.c_str(), "w");
-
-	if(fp == nullptr) {
-		printf("[SocketCanSender::_initialize] Could not set bitrate\n");
-	} else {		//Can write bitrate
-		fprintf(fp, "%u\n", bitrate);
-		fclose(fp);
-	}
 
 
 	if (bind(mSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)

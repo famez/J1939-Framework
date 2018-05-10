@@ -278,6 +278,25 @@ int main(int argc, char **argv) {
 
 	for(auto iter = canHelpers.begin(); iter != canHelpers.end(); ++iter) {
 		if(!silent)	std::cout << (*iter)->getBackend() << " backend detected" << std::endl;
+
+		std::set<std::string> interfaces = (*iter)->getCanIfaces();
+
+		for(auto iface = interfaces.begin(); iface != interfaces.end(); ++iface) {
+
+			if((*iter)->initialized(*iface)) {
+				if(!silent)	std::cout << "Interface " << *iface << " is already initialized (by another app?)"  << std::endl;
+
+			} else {
+
+				//Initialize the interface
+				if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
+					std::cerr << "Interface " << *iface << " could not be correctly initialized" << std::endl;
+				}
+
+			}
+
+		}
+
 	}
 
 
@@ -806,7 +825,11 @@ void parseListInterfacesCommand() {
 		std::set<std::string> interfaces = (*helper)->getCanIfaces();
 
 		for(auto iter = interfaces.begin(); iter != interfaces.end(); ++iter) {
-			std::cout << *iter << std::endl;
+
+			if((*helper)->initialized(*iter))
+			{
+				std::cout << *iter << std::endl;
+			}
 		}
 	}
 
@@ -827,6 +850,7 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 		return;
 	}
 
+
 	const J1939Frame* j1939Frame = frameIter->second;
 	ICanHelper* canHelper = nullptr;		//Backend to use
 
@@ -840,7 +864,7 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 				//Check that the corresponding interface really exists
 				std::set<std::string> interfaces = (*helper)->getCanIfaces();
 
-				if(interfaces.find(value) != interfaces.end()) {
+				if(interfaces.find(value) != interfaces.end() && (*helper)->initialized(value)) {
 					interface = value;
 					canHelper = *helper;
 					return;
@@ -853,7 +877,7 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 	processCommandParameters(arguments, func);
 
 	if(interface.empty()) {
-		std::cerr << "Interface not defined..." << std::endl;
+		std::cerr << "Interface not defined or not initialized..." << std::endl;
 		return;
 	}
 
@@ -867,7 +891,7 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 	//The corresponding sender is created for the interface?
 	if(senders.find(interface) == senders.end()) {
 		ICanSender* sender = canHelper->allocateCanSender();
-		sender->initialize(interface, BAUD_250K);		//J1939 protocol needs as physical layer a bitrate of 250 kbps
+		sender->initialize(interface);
 		senders[interface] = sender;
 	}
 
@@ -982,6 +1006,7 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 
 
 	std::vector<u32> ids;
+	bool found = false;
 
 
 	//If the frame is bigger than 8 bytes, we use BAM
@@ -1010,8 +1035,16 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 
 	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-		if(interface.empty() || interface == sender->first) sender->second->unSendFrames(ids);
+		if(interface.empty() || interface == sender->first) {
 
+			sender->second->unSendFrames(ids);
+			found = true;
+		}
+
+	}
+
+	if(!found) {
+		std::cerr << "Frame not sent through the given interface..." << std::endl;
 	}
 
 }
@@ -1052,8 +1085,6 @@ void execScript(const std::string& file) {
 
 	std::string line;
 
-	//If any file is defined, execute commands from it
-//	if(!silent) std::cout << "Script file passed as argument" << std::endl;
 
 	std::ifstream fileScript;
 	fileScript.open(file);
@@ -1131,6 +1162,16 @@ void uninitializeVariables() {
 		delete iter->second;
 	}
 
+
+	//Finalize interfaces
+	for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+
+		std::set<std::string> ifaces = (*helper)->getCanIfaces();
+
+		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
+			(*helper)->finalize(*iface);
+		}
+	}
 
 	//Dealloc canHelpers
 	ICanHelper::deallocateCanHelpers();

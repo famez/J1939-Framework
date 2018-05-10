@@ -25,26 +25,6 @@ namespace Can {
 class CommonCanSender : public ICanSender, public Threads::Thread {
 private:
 
-//	class CanFramePeriod {
-//	private:
-//		CanFrame mFrame;
-//		u32 mPeriod;
-//		timespec mTxTimestamp;
-//	public:
-//		CanFramePeriod(const CanFrame& frame, u32 period) : mFrame(frame), mPeriod(period) { mTxTimestamp = {0, 0}; }
-//		virtual ~CanFramePeriod() {}
-//
-//		const CanFrame& getFrame() const { return mFrame; }
-//		u32 getPeriod() const { return mPeriod; }
-//		timespec getTxTimestamp() const { return mTxTimestamp; }
-//
-//
-//		void setTxTimestamp(timespec timeStamp) { mTxTimestamp = timeStamp; }
-//		void setFrame(const CanFrame& frame) { mFrame = frame; }
-//		void setPeriod(u32 period) { mPeriod = period; }
-//
-//	};
-
 	class CanFrameRing {
 	private:
 		std::vector<CanFrame> mFrames;
@@ -80,7 +60,7 @@ private:
 
 protected:
 	virtual void _sendFrame(const CanFrame& frame) const = 0;
-	virtual bool _initialize(std::string interface, u32 bitrate) = 0;
+	virtual bool _initialize(std::string interface) = 0;
 	virtual bool _finalize() = 0;
 
 public:
@@ -89,7 +69,7 @@ public:
 
 
 	//ICanSender implementation
-	bool initialize(std::string interface, u32 bitrate);
+	bool initialize(std::string interface);
 	bool finalize();
 	bool sendFrame(CanFrame frame, u32 period);
 	bool sendFrames(std::vector<CanFrame> frames, u32 period);

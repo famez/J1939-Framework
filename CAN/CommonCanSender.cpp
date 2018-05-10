@@ -67,9 +67,9 @@ CommonCanSender::CommonCanSender() : mFinished(false) {
 CommonCanSender::~CommonCanSender() {
 }
 
-bool CommonCanSender::initialize(std::string interface, u32 bitrate) {
+bool CommonCanSender::initialize(std::string interface) {
 
-	bool retVal = _initialize(interface, bitrate);
+	bool retVal = _initialize(interface);
 
 	if(retVal) {
 		start();			//Initialize the thread in charge of sending the frames
@@ -84,6 +84,9 @@ bool CommonCanSender::finalize() {
 	mFinished = true;		//This makes the thread finish
 
 	join();					//Wait for thread to finish doing proper cleaning and claim resources
+
+	//End of thread, execute _finalize
+	_finalize();
 
 	return true;
 }
@@ -196,9 +199,6 @@ void CommonCanSender::run() {
 		usleep(1000);
 	}
 
-	//End of thread, execute _finalize
-
-	_finalize();
 
 }
 

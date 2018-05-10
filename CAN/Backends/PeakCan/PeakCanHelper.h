@@ -28,9 +28,15 @@ public:
 
 	bool isCompatible();
 
-	std::string getBackend() const override { return "PeakCan"; }
+	std::string getBackend() override { return "PeakCan"; }
 
-	ICanSender* allocateCanSender() const override;
+	ICanSender* allocateCanSender() override;
+
+	bool initialize(std::string interface, u32 bitrate) override;
+
+	void finalize(std::string interface) override;
+
+	bool initialized(std::string interface) override;
 
 };
 
