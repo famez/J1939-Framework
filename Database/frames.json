@@ -153,9 +153,103 @@
 				"formatOffset" : -273,
 				"name" : "Engine Oil Temperature 1",
 				"number" : 175,
-				"offset" : 1,
+				"offset" : 2,
 				"type" : 0,
 				"units" : "°C"
+			}
+		]
+	},
+	{
+		"name" : "TRF1",
+		"pgn" : 65272,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 16,
+				"formatOffset" : 0,
+				"name" : "Clutch Pressure",
+				"number" : 123,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0,
+				"name" : "Transmission Oil Level",
+				"number" : 124,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "%"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 2,
+				"formatOffset" : 0,
+				"name" : "Transmission Filter Differential Pressure",
+				"number" : 126,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 16,
+				"formatOffset" : 0,
+				"name" : "Transmission Oil Pressure",
+				"number" : 127,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.03125,
+				"formatOffset" : -273,
+				"name" : "Transmission Oil Temperature",
+				"number" : 177,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.5,
+				"formatOffset" : -62.5,
+				"name" : "Transmission Oil Level High / Low",
+				"number" : 3027,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "L"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.5,
+				"formatOffset" : -62.5,
+				"name" : "Transmission Oil Level Countdown Timer",
+				"number" : 3027,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "L"
+			},
+			{
+				"bitOffset" : 0,
+				"bitSize" : 4,
+				"name" : "Transmission Oil Level Countdown Timer",
+				"number" : 3028,
+				"offset" : 7,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 4,
+				"name" : "Transmission Oil Level Measurement Status",
+				"number" : 3026,
+				"offset" : 7,
+				"type" : 1
 			}
 		]
 	},
