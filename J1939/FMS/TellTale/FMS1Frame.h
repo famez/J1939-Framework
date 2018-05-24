@@ -38,6 +38,8 @@ public:
 
 	virtual ~FMS1Frame();
 
+	bool hasTTS(u8 number);
+
 	TellTale getTTS(u8 number);
 
 	bool setTTS(u8 number, u8 status);

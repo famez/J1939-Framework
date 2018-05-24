@@ -58,6 +58,8 @@ public:
 		mStatus = status;
 	}
 
+	std::string toString() const;
+
 
 	static std::string getNameForTTSNumber(u8 number) { return (mNumberToName.find(number) != mNumberToName.end()) ? mNumberToName.at(number) : ""; }
 	static std::string getSatusname(u8 status) { return (mStatusName.find(status) != mStatusName.end()) ? mStatusName.at(status) : "RESERVED"; }

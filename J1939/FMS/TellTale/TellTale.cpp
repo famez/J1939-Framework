@@ -5,6 +5,8 @@
  *      Author: famez
  */
 
+#include <sstream>
+
 #include "TellTale.h"
 
 TellTale::TellTale() : mNumber(0), mStatus(0) {
@@ -16,6 +18,19 @@ TellTale::TellTale(u8 number, u8 status) : mNumber(number), mStatus(status) {
 }
 
 TellTale::~TellTale() {
+}
+
+
+std::string TellTale::toString() const {
+
+	std::stringstream sstr;
+
+	sstr << "TTS " << static_cast<u32>(mNumber) << ": " <<
+					TellTale::getNameForTTSNumber(mNumber) << " -> Status: "
+					<< TellTale::getSatusname(mStatus) << " (" << static_cast<u32>(mStatus) << ")" << std::endl;
+
+	return sstr.str();
+
 }
 
 std::map<u8, std::string> TellTale::initializeNTNMap() {

@@ -33,7 +33,7 @@ FMS1Frame::FMS1Frame() : J1939Frame(FMS1_PGN), mBlockID(0) {
 FMS1Frame::FMS1Frame(u8 blockID) : J1939Frame(FMS1_PGN), mBlockID(blockID) {
 	mName = FMS1_NAME;
 
-	for(u8 i = mBlockID * TTSS_PER_BLOCK; i < (mBlockID + 1) * TTSS_PER_BLOCK; ++i) {
+	for(u8 i = mBlockID * TTSS_PER_BLOCK + 1; i < (mBlockID + 1) * TTSS_PER_BLOCK + 1; ++i) {
 		mTTSs[i] = TellTale(i, TellTale::TTS_STATUS_NOT_AVAILABLE);
 	}
 }
@@ -104,15 +104,22 @@ std::string FMS1Frame::toString() {
 
 	std::stringstream sstr;
 
+	sstr << "Block ID: " << static_cast<int>(mBlockID) << std::endl;
+
 	for(auto tts = mTTSs.begin(); tts != mTTSs.end(); ++tts) {
-		sstr << "TTS " << static_cast<u32>(tts->first) << ": " <<
-				TellTale::getNameForTTSNumber(tts->first) << " -> Status: "
-				<< TellTale::getSatusname(tts->second.getStatus()) << " (" << static_cast<u32>(tts->second.getStatus()) << ")" << std::endl;
+		sstr << tts->second.toString();
 	}
 
 	return retVal + sstr.str();
 
 }
+
+bool FMS1Frame::hasTTS(u8 number) {
+
+	return (mTTSs.find(number) != mTTSs.end());
+
+}
+
 
 TellTale FMS1Frame::getTTS(u8 number) {
 
