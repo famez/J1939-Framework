@@ -53,7 +53,6 @@ std::unique_ptr<J1939Frame> J1939Factory::getJ1939Frame(u32 id, const u8* data, 
 	std::map<u32, J1939Frame*>::iterator iter = mFrames.find(pgn);
 
 	if(iter == mFrames.end() || ((frame = iter->second) == NULL)) {
-        //printf("Pgn: %u not found", pgn);
         return std::unique_ptr<J1939Frame>(nullptr);
 	}
 

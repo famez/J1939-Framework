@@ -14,6 +14,8 @@
 #define J1939_DST_ADDR_MASK			0xFF
 #define J1939_SRC_ADDR_MASK			0xFF
 
+
+#define J1939_SRC_ADDR_OFFSET		0
 #define J1939_DST_ADDR_OFFSET		0
 
 
