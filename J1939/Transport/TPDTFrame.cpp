@@ -31,7 +31,7 @@ TPDTFrame::~TPDTFrame() {
 
 void TPDTFrame::decodeData(const u8* buffer, size_t length) {
 
-	if(length != TP_DT_PACKET_SIZE) {
+	if(length != BAM_DT_SIZE) {
 		throw J1939DecodeException("[TPDTFrame::decodeData] Buffer length does not match the expected length. Buffer length:" + std::to_string(length)
 		+ ". Expected length: " + std::to_string(TP_DT_PACKET_SIZE));
 	}
