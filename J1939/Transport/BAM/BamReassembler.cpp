@@ -128,6 +128,8 @@ void BamReassembler::handleFrame(const J1939Frame& frame) {
 			break;
 		}
 
+		data = static_cast<const TPDTFrame*>(&frame);
+
 		u8 sq = data->getSq();
 
 		const TPCMFrame& connFrame = mFragments[srcAddr].getCmFrame();
