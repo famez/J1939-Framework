@@ -50,7 +50,7 @@ void VIFrame::setVIN(const std::string& id) {
 void VIFrame::decodeData(const u8* buffer, size_t length) {
 	//Not using strchr because buffer is not null terminated
 	char aux[length];
-	size_t strLength = 0;
+	int strLength = -1;
 	bool validId = false;
 	validId = false;
 
@@ -61,7 +61,12 @@ void VIFrame::decodeData(const u8* buffer, size_t length) {
 		}
 	}
 
-	if(strLength) {
+	if(strLength == 0) {
+
+		validId = true;
+		mId.clear();
+
+	} else if(strLength > 0) {
 		memcpy(aux, buffer, strLength);
 		aux[strLength] = NULL_TERMINATOR;
 		mId = aux;
