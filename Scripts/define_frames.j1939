@@ -4,6 +4,10 @@ create frame name: lfc title: LFC
 create frame name: vdhr title: VDHR
 create frame name: dd title: DD
 create frame name: efl title: EFL
+create frame name: vin title: VIN
+create frame name: et1 title: ET1
+create frame name: trf1 title: TRF1
+
 
 
 set frame ccvs period: 100 priority: 2 source: 20
@@ -12,4 +16,6 @@ set frame lfc period: 1000 priority: 2 source: 20
 set frame vdhr period: 1000 priority: 2 source: 20
 set frame dd period: 1000 priority: 2 source: 20
 set frame efl period: 500 priority: 2 source: 20
-
+set frame et1 period: 1000 priority: 2 source: 20
+set frame vin period: 10000 priority: 2 source: 20
+set frame trf1 period: 1000 priority: 2 source: 20
