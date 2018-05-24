@@ -12,6 +12,7 @@
 #include <string>
 
 #include "ICanSender.h"
+#include "CommonCanReceiver.h"
 
 namespace Can {
 
@@ -40,6 +41,8 @@ public:
 	virtual bool initialized(std::string interface) = 0;
 
 	virtual ICanSender* allocateCanSender() = 0;
+
+	virtual CommonCanReceiver* allocateCanReceiver() = 0;
 
 	static const std::set<ICanHelper*>& getCanHelpers();
 

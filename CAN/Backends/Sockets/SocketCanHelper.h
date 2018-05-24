@@ -32,6 +32,7 @@ public:
 	std::string getBackend() override { return "SocketCan"; }
 
 	ICanSender* allocateCanSender() override;
+	CommonCanReceiver* allocateCanReceiver() override;
 
 	bool initialize(std::string interface, u32 bitrate) override;
 

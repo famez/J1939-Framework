@@ -24,6 +24,7 @@ PeakCanSender::PeakCanSender() : mCurrentHandle(PCAN_NONEBUS) {
 }
 
 PeakCanSender::~PeakCanSender() {
+
 }
 
 bool PeakCanSender::_initialize(std::string interface) {

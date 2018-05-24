@@ -5,7 +5,7 @@
  *      Author: famez
  */
 
-#include "SocketCanSender.h"
+
 
 #include <stdio.h>
 #include <string.h>
@@ -18,7 +18,7 @@
 
 #include <Utils.h>
 
-#include "../../CanCommon.h"
+#include "SocketCanSender.h"
 
 namespace Can {
 namespace Sockets {
@@ -79,7 +79,7 @@ void SocketCanSender::_sendFrame(const CanFrame& frame) const {
 	memset(&frameToSend, 0, sizeof(can_frame));
 
 	frameToSend.can_id = frame.getId();
-	frameToSend.can_id |= (frame.isExtendedFormat() ? 1 : 0) << FORMAT_FLAG_OFFSET;
+	frameToSend.can_id |= (frame.isExtendedFormat() ? CAN_EFF_FLAG : 0);
 	frameToSend.can_dlc = frame.getData().size();
 
 	memcpy(frameToSend.data, frame.getData().c_str(), frameToSend.can_dlc);
@@ -94,7 +94,14 @@ void SocketCanSender::_sendFrame(const CanFrame& frame) const {
 
 bool SocketCanSender::_finalize() {
 
-	return (close(mSock) != 0);
+	int retVal = 0;
+
+	if(mSock != -1) {
+		retVal = close(mSock);
+		mSock = -1;
+	}
+
+	return (retVal == 0);
 
 }
 

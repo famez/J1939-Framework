@@ -187,7 +187,10 @@ bool PeakCanHelper::initialized(std::string interface) {
 
 	return ((status == PCAN_ERROR_OK) && (value & PCAN_CHANNEL_OCCUPIED));	//Channel already initialized?
 
+}
 
+CommonCanReceiver* PeakCanHelper::allocateCanReceiver() {
+	return NULL;
 }
 
 

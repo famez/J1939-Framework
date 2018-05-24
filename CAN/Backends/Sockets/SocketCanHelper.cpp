@@ -6,7 +6,7 @@
  */
 
 
-#include "SocketCanHelper.h"
+
 
 #include <unistd.h>
 #include <stdio.h>
@@ -19,8 +19,10 @@
 #include <linux/can.h>
 #include <string.h>
 
-
+#include "SocketCanHelper.h"
 #include "SocketCanSender.h"
+#include "SocketCanReceiver.h"
+
 
 
 #define SYS_CLASS_NET_PATH		"/sys/class/net/"
@@ -87,10 +89,6 @@ bool SocketCanHelper::isCompatible() {
 
 	return !getCanIfaces().empty();		//No interfaces available
 
-}
-
-ICanSender* SocketCanHelper::allocateCanSender() {
-	return new SocketCanSender;
 }
 
 
@@ -204,6 +202,15 @@ bool SocketCanHelper::initialized(std::string interface) {
 
 	return getIfFlag(interface, IFF_UP);		//If the interface is already up, means that it has been already initialized by
 												//another application or by ourselves
+}
+
+
+ICanSender* SocketCanHelper::allocateCanSender() {
+	return new SocketCanSender;
+}
+
+CommonCanReceiver* SocketCanHelper::allocateCanReceiver() {
+	return new SocketCanReceiver;
 }
 
 } /* namespace Can */

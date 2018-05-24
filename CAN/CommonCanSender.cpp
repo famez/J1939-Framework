@@ -17,7 +17,6 @@
 #include <Utils.h>
 
 #include "CommonCanSender.h"
-#include "CanCommon.h"
 
 namespace Can {
 
@@ -65,6 +64,7 @@ CommonCanSender::CommonCanSender() : mFinished(false) {
 }
 
 CommonCanSender::~CommonCanSender() {
+	finalize();
 }
 
 bool CommonCanSender::initialize(std::string interface) {
@@ -80,6 +80,8 @@ bool CommonCanSender::initialize(std::string interface) {
 }
 
 bool CommonCanSender::finalize() {
+
+	if(mFinished) return false;		//Already finalized
 
 	mFinished = true;		//This makes the thread finish
 

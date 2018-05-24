@@ -31,6 +31,7 @@ public:
 	std::string getBackend() override { return "PeakCan"; }
 
 	ICanSender* allocateCanSender() override;
+	CommonCanReceiver* allocateCanReceiver() override;
 
 	bool initialize(std::string interface, u32 bitrate) override;
 
