@@ -10,7 +10,6 @@
 
 #include <Types.h>
 
-#include "CanCommon.h"
 
 namespace Can {
 
@@ -25,6 +24,8 @@ private:
 
 public:
 	CanFilter() : mId(0), mMask(0), mStdFrame(false), mExtFrame(false) {}
+	CanFilter(u32 id, u32 mask, bool filterExt, bool filterStd) : mId(id), mMask(mask), mStdFrame(filterStd), mExtFrame(filterExt) {}
+
 	virtual ~CanFilter() {}
 
 	u32 getId() const {
