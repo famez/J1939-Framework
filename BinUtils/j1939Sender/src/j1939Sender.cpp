@@ -29,6 +29,7 @@
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
 #include <FMS/VIFrame.h>
+#include <FMS/TellTale/FMS1Frame.h>
 #include <Transport/BAM/BamFragmenter.h>
 
 
@@ -79,6 +80,9 @@
 #define VALUE_TOKEN			"value"
 
 #define VIN_TOKEN			"vin"
+#define TTS_TOKEN			"tts"
+#define TTS_NUMBER			"number"
+#define TTS_STATUS			"status"
 
 
 #define DATABASE_PATH		"/etc/j1939/frames.json"
@@ -122,7 +126,6 @@ public:
 };
 
 
-
 //Command that will hold the other commands
 CommandHelper baseCommand;
 
@@ -143,6 +146,10 @@ std::map<std::string, ICanSender*> senders;
 //Backends to determine the available interfaces
 std::set<ICanHelper*> canHelpers;
 
+//TTS
+std::vector<FMS1Frame> fms1Frames;
+u32 ttsPeriod;
+
 bool silent;
 
 
@@ -155,7 +162,9 @@ void parseLine(const std::string& line);
 
 //Functions to interpret the different commands
 void parseSetFrameCommand(std::list<std::string> arguments);
+void parseSetTTSCommand(std::list<std::string> arguments);
 void parseListCommandsCommand();
+void parseListTTSCommand(std::list<std::string> arguments);
 void processCommandParameters(std::list<std::string> arguments, ParamParserFunc func);
 void parsePrintFrameCommand(std::list<std::string> arguments);
 void parseQuitCommand();
@@ -163,8 +172,11 @@ void parseCreateFrameCommand(std::list<std::string> arguments);
 void parseListFramesCommand();
 void parseListInterfacesCommand();
 void parseSendFrameCommand(std::list<std::string> arguments);
+void parseSendTTSCommand(std::list<std::string> arguments);
 void parseExecCommand(std::list<std::string> arguments);
 void parseUnsendFrameCommand(std::list<std::string> arguments);
+
+std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFrames);
 
 
 
@@ -190,6 +202,7 @@ int main(int argc, char **argv) {
 	int c;
 	std::string file;
 	silent = false;
+
 
 	static struct option long_options[] =
 	{
@@ -271,6 +284,12 @@ int main(int argc, char **argv) {
 		J1939Factory::getInstance().registerFrame(*iter);
 	}
 
+	//Generate frames for the TTSs
+	fms1Frames.push_back(FMS1Frame(0));
+	fms1Frames.push_back(FMS1Frame(1));
+	fms1Frames.push_back(FMS1Frame(2));
+	fms1Frames.push_back(FMS1Frame(3));
+
 
 	//Determine the possible backends
 
@@ -328,13 +347,16 @@ void registerCommands() {
 	).addSubCommand(
 			CommandHelper(LIST_TOKEN).addSubCommand(CommandHelper(FRAMES_TOKEN, parseListFramesCommand)).
 					addSubCommand(CommandHelper(COMMANDS_TOKEN, parseListCommandsCommand)).
-					addSubCommand(CommandHelper(INTERFACES_TOKEN, parseListInterfacesCommand))
+					addSubCommand(CommandHelper(INTERFACES_TOKEN, parseListInterfacesCommand)).
+					addSubCommand(CommandHelper(TTS_TOKEN, parseListTTSCommand))
 	).addSubCommand(
 			CommandHelper(PRINT_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parsePrintFrameCommand))
 	).addSubCommand(
-			CommandHelper(SET_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSetFrameCommand))
+			CommandHelper(SET_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSetFrameCommand)).
+					addSubCommand(CommandHelper(TTS_TOKEN, parseSetTTSCommand))
 	).addSubCommand(
-			CommandHelper(SEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSendFrameCommand))
+			CommandHelper(SEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSendFrameCommand)).
+					addSubCommand(CommandHelper(TTS_TOKEN, parseSendTTSCommand))
 	).addSubCommand(
 			CommandHelper(EXEC_TOKEN, parseExecCommand)
 	).addSubCommand(
@@ -571,6 +593,243 @@ void parseListFramesCommand() {
 
 }
 
+void parseListTTSCommand(std::list<std::string> arguments) {
+
+
+	std::vector<u32> ids;
+	u8 number = 0;
+
+	auto paramParser = [&number](const std::string& key, const std::string& value) {
+
+		if(key == TTS_NUMBER) {
+
+			try {
+
+				u32 ttsNumber = std::stoul(value);
+
+				if(ttsNumber == (ttsNumber & 0xFF)) {
+					number = static_cast<u8>(ttsNumber);
+				} else {
+					std::cerr << "number out of range..." << std::endl;
+				}
+
+			} catch (std::invalid_argument&) {
+				std::cerr << "number is not a number..." << std::endl;
+			}
+
+		}
+
+	};
+
+	processCommandParameters(arguments, paramParser);
+
+	bool somePrinted = false;
+
+	for(auto iter = fms1Frames.begin(); iter != fms1Frames.end(); ++iter) {
+
+		if(number == 0) {
+			somePrinted = true;
+
+			std::cout << iter->toString();
+
+
+		} else {
+
+			if(iter->hasTTS(number)) {
+				std::cout << iter->getTTS(number).toString();
+				somePrinted = true;
+			}
+
+		}
+
+		ids.push_back(iter->getIdentifier());
+	}
+
+	if(somePrinted) {
+
+		//Print the interface from which tts are sent
+		for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+
+			if(sender->second->isSent(ids)) {
+				std::cout << "Sent from interface " << sender->first << std::endl;
+			}
+
+		}
+
+	}
+
+}
+
+void parseSendTTSCommand(std::list<std::string> arguments) {
+
+
+	std::string interface;
+
+	bool periodValid = false;
+	ICanHelper* canHelper = nullptr;		//Backend to use
+
+	auto paramParser = [&interface, &periodValid, &canHelper](const std::string& key, const std::string& value) {
+
+		if(key == INTERFACE_TOKEN) {
+
+			for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+
+
+				//Check that the corresponding interface really exists
+				std::set<std::string> interfaces = (*helper)->getCanIfaces();
+
+				if(interfaces.find(value) != interfaces.end() && (*helper)->initialized(value)) {
+					interface = value;
+					canHelper = *helper;
+					return;
+				}
+			}
+		} else if(key == PERIOD_TOKEN) {
+
+			try {
+
+				ttsPeriod = std::stoul(value);
+				periodValid = true;
+
+			} catch (std::invalid_argument& e) {
+				std::cerr << "Period is not a number..." << std::endl;
+
+			}
+
+		}
+
+	};
+
+	processCommandParameters(arguments, paramParser);
+
+	if(!periodValid) {
+		std::cerr << "Period not defined..." << std::endl;
+		return;
+	}
+
+	if(interface.empty()) {
+		std::cerr << "Interface not defined or not initialized..." << std::endl;
+		return;
+	}
+
+
+	//Is there an available layer for Can TX?
+	if(canHelper == nullptr) {
+		std::cerr << "No Can support..." << std::endl;
+		return;
+	}
+
+	//The corresponding sender is created for the interface?
+	if(senders.find(interface) == senders.end()) {
+		ICanSender* sender = canHelper->allocateCanSender();
+		sender->initialize(interface);
+		senders[interface] = sender;
+	}
+
+	std::vector<CanFrame> frames = ttsFramesToCanFrames(fms1Frames);
+
+	senders[interface]->sendFrames(frames, ttsPeriod);
+
+}
+
+
+
+void parseSetTTSCommand(std::list<std::string> arguments) {
+
+	u8 number = 0xFF, status = 0xFF;
+
+	auto paramParser = [&number, &status](const std::string& key, const std::string& value) {
+
+		if(key == TTS_NUMBER) {
+
+			try {
+
+				u32 ttsNumber = std::stoul(value);
+
+				if(ttsNumber == (ttsNumber & 0xFF)) {
+					number = static_cast<u8>(ttsNumber);
+				} else {
+					std::cerr << "Number out of range..." << std::endl;
+					number = 0xFF;
+				}
+
+
+			} catch (std::invalid_argument&) {
+				std::cerr << "Number is not a number..." << std::endl;
+				number = 0xFF;
+			}
+
+		} else if(key == TTS_STATUS) {
+
+			try {
+
+				u32 ttsStatus = std::stoul(value);
+
+				if(ttsStatus == (ttsStatus & 0xFF)) {
+					status = static_cast<u8>(ttsStatus);
+				} else {
+					std::cerr << "Status out of range..." << std::endl;
+					status = 0xFF;
+				}
+
+			} catch (std::invalid_argument&) {
+				std::cerr << "Status is not a number..." << std::endl;
+				status = 0xFF;
+			}
+
+		}
+
+	};
+
+	processCommandParameters(arguments, paramParser);
+
+
+	if(number != 0xFF && status != 0xFF) {
+
+		bool ttsSet = false;
+
+		for(auto iter = fms1Frames.begin(); iter != fms1Frames.end(); ++iter) {
+
+			if(iter->hasTTS(number)) {
+
+				iter->setTTS(number, status);
+				if(!silent) 	std::cout << "TTS " << static_cast<u32>(number) << " set to " << TellTale::getSatusname(status) << std::endl;
+				ttsSet = true;
+				break;
+
+			}
+
+		}
+
+		if(!ttsSet) {
+			std::cerr << "TTS not found";
+		} else {
+
+			std::vector<u32> ids;
+
+			for(auto iter = fms1Frames.begin(); iter != fms1Frames.end(); ++iter) {
+
+
+				ids.push_back(iter->getIdentifier());
+			}
+
+			for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+
+				if(sender->second->isSent(ids)) {
+
+					std::vector<CanFrame> frames = ttsFramesToCanFrames(fms1Frames);
+
+					sender->second->sendFrames(frames, ttsPeriod);
+				}
+
+			}
+
+		}
+
+	}
+
+}
+
 
 void parsePrintFrameCommand(std::list<std::string> arguments) {
 
@@ -642,15 +901,15 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 				{
 					SPNNumeric* spnNum = static_cast<SPNNumeric*>(spn);
 					if(spnNum->setFormattedValue(valueNumber)) {
-						std::cout << "Spn set to value " << spnNum->getFormatedValue() << std::endl;
+						std::cout << "Spn " << spn->getSpnNumber() << " from frame " << frame->getName() << " set to value " << spnNum->getFormatedValue() << std::endl;
 					}
 				}	break;
 				case SPN::SPN_STATUS:
 				{
-
-					if((valueNumber && 0xFF) == valueNumber) {
+					u8 status = static_cast<u8>(valueNumber);
+					if((status & 0xFF) == valueNumber) {
 						SPNStatus* spnStat = static_cast<SPNStatus*>(spn);
-						if(!spnStat->setValue(static_cast<u8>(valueNumber))) {
+						if(!spnStat->setValue(status)) {
 							std::cerr << "Value out of range" << std::endl;
 						}
 					} else {
@@ -675,9 +934,8 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 			//Parse generic parameters as the period to send the frames, the priority, the source address, dst address and so on
 			if(!parseSetGenericParams(name, frame, key, value)) {
-
-
 				//If this function returns false, it means that the given key is not a generic parameter, but it is particular of certain frame
+
 				if(key == VIN_TOKEN) {
 
 					if(frame->getPGN() == VI_PGN) {
@@ -1239,4 +1497,40 @@ bool parseSetGenericParams(const std::string& name, J1939Frame* frame, const std
 	}
 
 	return retVal;
+}
+
+
+std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFrames) {
+
+	std::vector<CanFrame> frames;
+
+	size_t length;
+	CanFrame canFrame;
+	u32 id;
+	u8* buff;
+	std::string data;
+
+	for(auto frame = fms1Frames.begin(); frame != fms1Frames.end(); ++frame) {
+
+		length = frame->getDataLength();
+
+		buff = new u8[length];
+
+		frame->encode(id, buff, length);
+
+		canFrame.setId(id);
+		canFrame.setExtendedFormat(true);
+
+		std::string data;
+		data.append((char*)buff, length);
+
+		canFrame.setData(data);
+
+		delete[] buff;
+
+		frames.push_back(canFrame);
+
+	}
+
+	return frames;
 }
