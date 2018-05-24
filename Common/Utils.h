@@ -24,6 +24,22 @@ u32 getElapsedMillis(timespec* start, timespec* end);
 timespec addMillis(timespec* time, u32 millis);
 
 
+
+class TimeStamp {
+private:
+	u32 mSeconds;
+	u32 mMicroSec;
+
+public:
+	TimeStamp(): mSeconds(0), mMicroSec(0) {}
+	TimeStamp(u32 seconds, u32 microSec) : mSeconds(seconds), mMicroSec(microSec) {}
+	~TimeStamp() {}
+	u32 getMicroSec() const { return mMicroSec; }
+	void setMicroSec(u32 microSec) { mMicroSec = microSec; }
+	u32 getSeconds() const { return mSeconds; }
+	void setSeconds(u32 seconds) { mSeconds = seconds; }
+};
+
 }
 
 
