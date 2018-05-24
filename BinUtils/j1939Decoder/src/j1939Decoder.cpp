@@ -147,8 +147,6 @@ main (int argc, char **argv)
 	//Convert the introduced string to a number to be interpreted by the frame factory when using it.
 	u32 formattedId = std::stoul(id, nullptr, 16);
 
-	//Prepare factory with default frames
-	J1939Factory::getInstance().registerPredefinedFrames();
 
 
 	//Read database if available
