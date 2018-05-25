@@ -41,7 +41,6 @@ void dissect_fms1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, c
 static int hf_j1939_frame = -1;
 static int hf_j1939_spn = -1;
 
-static int hf_j1939_tts = -1;
 static int hf_j1939_blockId = -1;
 
 static int proto_j1939 = -1;
@@ -109,10 +108,6 @@ void proto_register_j1939(void) {
 		},
 		{ &hf_j1939_spn,
 			{"Spn", "j1939.spn",
-					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
-		},
-		{ &hf_j1939_tts,
-			{"Tts", "j1939.tts",
 					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
 		},
 		{ &hf_j1939_blockId,
@@ -200,19 +195,71 @@ void proto_reg_handoff_j1939(void) {
 
 	const std::vector<GenericFrame>& ddbbFrames = ddbb.getParsedFrames();
 
-	header_field_info* info;
-	std::string abbrev;
 
 	//Register all the frames listed in the database
 	for(auto iter = ddbbFrames.begin(); iter != ddbbFrames.end(); ++iter) {
+
 		J1939Factory::getInstance().registerFrame(*iter);
 
+	}
+
+	header_field_info* info;
+	std::string abbrev;
+	std::string tts_name;
+
+	for(unsigned int tts = 1; tts <= NUMBER_OF_BLOCKS * TTSS_PER_BLOCK; ++tts) {
+
+		info = (header_field_info*)g_malloc0(sizeof(header_field_info));
+
+		info->id = -1;
+		info->ref_type = HF_REF_TYPE_NONE;
+		info->same_name_prev_id = -1;
+
+		abbrev = std::string("j1939.tts.") + std::to_string(tts);
+		tts_name = std::string("TTS ") + std::to_string(tts) + std::string(" Status");
+
+		info->name = g_strdup(tts_name.c_str());
+		info->abbrev = g_strdup(abbrev.c_str());
+
+		info->type = FT_UINT8;
+		info->display = BASE_DEC;
+
+		info->strings = VALS(tts_status);
+
+		info->bitmask = 0x7;
+
+		if((((tts - 1) % TTSS_PER_BLOCK) % 2) == 0) {				//If TTS number is even, the bitmask corresponds to the 4 most significant bits. Otherwise, it corresponds to the 4 least significant bits.
+			info->bitmask <<= 4;
+		}
+
+		proto_register_fields_section(proto_j1939, info, 1);
+
+		ttsNumToHinfoId[tts] = info->id;
+
+	}
+
+	std::set<u32> pgns = J1939Factory::getInstance().getAllRegisteredPGNs();
+
+
+	//Register dissectors for all the known frames
+	for(auto pgn = pgns.begin(); pgn != pgns.end(); ++pgn) {
+
+		dissector_add_uint("j1939.pgn", *pgn, j1939_handle);
+
+		std::unique_ptr<J1939Frame> frame = J1939Factory::getInstance().getJ1939Frame(*pgn);
+
+		if(!frame->isGenericFrame()) {
+			continue;
+		}
+
+		GenericFrame *genFrame = static_cast<GenericFrame *>(frame.get());
+
 		//Also, we have to register SPN specific fields
-		std::set<u32> spnNumbers = iter->getSPNNumbers();
+		std::set<u32> spnNumbers = genFrame->getSPNNumbers();
 
 		for(auto spnNumber = spnNumbers.begin(); spnNumber != spnNumbers.end(); ++spnNumber) {
 
-			const SPN* spn = iter->getSPN(*spnNumber);
+			const SPN* spn = genFrame->getSPN(*spnNumber);
 
 			info = (header_field_info*)g_malloc0(sizeof(header_field_info));
 
@@ -259,49 +306,7 @@ void proto_reg_handoff_j1939(void) {
 
 		}
 
-	}
 
-
-	std::string tts_name;
-
-	for(unsigned int tts = 1; tts <= NUMBER_OF_BLOCKS * TTSS_PER_BLOCK; ++tts) {
-
-		info = (header_field_info*)g_malloc0(sizeof(header_field_info));
-
-		info->id = -1;
-		info->ref_type = HF_REF_TYPE_NONE;
-		info->same_name_prev_id = -1;
-
-		abbrev = std::string("j1939.tts.") + std::to_string(tts);
-		tts_name = std::string("TTS ") + std::to_string(tts) + std::string(" Status");
-
-		info->name = g_strdup(tts_name.c_str());
-		info->abbrev = g_strdup(abbrev.c_str());
-
-		info->type = FT_UINT8;
-		info->display = BASE_DEC;
-
-		info->strings = VALS(tts_status);
-
-		info->bitmask = 0x7;
-
-		if((((tts - 1) % TTSS_PER_BLOCK) % 2) == 0) {				//If TTS number is even, the bitmask corresponds to the 4 most significant bits. Otherwise, it corresponds to the 4 least significant bits.
-			info->bitmask <<= 4;
-		}
-
-		proto_register_fields_section(proto_j1939, info, 1);
-
-		ttsNumToHinfoId[tts] = info->id;
-
-	}
-
-	std::set<u32> pgns = J1939Factory::getInstance().getAllRegisteredPGNs();
-
-
-	//Register dissectors for all the known frames
-	for(auto pgn = pgns.begin(); pgn != pgns.end(); ++pgn) {
-
-		dissector_add_uint("j1939.pgn", *pgn, j1939_handle);
 
 	}
 
