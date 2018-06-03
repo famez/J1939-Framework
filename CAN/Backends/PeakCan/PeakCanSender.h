@@ -21,6 +21,7 @@ namespace PeakCan {
 class PeakCanSender : public CommonCanSender {
 private:
 	TPCANHandle mCurrentHandle;
+protected:
 	void _sendFrame(const CanFrame& frame) const override;
 	bool _initialize(std::string interface) override;
 	bool _finalize() override;

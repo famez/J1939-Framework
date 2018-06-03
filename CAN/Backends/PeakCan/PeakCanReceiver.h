@@ -10,19 +10,28 @@
 
 #include "../../CommonCanReceiver.h"
 
+#include "PeakCanSymbols.h"
+
 namespace Can {
 namespace PeakCan {
 
 class PeakCanReceiver : public CommonCanReceiver {
+
+private:
+	TPCANHandle mCurrentHandle;
+	int mReadFd;
+	std::set<CanFilter> mFilters;
+protected:
+	/*ICanReceiver implementation*/
+	bool _initialize(const std::string& interface) override;
+	bool finalize(const std::string& interface) override;
+	bool setFilters(std::set<CanFilter> filters) override;
+	void sniff(u32 timeout) override;
+
+
 public:
 	PeakCanReceiver();
 	virtual ~PeakCanReceiver();
-
-	/*ICanReceiver implementation*/
-	bool initialize(const std::string& interface) override;
-	bool finalize(const std::string& interface) override;
-	void addFilter(const CanFilter& filter) override;
-	bool receive(CanFrame& frame, u32 timeout) override;
 
 };
 

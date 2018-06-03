@@ -316,6 +316,8 @@ class PeakCanSymbols : public ISingleton<PeakCanSymbols> {
 
 	friend class PeakCanHelper;
 	friend class PeakCanSender;
+	friend class PeakCanReceiver;
+	
 private:
 	PeakCanSymbols() {}
 	~PeakCanSymbols() {}

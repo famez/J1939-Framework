@@ -5,7 +5,6 @@
  *      Author: famez
  */
 
-#include "PeakCanSender.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -13,6 +12,8 @@
 #include <Types.h>
 #include <Utils.h>
 
+
+#include "PeakCanSender.h"
 #include "PeakCanChannels.h"
 
 

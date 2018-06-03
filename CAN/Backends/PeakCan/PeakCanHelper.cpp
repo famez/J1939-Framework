@@ -11,6 +11,7 @@
 #include "PeakCanChannels.h"
 
 #include "PeakCanSender.h"
+#include "PeakCanReceiver.h"
 
 
 struct BitrateItem
@@ -96,10 +97,6 @@ std::set<std::string> PeakCanHelper::getCanIfaces() {
 
 	return retVal;
 
-}
-
-ICanSender* PeakCanHelper::allocateCanSender() {
-	return new PeakCanSender;
 }
 
 
@@ -189,8 +186,13 @@ bool PeakCanHelper::initialized(std::string interface) {
 
 }
 
+
+ICanSender* PeakCanHelper::allocateCanSender() {
+	return new PeakCanSender;
+}
+
 CommonCanReceiver* PeakCanHelper::allocateCanReceiver() {
-	return NULL;
+	return new PeakCanReceiver;
 }
 
 
