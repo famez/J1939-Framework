@@ -7,6 +7,18 @@ create frame name: efl title: EFL
 create frame name: vin title: VIN
 create frame name: et1 title: ET1
 create frame name: trf1 title: TRF1
+create frame name: eec2 title: EEC2
+create frame name: vdc2 title: VDC2
+create frame name: ic1 title: IC1
+create frame name: amb title: AMB
+create frame name: rf title: RF
+create frame name: hours title: HOURS
+create frame name: etc1 title: ETC1
+create frame name: etc2 title: ETC2
+create frame name: erc1 title: ERC1
+create frame name: ebc1 title: EBC1
+create frame name: as title: AS
+create frame name: at1t1i title: AT1T1I
 
 
 
@@ -19,3 +31,15 @@ set frame efl period: 500 priority: 2 source: 20
 set frame et1 period: 1000 priority: 2 source: 20
 set frame vin period: 10000 priority: 2 source: 20
 set frame trf1 period: 1000 priority: 2 source: 20
+set frame eec2 period: 50 priority: 2 source: 20
+set frame vdc2 period: 10 priority: 2 source: 20
+set frame ic1 period: 500 priority: 2 source: 20
+set frame amb period: 1000 priority: 2 source: 20
+set frame rf period: 1000 priority: 2 source: 20
+set frame hours period: 5000 priority: 2 source: 20
+set frame etc1 period: 10 priority: 2 source: 20
+set frame etc2 period: 10 priority: 2 source: 20
+set frame erc1 period: 50 priority: 2 source: 20
+set frame ebc1 period: 100 priority: 2 source: 20
+set frame as period: 1000 priority: 2 source: 20
+set frame at1t1i period: 1000 priority: 2 source: 20
