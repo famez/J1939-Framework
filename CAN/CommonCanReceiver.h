@@ -21,6 +21,8 @@ typedef bool (*OnTimeoutPtr)();
 namespace Can {
 
 class CommonCanReceiver {
+private:
+	std::set<CanFilter> mFilters;
 
 protected:
 	OnReceiveFramePtr mRcvCB = nullptr;
@@ -28,6 +30,8 @@ protected:
 	void* mData = nullptr;		//Data to be passed to the OnReceiveFramePtr callback
 
 	virtual bool _initialize(const std::string& interface) = 0;
+
+	bool filter(u32 id);
 
 public:
 	CommonCanReceiver() {}
@@ -44,8 +48,9 @@ public:
 	virtual bool finalize(const std::string& interface) = 0;
 
 	/*
+	 * There is the default implementation which is based in a check in user space, but there are specific implementations that let delegate the work to kernel space
 	 */
-	virtual bool setFilters(std::set<CanFilter> filters) = 0;
+	virtual bool setFilters(std::set<CanFilter> filters);
 
 	/*
 	 */

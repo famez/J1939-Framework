@@ -171,12 +171,14 @@ void SocketCanReceiver::sniff(u32 timeout) {
 	msg.msg_control = &ctrlmsg;
 
 	timeval tv;
-	tv.tv_sec = timeout / 1000;
-	tv.tv_usec = (timeout % 1000) / 1000000;
+
 
 	if(mSock == -1) return;			//Receiver not initialized
 
 	do {
+
+		tv.tv_sec = timeout / 1000;
+		tv.tv_usec = (timeout % 1000) / 1000000;
 
 		do {
 

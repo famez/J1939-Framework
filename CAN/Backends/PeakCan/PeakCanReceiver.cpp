@@ -72,35 +72,6 @@ bool PeakCanReceiver::finalize(const std::string& interface) {
 
 }
 
-
-bool PeakCanReceiver::setFilters(std::set<CanFilter> filters) {
-
-	mFilters = filters;
-
-	for(auto filter = filters.begin(); filter != filters.end(); ++filter) {
-
-
-		if(filter->filterExtFrame() == filter->filterStdFrame() || filter->filterExtFrame()) {		//To filter extended format
-
-			//From PeakCan backend we can only filter ids. It is task for us to apply the mask to finally determine if the id and mask applied all together are valid.
-			PeakCanSymbols::getInstance().CAN_FilterMessages(mCurrentHandle, filter->getId(), filter->getId(), PCAN_MESSAGE_EXTENDED);
-
-		}
-
-
-		if(filter->filterExtFrame() == filter->filterStdFrame() || filter->filterStdFrame()) {		//To filter standard format
-
-			//From PeakCan backend we can only filter ids. It is task for us to apply the mask to finally determine if the id and mask applied all together are valid.
-			PeakCanSymbols::getInstance().CAN_FilterMessages(mCurrentHandle, filter->getId(), filter->getId(), PCAN_MESSAGE_STANDARD);
-
-		}
-
-	}
-
-	return true;
-
-}
-
 void PeakCanReceiver::sniff(u32 timeout) {
 
 	bool running = true;
@@ -111,11 +82,12 @@ void PeakCanReceiver::sniff(u32 timeout) {
 	int result;
 
 	timeval tv;
-	tv.tv_sec = timeout / 1000;
-	tv.tv_usec = (timeout % 1000) / 1000000;
 
 
 	do {
+
+		tv.tv_sec = timeout / 1000;
+		tv.tv_usec = (timeout % 1000) / 1000000;
 
 		do {
 
@@ -132,23 +104,14 @@ void PeakCanReceiver::sniff(u32 timeout) {
 			if (FD_ISSET(mReadFd, &fds)) {		//Frame available from interface
 
 
-			status = PeakCanSymbols::getInstance().CAN_Read(mCurrentHandle, &message, &tmStamp);
+				status = PeakCanSymbols::getInstance().CAN_Read(mCurrentHandle, &message, &tmStamp);
 
-				if (status != PCAN_ERROR_OK || message.LEN > MAX_CAN_DATA_SIZE || message.MSGTYPE != PCAN_MESSAGE_STANDARD ||
-						message.MSGTYPE != PCAN_MESSAGE_EXTENDED) {
+				if (status != PCAN_ERROR_OK || message.LEN > MAX_CAN_DATA_SIZE || (message.MSGTYPE != PCAN_MESSAGE_STANDARD &&
+						message.MSGTYPE != PCAN_MESSAGE_EXTENDED)) {
 					continue;
 				}
 
-				bool filtered = false;
-				//Apply second part of the filter capability...
-				for(auto filter = mFilters.begin(); filter != mFilters.end(); ++filter) {
-					if((filter->getId() & filter->getMask()) == (message.ID & filter->getMask())) {
-						filtered = true;
-						break;
-					}
-				}
-
-				if(filtered || mFilters.empty()) {
+				if(filter(message.ID)) {		//Check if message is filtered
 
 					//Set data
 					std::string data;
