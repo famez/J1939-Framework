@@ -4,12 +4,9 @@
 
 namespace Can {
 
-bool CommonCanReceiver::initialize(const std::string& interface, OnReceiveFramePtr rcvCallback, OnTimeoutPtr tmoutCallback, void* data) {
+bool CommonCanReceiver::initialize(const std::string& interface) {
 
-	mRcvCB = rcvCallback;
-	mTimeoutCB = tmoutCallback;
-
-	mData = data;
+	mInterface = interface;
 
 	return _initialize(interface);
 

@@ -15,24 +15,14 @@
 #include "CanFilter.h"
 #include "CanFrame.h"
 
-typedef void (*OnReceiveFramePtr)(const Can::CanFrame& frame, const Utils::TimeStamp& tStamp, void* data);
-typedef bool (*OnTimeoutPtr)();
-
 namespace Can {
 
 class CommonCanReceiver {
 private:
 	std::set<CanFilter> mFilters;
-
+	std::string mInterface;
 protected:
-	OnReceiveFramePtr mRcvCB = nullptr;
-	OnTimeoutPtr mTimeoutCB = nullptr;
-	void* mData = nullptr;		//Data to be passed to the OnReceiveFramePtr callback
-
 	virtual bool _initialize(const std::string& interface) = 0;
-
-	bool filter(u32 id);
-
 public:
 	CommonCanReceiver() {}
 	virtual ~CommonCanReceiver() {}
@@ -40,8 +30,7 @@ public:
 	/*
 	 * Initializes the receiver to be used with the specified interface
 	 */
-	bool initialize(const std::string& interface, OnReceiveFramePtr rcvCallback, OnTimeoutPtr tmoutCallback, void* data = nullptr);
-
+	bool initialize(const std::string& interface);
 	/*
 	 * Finalize the interface releasing the resources that have been taken to initialize the interface.
 	 */
@@ -52,10 +41,14 @@ public:
 	 */
 	virtual bool setFilters(std::set<CanFilter> filters);
 
-	/*
-	 */
-	virtual void sniff(u32 timeout) = 0;
 
+	virtual int getFD() = 0;
+
+	virtual bool receive(CanFrame&, Utils::TimeStamp&) = 0;
+
+	virtual bool filter(u32 id);
+
+	const std::string& getInterface() const { return mInterface; }
 
 };
 

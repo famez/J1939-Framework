@@ -17,8 +17,13 @@ class SocketCanReceiver : public CommonCanReceiver {
 private:
 	int mSock;
 	bool mTimeStamp;
-protected:
-	bool _initialize(const std::string& interface) override;
+
+	iovec iov;
+	msghdr msg;
+	canfd_frame frame;
+	sockaddr_can addr;
+	char ctrlmsg[CMSG_SPACE(sizeof(timeval) + 3*sizeof(timespec) + sizeof(u32))];
+
 public:
 	SocketCanReceiver();
 	virtual ~SocketCanReceiver();
@@ -27,7 +32,15 @@ public:
 
 	bool finalize(const std::string& interface) override;
 	bool setFilters(std::set<CanFilter> filters) override;
-	void sniff(u32 timeout) override;
+
+	bool filter(u32 id) override { return true; }		//Filtering is already done in kernel space
+
+	bool receive(CanFrame&, Utils::TimeStamp&) override;
+
+	int getFD() override;
+
+	bool _initialize(const std::string& interface) override;
+
 };
 
 } /* namespace Sockets */

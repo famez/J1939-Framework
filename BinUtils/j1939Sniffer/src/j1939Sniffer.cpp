@@ -21,6 +21,7 @@
 #include <GenericFrame.h>
 #include <Transport/TPCMFrame.h>
 #include <Transport/TPDTFrame.h>
+#include <CanSniffer.h>
 
 
 
@@ -37,7 +38,7 @@ using namespace J1939;
 //To reassemble frames fragmented by means of Broadcast Announce Message protocol
 BamReassembler reassembler;
 
-void onRcv(const Can::CanFrame& frame, const TimeStamp& tStamp, void*);
+void onRcv(const Can::CanFrame& frame, const TimeStamp&, const std::string& interface, void*);
 bool onTimeout();
 
 u32 pgn;
@@ -244,36 +245,39 @@ int main (int argc, char **argv)
 
 	ICanHelper* helper = nullptr;
 
+	CanSniffer sniffer(onRcv, onTimeout);
+
 	for(auto iter = helpers.begin(); iter != helpers.end() && !helper; ++iter) {
 
 		std::set<std::string> ifaces = (*iter)->getCanIfaces();
 
-		for(auto iface = ifaces.begin(); iface != ifaces.end() && !helper; ++iface) {
-			if(interface == *iface) {
+		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
+			if(interface == *iface || interface.empty()) {
 				helper = *iter;
+
+				if(!helper->initialized(*iface)) {
+
+					if(!helper->initialize(*iface, BAUD_250K)) {
+						std::cerr << "Could not initialize the interface" << std::endl;
+						return 9;
+					}
+				}
+
+				CommonCanReceiver* receiver = helper->allocateCanReceiver();
+
+				receiver->initialize(*iface);
+
+				sniffer.addReceiver(receiver);
 			}
 		}
-
 	}
 
-	if(!helper) {
-		std::cerr << "Interface not found or not defined" << std::endl;
+	if(sniffer.getNumberOfReceivers() == 0) {
+		std::cerr << "No interface available from to sniffer" << std::endl;
 		return 8;
 	}
 
 
-	if(!helper->initialized(interface)) {
-
-		if(!helper->initialize(interface, BAUD_250K)) {
-			std::cerr << "Could not initialize the interface" << std::endl;
-			return 9;
-		}
-	}
-
-
-	CommonCanReceiver* receiver = helper->allocateCanReceiver();
-
-	receiver->initialize(interface, onRcv, onTimeout);
 
 	std::set<CanFilter> filters;
 
@@ -299,13 +303,13 @@ int main (int argc, char **argv)
 	filters.insert(tpdtFilter);
 
 
-	receiver->setFilters(filters);
+	sniffer.setFilters(filters);
 
 
 	//Initialize ncurses
 	initscr();
 
-	receiver->sniff(1000);
+	sniffer.sniff(1000);
 
 	endwin();
 
@@ -314,7 +318,7 @@ int main (int argc, char **argv)
 
 
 
-void onRcv(const Can::CanFrame& frame, const TimeStamp&, void*) {
+void onRcv(const Can::CanFrame& frame, const TimeStamp&, const std::string& interface, void*) {
 
 	std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
 			getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());

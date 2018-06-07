@@ -27,6 +27,13 @@ namespace Sockets {
 
 SocketCanReceiver::SocketCanReceiver() : mSock(-1), mTimeStamp(true) {
 
+
+	iov.iov_base = &frame;
+	msg.msg_name = &addr;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_control = &ctrlmsg;
+
 }
 
 SocketCanReceiver::~SocketCanReceiver() {
@@ -147,119 +154,73 @@ bool SocketCanReceiver::setFilters(std::set<CanFilter> filters) {
 
 }
 
+bool SocketCanReceiver::receive(CanFrame& canFrame, TimeStamp& timestamp) {
 
-
-void SocketCanReceiver::sniff(u32 timeout) {
-
-	bool running = true;
-	int nbytes;
-	int result;
-	fd_set rdfs;
-	iovec iov;
-	msghdr msg;
-	canfd_frame frame;
-	sockaddr_can addr;
 	cmsghdr *cmsg;
-	char ctrlmsg[CMSG_SPACE(sizeof(timeval) + 3*sizeof(timespec) + sizeof(u32))];
-	CanFrame canFrame;
-	TimeStamp timestamp;
+	int nbytes;
 
-	iov.iov_base = &frame;
-	msg.msg_name = &addr;
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-	msg.msg_control = &ctrlmsg;
-
-	timeval tv;
+	iov.iov_len = sizeof(frame);
+	msg.msg_namelen = sizeof(addr);
+	msg.msg_controllen = sizeof(ctrlmsg);
+	msg.msg_flags = 0;
 
 
-	if(mSock == -1) return;			//Receiver not initialized
+	nbytes = recvmsg(mSock, &msg, 0);
 
-	do {
+	if(nbytes >= 0) {
 
-		tv.tv_sec = timeout / 1000;
-		tv.tv_usec = (timeout % 1000) / 1000000;
+		if(mTimeStamp) {			//Timestamp option is enabled
 
-		do {
+			//Extract timestamp
+			for (cmsg = CMSG_FIRSTHDR(&msg);
+				 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
+				 cmsg = CMSG_NXTHDR(&msg,cmsg)) {
+				if (cmsg->cmsg_type == SO_TIMESTAMP) {
 
-			FD_ZERO(&rdfs);
-			FD_SET(mSock, &rdfs);
-			result = select(mSock + 1, &rdfs, NULL, NULL, &tv);
+					timeval *stamp = (timeval*)(CMSG_DATA(cmsg));
 
-		} while (result == -1 && errno == EINTR);
+					timestamp.setMicroSec(stamp->tv_usec);
+					timestamp.setSeconds(stamp->tv_sec);
 
-		if (result > 0) {
+				} else if (cmsg->cmsg_type == SO_TIMESTAMPING) {
 
-			if (FD_ISSET(mSock, &rdfs)) {		//Frame available from interface
+					timespec *stamp = (struct timespec *)CMSG_DATA(cmsg);
 
-				iov.iov_len = sizeof(frame);
-				msg.msg_namelen = sizeof(addr);
-				msg.msg_controllen = sizeof(ctrlmsg);
-				msg.msg_flags = 0;
-
-				nbytes = recvmsg(mSock, &msg, 0);
-
-				if(nbytes < 0) {
-					running = false;
-				} else {
-
-					if(mTimeStamp) {			//Timestamp option is enabled
-
-						//Extract timestamp
-						for (cmsg = CMSG_FIRSTHDR(&msg);
-							 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
-							 cmsg = CMSG_NXTHDR(&msg,cmsg)) {
-							if (cmsg->cmsg_type == SO_TIMESTAMP) {
-
-								timeval *stamp = (timeval*)(CMSG_DATA(cmsg));
-
-								timestamp.setMicroSec(stamp->tv_usec);
-								timestamp.setSeconds(stamp->tv_sec);
-
-							} else if (cmsg->cmsg_type == SO_TIMESTAMPING) {
-
-								timespec *stamp = (struct timespec *)CMSG_DATA(cmsg);
-
-								/*
-								 * stamp[0] is the software timestamp
-								 * stamp[1] is deprecated
-								 * stamp[2] is the raw hardware timestamp
-								 * See chapter 2.1.2 Receive timestamps in
-								 * linux/Documentation/networking/timestamping.txt
-								 */
-								timestamp.setSeconds(stamp[2].tv_sec);
-								timestamp.setMicroSec(stamp[2].tv_nsec/1000);
-							}
-						}
-
-					}
-
-
-					//Copy Frame
-					canFrame.setId(frame.can_id);
-
-					std::string data;
-					data.append((char*)(frame.data), frame.len);
-
-
-					canFrame.setData(data);
-
-
-					//Work is delegated to callback.
-					(mRcvCB)(canFrame, timestamp, mData);
-
+					/*
+					 * stamp[0] is the software timestamp
+					 * stamp[1] is deprecated
+					 * stamp[2] is the raw hardware timestamp
+					 * See chapter 2.1.2 Receive timestamps in
+					 * linux/Documentation/networking/timestamping.txt
+					 */
+					timestamp.setSeconds(stamp[2].tv_sec);
+					timestamp.setMicroSec(stamp[2].tv_nsec/1000);
 				}
-
 			}
 
-		} else if (result == 0) {		//Timeout expired
-			running = (mTimeoutCB)();
-		} else {
-			running = false;
 		}
 
-	} while (running);
 
+		//Copy Frame
+		canFrame.setId(frame.can_id);
+
+		std::string data;
+		data.append((char*)(frame.data), frame.len);
+
+
+		canFrame.setData(data);
+
+
+	}
+
+	return true;
+
+}
+
+
+int SocketCanReceiver::getFD() {
+
+	return mSock;
 
 }
 

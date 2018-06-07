@@ -72,73 +72,36 @@ bool PeakCanReceiver::finalize(const std::string& interface) {
 
 }
 
-void PeakCanReceiver::sniff(u32 timeout) {
+bool PeakCanReceiver::receive(CanFrame& frame, TimeStamp& timestamp) {
 
-	bool running = true;
 	TPCANMsg message;
 	TPCANTimestamp tmStamp;
-	fd_set fds;
-	TPCANStatus status;
-	int result;
 
-	timeval tv;
+	TPCANStatus status = PeakCanSymbols::getInstance().CAN_Read(mCurrentHandle, &message, &tmStamp);
 
+	if (status != PCAN_ERROR_OK || message.LEN > MAX_CAN_DATA_SIZE || (message.MSGTYPE != PCAN_MESSAGE_STANDARD &&
+			message.MSGTYPE != PCAN_MESSAGE_EXTENDED)) {
+		return false;
+	}
 
-	do {
+	//Set data
+	std::string data;
+	data.append((char*)message.DATA, message.LEN);
 
-		tv.tv_sec = timeout / 1000;
-		tv.tv_usec = (timeout % 1000) / 1000000;
+	frame = CanFrame(message.MSGTYPE == PCAN_MESSAGE_EXTENDED, message.ID, data);
 
-		do {
+	timestamp = TimeStamp(tmStamp.millis / 1000, (tmStamp.millis % 1000) * 1000 + tmStamp.micros);
 
-			FD_ZERO(&fds);
-			FD_SET(mReadFd, &fds);
-			result = select(mReadFd + 1, &fds, NULL, NULL, &tv);
-
-		} while (result == -1 && errno == EINTR);
-
-
-
-		if (result > 0) {
-
-			if (FD_ISSET(mReadFd, &fds)) {		//Frame available from interface
-
-
-				status = PeakCanSymbols::getInstance().CAN_Read(mCurrentHandle, &message, &tmStamp);
-
-				if (status != PCAN_ERROR_OK || message.LEN > MAX_CAN_DATA_SIZE || (message.MSGTYPE != PCAN_MESSAGE_STANDARD &&
-						message.MSGTYPE != PCAN_MESSAGE_EXTENDED)) {
-					continue;
-				}
-
-				if(filter(message.ID)) {		//Check if message is filtered
-
-					//Set data
-					std::string data;
-					data.append((char*)message.DATA, message.LEN);
-
-					CanFrame frame(message.MSGTYPE == PCAN_MESSAGE_EXTENDED, message.ID, data);
-
-					TimeStamp timestamp(tmStamp.millis / 1000, (tmStamp.millis % 1000) * 1000 + tmStamp.micros);
-
-					//Work is delegated to callback.
-					(mRcvCB)(frame, timestamp, mData);
-
-				}
-
-			}
-
-		} else if (result == 0) {		//Timeout expired
-			running = (mTimeoutCB)();
-		} else {
-			running = false;
-		}
-
-
-	} while (running);
+	return true;
 
 }
 
+
+int PeakCanReceiver::getFD() {
+
+	return mReadFd;
+
+}
 
 } /* namespace PeakCan */
 } /* namespace Can */

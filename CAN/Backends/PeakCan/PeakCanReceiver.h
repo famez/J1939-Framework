@@ -22,15 +22,16 @@ private:
 	int mReadFd;
 protected:
 	/*ICanReceiver implementation*/
-	bool _initialize(const std::string& interface) override;
 	bool finalize(const std::string& interface) override;
-	void sniff(u32 timeout) override;
-
 
 public:
 	PeakCanReceiver();
 	virtual ~PeakCanReceiver();
 
+	int getFD() override;
+
+	bool receive(CanFrame&, Utils::TimeStamp&) override;
+	bool _initialize(const std::string& interface) override;
 };
 
 } /* namespace PeakCan */
