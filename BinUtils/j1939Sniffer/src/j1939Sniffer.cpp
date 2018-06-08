@@ -247,7 +247,7 @@ int main (int argc, char **argv)
 
 	CanSniffer sniffer(onRcv, onTimeout);
 
-	for(auto iter = helpers.begin(); iter != helpers.end() && !helper; ++iter) {
+	for(auto iter = helpers.begin(); iter != helpers.end(); ++iter) {
 
 		std::set<std::string> ifaces = (*iter)->getCanIfaces();
 
