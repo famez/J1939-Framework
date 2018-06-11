@@ -17,17 +17,25 @@
 
 namespace Can {
 
+
+
 class TRCWriter {
 private:
 	std::ofstream mFileStream;
 	unsigned int mCounter;
 public:
+	TRCWriter();
 	TRCWriter(const std::string& file);
 	virtual ~TRCWriter();
 
 	void write(const CanFrame& frame, const Utils::TimeStamp& timeStamp);
 
+	bool open(const std::string& file);
 	void close();
+
+	class TRCWriteException : public std::exception {
+
+	};
 
 };
 
