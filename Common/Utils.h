@@ -38,6 +38,10 @@ public:
 	void setMicroSec(u32 microSec) { mMicroSec = microSec; }
 	u32 getSeconds() const { return mSeconds; }
 	void setSeconds(u32 seconds) { mSeconds = seconds; }
+
+
+	TimeStamp operator-(const TimeStamp& other) const;
+
 };
 
 }

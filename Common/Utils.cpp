@@ -27,4 +27,29 @@ timespec addMillis(timespec* time, u32 millis) {
 
 }
 
+TimeStamp TimeStamp::operator-(const TimeStamp& other) const {
+
+	TimeStamp retVal(*this);
+
+	if(other.mMicroSec > mMicroSec) {
+		if(other.mSeconds >= mSeconds) {
+			return TimeStamp();
+		} else {
+			retVal.mMicroSec = mMicroSec + 1000000;
+			retVal.mSeconds = mSeconds - 1;
+		}
+	}
+
+	if(other.mSeconds > retVal.mSeconds) {
+		return TimeStamp();
+	}
+
+
+	retVal.mSeconds = retVal.mSeconds - other.mSeconds;
+	retVal.mMicroSec = retVal.mMicroSec - other.mMicroSec;
+
+	return retVal;
+
+}
+
 }
