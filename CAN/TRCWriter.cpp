@@ -10,6 +10,8 @@
 
 #include "TRCWriter.h"
 
+#define TRC_FILE_HEADER			";$FILEVERSION=1.1\n;\n"
+
 
 namespace Can {
 
@@ -84,10 +86,11 @@ bool TRCWriter::open(const std::string& file) {
 
 	mFileStream.open(file.c_str(), std::ifstream::out | std::ifstream::trunc);
 
+	if(mFileStream.is_open()) {
+		mFileStream << TRC_FILE_HEADER;
+	}
 
 	return mFileStream.is_open();
-
-
 }
 
 void TRCWriter::close() {
