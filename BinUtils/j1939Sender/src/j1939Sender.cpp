@@ -381,6 +381,10 @@ void parseLine(const std::string& line) {
 	//If there is the character #, omit every character until the end of line (including the # character)
 	size_t found = line.find_first_of('#');
 
+	if(found == 0) {
+		return;
+	}
+
 	std::list<std::string> tokens = splitTokens(line.substr(0, found));
 
 	const CommandHelper& cmd = findSubCommand(baseCommand, tokens);
