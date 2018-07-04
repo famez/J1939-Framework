@@ -44,7 +44,7 @@ FMS1Frame::~FMS1Frame() {
 void FMS1Frame::decodeData(const u8* buffer, size_t length) {
 
 	if(length != FMS1_FRAME_LENGTH) {		//Check the length first
-		throw new J1939DecodeException("[FMS1Frame::decodeData] Buffer length does "
+		throw  J1939DecodeException("[FMS1Frame::decodeData] Buffer length does "
 				"not match the expected length. Buffer length:" + std::to_string(length) + ". Expected length: " + std::to_string(FMS1_FRAME_LENGTH));
 	}
 
@@ -76,12 +76,12 @@ void FMS1Frame::encodeData(u8* buffer, size_t length) const {
 	//Not necessary to check length if getDataLength() returns the proper value as the base class will already do the check
 
 	if(mTTSs.size() != TTSS_PER_BLOCK) {		//Check if we have the right number of TTSs.
-		throw new J1939EncodeException("[FMS1Frame::encodeData] There are not " + std::to_string(TTSS_PER_BLOCK) + " defined");
+		throw  J1939EncodeException("[FMS1Frame::encodeData] There are not " + std::to_string(TTSS_PER_BLOCK) + " defined");
 	}
 
 	//Check if the number for every TTS is the right one.
 	if(mTTSs.begin()->first <= mBlockID * TTSS_PER_BLOCK || mTTSs.rbegin()->first > (mBlockID + 1) * TTSS_PER_BLOCK) {
-		throw new J1939EncodeException("[FMS1Frame::encodeData] TTS numbers are not the proper ones for this block");
+		throw  J1939EncodeException("[FMS1Frame::encodeData] TTS numbers are not the proper ones for this block");
 	}
 
 	u8 tts1Number = TTSS_PER_BLOCK * mBlockID + 1;
