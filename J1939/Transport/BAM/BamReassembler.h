@@ -77,7 +77,7 @@ public:
 
 	bool toBeHandled(const J1939Frame&) const;
 
-	void handleFrame(const J1939Frame&);
+	size_t handleFrame(const J1939Frame&);
 
 	void clearStatus();
     void setError(EBamError status) { mLastError = status; }

@@ -83,17 +83,19 @@ bool BamReassembler::toBeHandled(const J1939Frame& frame) const {
 }
 
 
-void BamReassembler::handleFrame(const J1939Frame& frame) {
+size_t BamReassembler::handleFrame(const J1939Frame& frame) {
 
 	const TPDTFrame* data = NULL;
 	const TPCMFrame* conn = NULL;
+
+	size_t expectedSize = 0;
 
 	u8 srcAddr = frame.getSrcAddr();
 
 
 	if(frame.getDstAddr() != J1939_BROADCAST_ADDRESS) {		//The frame does not have a broadcast address
 		setError(BAM_ERROR_NOT_BCAST_ADDR);
-		return;
+		return 0;
 	}
 
 	switch(frame.getPGN()) {
@@ -117,6 +119,8 @@ void BamReassembler::handleFrame(const J1939Frame& frame) {
 		}
 
 		mFragments[srcAddr].setCmFrame(*conn);
+
+		expectedSize = conn->getTotalMsgSize();
 
 	}	break;
 
@@ -159,11 +163,13 @@ void BamReassembler::handleFrame(const J1939Frame& frame) {
 				mReassembledFrames.push(decodedFrame.release());
 			} else {
 				setError(BAM_ERROR_DECODING);
-				return;
+				return 0;
 			}
 
 			setError(BAM_ERROR_OK);
 		}
+
+		expectedSize = connFrame.getTotalMsgSize();
 
 	}	break;
 
@@ -175,6 +181,8 @@ void BamReassembler::handleFrame(const J1939Frame& frame) {
 	}	break;
 
 	}
+
+	return expectedSize;
 
 }
 
