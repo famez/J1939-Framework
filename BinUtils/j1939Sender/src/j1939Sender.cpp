@@ -915,6 +915,8 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 						SPNStatus* spnStat = static_cast<SPNStatus*>(spn);
 						if(!spnStat->setValue(status)) {
 							std::cerr << "Value out of range" << std::endl;
+						} else {
+							std::cout << "SPN " << spn->getSpnNumber() << " set to (" << valueNumber << ") " << spnStat->getValueDescription(status) << std::endl;
 						}
 					} else {
 						std::cerr << "Value out of range" << std::endl;
