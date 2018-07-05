@@ -7,7 +7,21 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 
+set(J1939_REPO_PATH "/home/fernado/git/J1939-Framework/")
+
 include(WiresharkPlugin)
+
+macro(use_cxx11)
+  if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+    endif ()
+  else ()
+    set (CMAKE_CXX_STANDARD 11)
+  endif ()
+endmacro(use_cxx11)
+
+
 
 # Plugin name and version info (major minor micro extra)
 set_module_info(j1939 0 0 4 0)
@@ -27,12 +41,12 @@ set_source_files_properties(
 	COMPILE_FLAGS "${WERROR_COMMON_FLAGS}"
 )
 
-set (CMAKE_CXX_STANDARD 11)
+use_cxx11()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(/home/fernado/git/J1939-Framework/J1939/ /home/fernado/git/J1939-Framework/Common/)
+include_directories(${J1939_REPO_PATH}/J1939/ ${J1939_REPO_PATH}/Common/)
 
-link_directories(/home/fernado/git/J1939-Framework/J1939/Debug/)
+link_directories(${J1939_REPO_PATH}/J1939/Debug/)
 
 register_plugin_files(plugin.c
 	plugin

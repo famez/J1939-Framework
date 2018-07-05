@@ -19,6 +19,7 @@ void proto_reg_handoff_j1939(void);
 #include <J1939Frame.h>
 #include <J1939DataBase.h>
 #include <GenericFrame.h>
+#include <FMS/VIFrame.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
 #include <Transport/BAM/BamReassembler.h>
@@ -344,7 +345,19 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
 	} else {		//Another type of frame than the generic ones and the ones that belong to BAM protocol
 
-		proto_tree_add_item(j1939_tree, hf_j1939_vin, tvb, 0, frame->getDataLength() - 1, ENC_NA);
+		switch(frame->getPGN()) {
+
+		case VI_PGN: {			//Vehicle identifier
+
+			proto_tree_add_item(j1939_tree, hf_j1939_vin, tvb, 0, frame->getDataLength() - 1, ENC_NA);
+
+		}	break;
+
+		default:
+			break;
+		}
+
+
 
 	}
 
