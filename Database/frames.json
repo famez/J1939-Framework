@@ -762,7 +762,7 @@
 			{
 				"byteSize" : 2,
 				"formatGain" : 0.00048828125,
-				"formatOffset" : -15,
+				"formatOffset" : -15.687,
 				"name" : "Lateral Acceleration",
 				"number" : 1809,
 				"offset" : 5,
