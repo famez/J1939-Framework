@@ -23,7 +23,7 @@ private:
 
 
 public:
-    SPNNumeric(u32 number, const std::string& name = "", size_t offset = 0, double formatGain = 0, s32 formatOffset = 0, u8 byteSize = 0, const std::string& units = "");
+    SPNNumeric(u32 number, const std::string& name = "", size_t offset = 0, double formatGain = 0, double formatOffset = 0, u8 byteSize = 0, const std::string& units = "");
 	virtual ~SPNNumeric();
 
 	double getFormatedValue() const ;

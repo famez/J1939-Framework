@@ -20,7 +20,7 @@
 
 namespace J1939 {
 
-SPNNumeric::SPNNumeric(u32 number, const std::string& name, size_t offset, double formatGain, s32 formatOffset, u8 byteSize, const std::string& units) :
+SPNNumeric::SPNNumeric(u32 number, const std::string& name, size_t offset, double formatGain, double formatOffset, u8 byteSize, const std::string& units) :
     SPN(number, name, offset),
 	 mFormatGain(formatGain), mFormatOffset(formatOffset), mByteSize(byteSize), mUnits(units), mValue(0) {
 
