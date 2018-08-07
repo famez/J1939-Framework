@@ -19,9 +19,9 @@ void proto_reg_handoff_j1939(void);
 #include <J1939Frame.h>
 #include <J1939DataBase.h>
 #include <GenericFrame.h>
-#include <FMS/VIFrame.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
+#include <SPN/SPNString.h>
 #include <Transport/BAM/BamReassembler.h>
 
 
@@ -38,6 +38,7 @@ static int hf_j1939_frame = -1;
 static int hf_j1939_spn = -1;
 static int hf_j1939_value = -1;
 static int hf_j1939_status = -1;
+static int hf_j1939_string = -1;
 static int hf_j1939_vin = -1;
 
 static int proto_j1939 = -1;
@@ -103,7 +104,12 @@ void proto_register_j1939(void) {
 		{ &hf_j1939_status,
 				{"Status", "j1939.spn.status",
 					FT_UINT8, BASE_DEC, NULL, 0x0, NULL, HFILL }
-		},{ &hf_j1939_vin,
+		},
+		{ &hf_j1939_string,
+				{"String", "j1939.spn.string",
+						FT_STRING, BASE_NONE, NULL, 0x0, NULL, HFILL }
+		},
+		{ &hf_j1939_vin,
 				{"Vehicle Identification Number", "j1939.vin",
 					FT_STRING, BASE_NONE, NULL, 0x0, NULL, HFILL }
 		},
@@ -345,20 +351,6 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
 	} else {		//Another type of frame than the generic ones and the ones that belong to BAM protocol
 
-		switch(frame->getPGN()) {
-
-		case VI_PGN: {			//Vehicle identifier
-
-			proto_tree_add_item(j1939_tree, hf_j1939_vin, tvb, 0, frame->getDataLength() - 1, ENC_NA);
-
-		}	break;
-
-		default:
-			break;
-		}
-
-
-
 	}
 
 	return tvb_captured_length(tvb);
@@ -400,6 +392,18 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 					spn->getName().c_str(), spnStatus->getValueDescription(spnStatus->getValue()).c_str(),
 					spnStatus->getValue());
 
+
+		}	break;
+
+		case SPN::SPN_STRING: {
+
+			const SPNString *spnStr = (SPNString *)(spn);
+
+			ti = proto_tree_add_uint(j1939_tree, hf_j1939_spn, tvb, spn->getOffset(), spnStr->getValue().size(), *iter);
+
+			spn_tree = proto_item_add_subtree(ti, ett_j1939_can);
+
+			ti = proto_tree_add_item(spn_tree, hf_j1939_string, tvb, spn->getOffset(), spnStr->getValue().size(), ENC_NA);
 
 		}	break;
 		default:

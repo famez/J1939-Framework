@@ -41,6 +41,7 @@ private:
 
 	bool parseSPNNumeric(GenericFrame& frame, const Json::Value& spn);
 	bool parseSPNStatus(GenericFrame& frame, const Json::Value& spn);
+	bool parseSPNString(GenericFrame& frame, const Json::Value& spn);
 
 	void writeSPNNumeric(const SPN* spn, Json::Value& jsonSpn);
 	void writeSPNStatus(const SPN* spn, Json::Value& jsonSpn);

@@ -15,6 +15,8 @@
 
 namespace J1939 {
 
+class GenericFrame;
+
 class SPN : public ICloneable<SPN> {
 public:
 	enum EType {
@@ -27,8 +29,8 @@ private:
     u32 mSPNNumber;
 	std::string mName;
 	size_t mOffset;
-
-
+protected:
+	GenericFrame *mOwner = nullptr;		//Owner of this spn
 
 public:
     SPN(u32 number, const std::string& name, size_t offset);
@@ -50,13 +52,6 @@ public:
 		mSPNNumber = spnNumber;
 	}
 
-	virtual EType getType() const = 0;
-
-
-    virtual void decode(const u8* buffer, size_t length) = 0;
-    virtual void encode(u8* buffer, size_t length) const = 0;
-
-
 	const std::string& getName() const {
 		return mName;
 	}
@@ -65,8 +60,18 @@ public:
 		mName = name;
 	}
 
+	void setOwner(GenericFrame* owner) { mOwner = owner; }
+
+	//To implement by inherited classes
+
+	virtual EType getType() const = 0;
+
+    virtual void decode(const u8* buffer, size_t length) = 0;
+    virtual void encode(u8* buffer, size_t length) const = 0;
+
 	virtual std::string toString();
 
+	virtual u8 getByteSize() const = 0;
 
 };
 

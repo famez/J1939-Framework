@@ -28,7 +28,7 @@
 #include <GenericFrame.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
-#include <FMS/VIFrame.h>
+#include <SPN/SPNString.h>
 #include <FMS/TellTale/FMS1Frame.h>
 #include <Transport/BAM/BamFragmenter.h>
 
@@ -897,12 +897,13 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 
 			try {
 
-				double valueNumber = std::stod(value);
+
 
 
 				switch(spn->getType()) {
 				case SPN::SPN_NUMERIC:
 				{
+					double valueNumber = std::stod(value);
 					SPNNumeric* spnNum = static_cast<SPNNumeric*>(spn);
 					if(spnNum->setFormattedValue(valueNumber)) {
 						std::cout << "Spn " << spn->getSpnNumber() << " from frame " << frame->getName() << " set to value " << spnNum->getFormatedValue() << std::endl;
@@ -910,6 +911,7 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 				}	break;
 				case SPN::SPN_STATUS:
 				{
+					u32 valueNumber = std::stoul(value);
 					u8 status = static_cast<u8>(valueNumber);
 					if((status & 0xFF) == valueNumber) {
 						SPNStatus* spnStat = static_cast<SPNStatus*>(spn);
@@ -921,6 +923,12 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 					} else {
 						std::cerr << "Value out of range" << std::endl;
 					}
+
+				}	break;
+				case SPN::SPN_STRING:
+				{
+					SPNString* spnStr = static_cast<SPNString*>(spn);
+					spnStr->setValue(value);
 
 				}	break;
 
@@ -942,19 +950,7 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 			if(!parseSetGenericParams(name, frame, key, value)) {
 				//If this function returns false, it means that the given key is not a generic parameter, but it is particular of certain frame
 
-				if(key == VIN_TOKEN) {
-
-					if(frame->getPGN() == VI_PGN) {
-
-						VIFrame* viFrame = static_cast<VIFrame*>(frame);
-
-						viFrame->setVIN(value);
-					}
-
-				} else {
-					std::cerr << "Unknown parameter..." << std::endl;
-				}
-
+				std::cerr << "Unknown parameter..." << std::endl;
 
 			}
 		}

@@ -12,7 +12,6 @@
 #include "Transport/TPDTFrame.h"
 #include "Diagnosis/Frames/DM1.h"
 #include "Addressing/AdressClaimFrame.h"
-#include "FMS/VIFrame.h"
 #include "FMS/TellTale/FMS1Frame.h"
 
 
@@ -122,11 +121,6 @@ void J1939Factory::registerPredefinedFrames() {
 		TPDTFrame frame;
 		registerFrame(frame);
 	}
-
-    {
-        VIFrame frame;
-        registerFrame(frame);
-    }
 
     {
     	FMS1Frame frame;

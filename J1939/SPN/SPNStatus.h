@@ -58,6 +58,8 @@ public:
 
     std::string toString() override;
 
+    u8 getByteSize() const override { return 1; }		//Spn status has always size of 1
+
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 
 };

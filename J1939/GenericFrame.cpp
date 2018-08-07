@@ -11,11 +11,13 @@
 #include <iostream>
 
 #include <Utils.h>
+#include <Assert.h>
 
 #include "GenericFrame.h"
-#include "SPN/SPNNumeric.h"
 
 namespace J1939 {
+
+
 
 GenericFrame::GenericFrame(u32 pgn) : J1939Frame(pgn), mLength(0) {
 
@@ -26,8 +28,8 @@ GenericFrame::GenericFrame(const GenericFrame& other) : J1939Frame(other), mLeng
 
     for(auto spn = other.mSPNs.begin(); spn != other.mSPNs.end(); ++spn) {
 		mSPNs[spn->first] = spn->second->clone();
+		mSPNs[spn->first]->setOwner(this);
 	}
-
 }
 
 GenericFrame::~GenericFrame() {
@@ -40,17 +42,32 @@ GenericFrame::~GenericFrame() {
 
 }
 
+void GenericFrame::recalculateStringOffsets() {
+
+	for(auto spn = mSPNs.begin(); spn != mSPNs.end(); ++spn) {
+
+		auto nextSpn = spn;
+		++nextSpn;
+		if(nextSpn != mSPNs.end()) {
+			nextSpn->second->setOffset(spn->second->getOffset() + spn->second->getByteSize());
+		}
+
+	}
+
+}
+
 void GenericFrame::decodeData(const u8* buffer, size_t length) {
 
-
 	const u8* spnBuf;
+	size_t offset;
 
     for(auto spn = mSPNs.begin(); spn != mSPNs.end(); ++spn) {
 
-        size_t offset = spn->second->getOffset();
-        if(offset >= length) {
-            throw J1939DecodeException("[GenericFrame::decodeData] Offset of spn is higher than frame length");
-        }
+    	offset = spn->second->getOffset();
+
+    	if(offset >= length) {
+			throw J1939DecodeException("[GenericFrame::decodeData] Offset of spn is higher than frame length");
+		}
 
         spnBuf = buffer + offset;
         spn->second->decode(spnBuf, length - offset);
@@ -62,9 +79,12 @@ void GenericFrame::decodeData(const u8* buffer, size_t length) {
 void GenericFrame::encodeData(u8* buffer, size_t length) const {
 
     u8* spnBuf;
+	size_t offset;
+
     for(auto spn = mSPNs.begin(); spn != mSPNs.end(); ++spn) {
 
-        size_t offset = spn->second->getOffset();
+    	offset = spn->second->getOffset();
+
         if(offset >= length) {
             throw J1939EncodeException("[GenericFrame::encodeData] Offset of spn is higher than frame length: SPN number: " + std::to_string(spn->second->getSpnNumber()) +
             		" offset: " + std::to_string(offset) + " length: " + std::to_string(length));
@@ -88,14 +108,7 @@ size_t GenericFrame::getDataLength() const {
 		if(maxOffset > spn->second->getOffset()) continue;
 
 		maxOffset = spn->second->getOffset();
-
-
-		if(spn->second->getType() == SPN::SPN_NUMERIC) {
-
-			SPNNumeric* numSpn = (SPNNumeric*)(spn->second);
-			sizeLastSpn = numSpn->getByteSize();
-		}
-
+		sizeLastSpn = spn->second->getByteSize();
 
 	}
 
@@ -110,12 +123,24 @@ SPN *GenericFrame::registerSPN(const SPN& spn) {
     SPN* retVal = NULL;
     auto spnIter = mSPNs.find(spn.getSpnNumber());
 
+    //Assertion to ensure that a generic frame only contains
+    //either SPNs of type string or SPNs of another type than string
+
+    ASSERT(mSPNs.empty() ? true : ((mSPNs.begin()->second->getType() == SPN::SPN_STRING) ==
+    		(spn.getType() == SPN::SPN_STRING)));
+
     if(spnIter == mSPNs.end()) {
         retVal = spn.clone();
+        retVal->setOwner(this);
         mSPNs[spn.getSpnNumber()] = retVal;
     } else {
         retVal = spnIter->second;
     }
+
+    if(spn.getType() == SPN::SPN_STRING) {
+    	recalculateStringOffsets();
+    }
+
     return retVal;
 }
 

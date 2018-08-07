@@ -28,6 +28,9 @@ public:
 	GenericFrame(const GenericFrame& other);
 	virtual ~GenericFrame();
 
+	//This method is called when there is a need to recalculate the offsets for SPNs of type String.
+	void recalculateStringOffsets();
+
 
 	/**
 	 * The copy-assingment and move-assignment are forbidden here. Use clone instead.

@@ -14,6 +14,7 @@
 #include "GenericFrame.h"
 #include "SPN/SPNNumeric.h"
 #include "SPN/SPNStatus.h"
+#include "SPN/SPNString.h"
 
 #include "json.h"
 
@@ -108,7 +109,7 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 			for(unsigned int j = 0; j < spns.size(); ++j) {
 				const Json::Value& spn = spns[j];
 
-				if(!spn.isMember(NAME_KEY) || !spn.isMember(NUMBER_KEY) || !spn.isMember(TYPE_KEY) || !spn.isMember(OFFSET_KEY) ) {
+				if(!spn.isMember(NAME_KEY) || !spn.isMember(NUMBER_KEY) || !spn.isMember(TYPE_KEY)) {
 					return false;
 
 				}
@@ -119,7 +120,7 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 				const Json::Value offset = spn[OFFSET_KEY];
 
 
-				if(!name.isString() || !number.isUInt() || !type.isUInt() || !offset.isUInt()) {
+				if(!name.isString() || !number.isUInt() || !type.isUInt()) {
 					return false;
 				}
 
@@ -141,6 +142,13 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 					}
 					break;
 
+				case SPN::SPN_STRING:
+
+					if(!parseSPNString(frame, spn)) {
+						return false;
+					}
+
+					break;
 
 				default:
 					mErrorCode = ERROR_UNKNOWN_SPN_TYPE;
@@ -239,7 +247,7 @@ const std::vector<GenericFrame>& J1939DataBase::getParsedFrames() const {
 bool J1939DataBase::parseSPNNumeric(GenericFrame& frame, const Json::Value& spn) {
 
 	if(!spn.isMember(NUM_FORMAT_GAIN_KEY)
-			|| !spn.isMember(NUM_FORMAT_OFFSET_KEY) || !spn.isMember(NUM_BYTE_SIZE_KEY) || !spn.isMember(NUM_UNITS_KEY)) {
+			|| !spn.isMember(NUM_FORMAT_OFFSET_KEY) || !spn.isMember(NUM_BYTE_SIZE_KEY) || !spn.isMember(NUM_UNITS_KEY) || !spn.isMember(OFFSET_KEY)) {
 		return false;
 	}
 
@@ -251,7 +259,7 @@ bool J1939DataBase::parseSPNNumeric(GenericFrame& frame, const Json::Value& spn)
 	const Json::Value& byteSize = 			spn[NUM_BYTE_SIZE_KEY];
 	const Json::Value& units = 				spn[NUM_UNITS_KEY];
 
-	if(!formatGain.isDouble() || !formatOffset.isDouble() || !byteSize.isUInt() || !units.isString()) {
+	if(!formatGain.isDouble() || !formatOffset.isDouble() || !byteSize.isUInt() || !units.isString() || !offset.isUInt()) {
 		return false;
 	}
 
@@ -273,7 +281,7 @@ bool J1939DataBase::parseSPNNumeric(GenericFrame& frame, const Json::Value& spn)
 
 bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) {
 
-	if(!spn.isMember(STAT_BIT_OFFSET_KEY) || !spn.isMember(STAT_BIT_SIZE_KEY)) {
+	if(!spn.isMember(STAT_BIT_OFFSET_KEY) || !spn.isMember(STAT_BIT_SIZE_KEY) || !spn.isMember(OFFSET_KEY)) {
 		return false;
 	}
 
@@ -284,7 +292,7 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
 	const Json::Value& bitSize = spn[STAT_BIT_SIZE_KEY];
 
 
-	if(!bitOffset.isUInt() || !bitSize.isUInt()) {
+	if(!bitOffset.isUInt() || !bitSize.isUInt() || !offset.isUInt()) {
 		return false;
 	}
 
@@ -312,6 +320,18 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
 
 	return true;
 
+}
+
+bool J1939DataBase::parseSPNString(GenericFrame& frame, const Json::Value& spn) {
+
+	const Json::Value& name = spn[NAME_KEY];
+	const Json::Value& number = spn[NUMBER_KEY];
+
+	SPNString spnStr(number.asUInt(), name.asString());
+
+	frame.registerSPN(spnStr);
+
+	return true;
 }
 
 void J1939DataBase::writeSPNNumeric(const SPN* spn, Json::Value& jsonSpn) {

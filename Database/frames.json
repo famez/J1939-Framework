@@ -1,5 +1,36 @@
 [
 	{
+		"name" : "VI",
+		"pgn" : 65260,
+		"length" : 0,
+		"spns" : 
+		[
+			{
+				"name" : "Vehicle Number Identifier",
+				"number" : 237,
+				"type" : 2
+			}
+		]
+	},
+	{
+		"name" : "DI",
+		"pgn" : 65131,
+		"length" : 0,
+		"spns" : 
+		[
+			{
+				"name" : "Driver 1 Identification",
+				"number" : 1625,
+				"type" : 2
+			},
+			{
+				"name" : "Driver 2 Identification",
+				"number" : 1626,
+				"type" : 2
+			}
+		]
+	},
+	{
 		"name" : "DD",
 		"pgn" : 65276,
 		"length" : 8,
