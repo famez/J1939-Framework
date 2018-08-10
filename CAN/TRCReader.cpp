@@ -31,11 +31,11 @@
 namespace Can {
 
 
-TRCReader::TRCReader() : mCurrentPos (0), mTotalFrames(0), mSeekPos(0) {
+TRCReader::TRCReader() : mCurrentPos (0), mTotalFrames(0) {
 
 }
 
-TRCReader::TRCReader(const std::string& path) : mCurrentPos (0), mTotalFrames(0), mSeekPos(0) {
+TRCReader::TRCReader(const std::string& path) : mCurrentPos (0), mTotalFrames(0) {
 	loadFile(path);
 }
 
@@ -65,7 +65,7 @@ bool TRCReader::loadFile(const std::string& path) {
 		return false;
 	}
 
-	seekPosition(0);
+	reset();
 
 	return true;
 
@@ -82,6 +82,15 @@ void TRCReader::unloadFile() {
 	mTotalFrames = 0;
 }
 
+void TRCReader::reset() {
+
+	mFileStream.clear();
+	mFileStream.seekg(0, mFileStream.beg);
+
+	mCurrentPos = 0;
+
+}
+
 bool TRCReader::seekPosition(size_t pos) {
 
 	if(!isFileLoaded() || pos >= mTotalFrames ) {
@@ -91,8 +100,6 @@ bool TRCReader::seekPosition(size_t pos) {
 	if(mCurrentPos == pos) {
 		return true;
 	}
-
-	mCanFrames.clear();
 
 	mFileStream.clear();
 	mFileStream.seekg(0, mFileStream.beg);

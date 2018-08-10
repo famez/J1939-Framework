@@ -34,11 +34,9 @@ class TRCReader {
 
 private:
 
-	std::deque< std::pair<u32, CanFrame> > mCanFrames;
 	std::string mFileName;
 	size_t mCurrentPos;
 	size_t mTotalFrames;
-	size_t mSeekPos;
 	std::ifstream mFileStream;
     std::pair<u64, CanFrame> mLastReadFrameTimePair;
 
@@ -62,6 +60,11 @@ public:
 	void seekTime(u32 millis);
     std::pair<u64, CanFrame> getLastCanFrame();
 	void readNextCanFrame();
+
+	/*
+	 * Resets the reader to the beginning
+	 */
+	void reset();
 
 
 };
