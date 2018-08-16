@@ -412,7 +412,7 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 			const SPNNumeric *spnNum = (SPNNumeric *)(spn);
 
 			ti = proto_tree_add_double_format(spn_tree, spnNumToHinfoId[*iter], tvb, spn->getOffset(),
-					spnNum->getByteSize(), spnNum->getFormatedValue(), "%s: %lf %s",
+					spnNum->getByteSize(), spnNum->getFormatedValue(), "%s: %.10g %s",
 					spn->getName().c_str(), spnNum->getFormatedValue(), spnNum->getUnits().c_str());
 
 		}	break;
