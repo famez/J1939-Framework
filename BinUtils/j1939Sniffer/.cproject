@@ -40,18 +40,16 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.274171196" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.paths.985479177" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/J1939/Debug}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.393837245" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="CAN"/>
 									<listOptionValue builtIn="false" value="ncurses"/>
-									<listOptionValue builtIn="false" value="Threads"/>
-									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="Common"/>
 									<listOptionValue builtIn="false" value="J1939"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.79458475" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-rdynamic" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.113497849" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -142,4 +140,5 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

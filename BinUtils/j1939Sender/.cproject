@@ -26,7 +26,6 @@
 								<option id="gnu.cpp.compiler.option.dialect.std.95404394" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.9407176" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/J1939}&quot;"/>
 								</option>
@@ -44,16 +43,14 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/J1939/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads/Debug}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1414001013" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="CAN"/>
 									<listOptionValue builtIn="false" value="Common"/>
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="rt"/>
 									<listOptionValue builtIn="false" value="J1939"/>
-									<listOptionValue builtIn="false" value="pthread"/>
-									<listOptionValue builtIn="false" value="Threads"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.1693384831" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-rdynamic" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1347929146" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

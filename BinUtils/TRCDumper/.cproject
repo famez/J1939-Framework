@@ -39,15 +39,13 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.160984213" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.1439875801" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="CAN"/>
-									<listOptionValue builtIn="false" value="Threads"/>
 									<listOptionValue builtIn="false" value="rt"/>
-									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="dl"/>
 									<listOptionValue builtIn="false" value="Common"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.245495372" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1355917260" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -143,4 +141,5 @@
 			<resource resourceType="PROJECT" workspacePath="/TRCDumper"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

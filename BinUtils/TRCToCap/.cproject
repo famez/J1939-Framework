@@ -29,9 +29,8 @@
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads}&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.include.files.1641527207" name="Include files (-include)" superClass="gnu.cpp.compiler.option.include.files" useByScannerDiscovery="false" valueType="includeFiles"/>
+								<option id="gnu.cpp.compiler.option.include.files.1641527207" name="Include files (-include)" superClass="gnu.cpp.compiler.option.include.files" useByScannerDiscovery="false"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.406755612" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.197837162" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -45,13 +44,11 @@
 									<listOptionValue builtIn="false" value="writecap"/>
 									<listOptionValue builtIn="false" value="CAN"/>
 									<listOptionValue builtIn="false" value="Common"/>
-									<listOptionValue builtIn="false" value="Threads"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.539167547" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/home/fernado/wireshark-2.6.1/run/"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CAN/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Common/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Threads/Debug}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1378090319" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

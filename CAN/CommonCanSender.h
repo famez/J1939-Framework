@@ -11,18 +11,21 @@
 
 
 #include <vector>
+#include <memory>
+
+#include <thread>
+#include <mutex>
 
 #include <time.h>
 
-#include <Thread.h>
-#include <Lock.h>
 
 #include "ICanSender.h"
+
 
 namespace Can {
 
 
-class CommonCanSender : public ICanSender, public Threads::Thread {
+class CommonCanSender : public ICanSender {
 private:
 
 	class CanFrameRing {
@@ -52,11 +55,10 @@ private:
 
 	};
 
-
-
-	mutable Threads::Lock mFramesLock;
+	mutable std::mutex mFramesLock;
 	std::vector<CanFrameRing> mFrameRings;
 	bool mFinished;
+	std::unique_ptr<std::thread> mThread = nullptr;
 
 protected:
 	virtual void _sendFrame(const CanFrame& frame) const = 0;
@@ -66,7 +68,6 @@ protected:
 public:
 	CommonCanSender();
 	virtual ~CommonCanSender();
-
 
 	//ICanSender implementation
 	bool initialize(std::string interface);

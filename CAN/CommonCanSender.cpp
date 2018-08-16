@@ -5,14 +5,7 @@
  *      Author: famez
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <linux/can.h>
-#include <linux/can/raw.h>
 
 #include <Utils.h>
 
@@ -72,7 +65,7 @@ bool CommonCanSender::initialize(std::string interface) {
 	bool retVal = _initialize(interface);
 
 	if(retVal) {
-		start();			//Initialize the thread in charge of sending the frames
+		mThread = std::unique_ptr<std::thread>(new std::thread(&CommonCanSender::run, this));			//Initialize the thread in charge of sending the frames
 	}
 
 	return retVal;
@@ -85,7 +78,7 @@ bool CommonCanSender::finalize() {
 
 	mFinished = true;		//This makes the thread finish
 
-	join();					//Wait for thread to finish doing proper cleaning and claim resources
+	mThread->join();					//Wait for thread to finish doing proper cleaning and claim resources
 
 	//End of thread, execute _finalize
 	_finalize();
@@ -142,7 +135,7 @@ bool CommonCanSender::sendFrames(std::vector<CanFrame> frames, u32 period) {
 
 	mFrameRings.push_back(ring);
 
-	mFramesLock.unLock();
+	mFramesLock.unlock();
 
 	return true;
 
@@ -195,7 +188,7 @@ void CommonCanSender::run() {
 			}
 		}
 
-		mFramesLock.unLock();
+		mFramesLock.unlock();
 
 
 		usleep(1000);
@@ -232,7 +225,7 @@ void CommonCanSender::unSendFrames(const std::vector<u32>& ids) {
 		mFrameRings.erase(found);
 	}
 
-	mFramesLock.unLock();
+	mFramesLock.unlock();
 
 }
 
