@@ -36,10 +36,6 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 static int hf_j1939_frame = -1;
 static int hf_j1939_spn = -1;
-static int hf_j1939_value = -1;
-static int hf_j1939_status = -1;
-static int hf_j1939_string = -1;
-static int hf_j1939_vin = -1;
 
 static int proto_j1939 = -1;
 static gint ett_j1939 = -1;
@@ -85,6 +81,7 @@ static const fragment_items bam_frag_items = {
 
 BamReassembler bamReassembler;
 
+std::map<u32/*SPN number*/, int/*header_field_info.id*/> spnNumToHinfoId;
 
 void proto_register_j1939(void) {
 
@@ -96,22 +93,6 @@ void proto_register_j1939(void) {
 		{ &hf_j1939_spn,
 			{"Spn", "j1939.spn",
 					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
-		},
-		{ &hf_j1939_value,
-				{"Value", "j1939.spn.value",
-					FT_DOUBLE, BASE_NONE, NULL, 0x0, NULL, HFILL }
-		},
-		{ &hf_j1939_status,
-				{"Status", "j1939.spn.status",
-					FT_UINT8, BASE_DEC, NULL, 0x0, NULL, HFILL }
-		},
-		{ &hf_j1939_string,
-				{"String", "j1939.spn.string",
-						FT_STRING, BASE_NONE, NULL, 0x0, NULL, HFILL }
-		},
-		{ &hf_j1939_vin,
-				{"Vehicle Identification Number", "j1939.vin",
-					FT_STRING, BASE_NONE, NULL, 0x0, NULL, HFILL }
 		},
 		{ &hf_bam_fragment_overlap,
 			      { "Fragment overlap", "bam.fragment.overlap", FT_BOOLEAN, BASE_NONE,
@@ -194,9 +175,65 @@ void proto_reg_handoff_j1939(void) {
 
 	const std::vector<GenericFrame>& ddbbFrames = ddbb.getParsedFrames();
 
+	header_field_info* info;
+	std::string abbrev;
+
 	//Register all the frames listed in the database
 	for(auto iter = ddbbFrames.begin(); iter != ddbbFrames.end(); ++iter) {
 		J1939Factory::getInstance().registerFrame(*iter);
+
+		//Also, we have to register SPN specific fields
+		std::set<u32> spnNumbers = iter->getSPNNumbers();
+
+		for(auto spnNumber = spnNumbers.begin(); spnNumber != spnNumbers.end(); ++spnNumber) {
+
+			const SPN* spn = iter->getSPN(*spnNumber);
+
+			info = (header_field_info*)g_malloc0(sizeof(header_field_info));
+
+			info->id = -1;
+			info->ref_type = HF_REF_TYPE_NONE;
+			info->same_name_prev_id = -1;
+
+			abbrev = std::string("j1939.spn.") + std::to_string(*spnNumber);
+
+			info->name = g_strdup(spn->getName().c_str());
+			info->abbrev = g_strdup(abbrev.c_str());
+
+			switch(spn->getType()) {
+
+			case SPN::SPN_STATUS: {
+
+				info->type = FT_UINT8;
+				info->display = BASE_DEC;
+
+			}	break;
+
+			case SPN::SPN_NUMERIC: {
+
+				info->type = FT_DOUBLE;
+				info->display = BASE_NONE;
+
+			}	break;
+
+			case SPN::SPN_STRING: {
+
+				info->type = FT_STRING;
+				info->display = BASE_NONE;
+
+			}	break;
+
+			default:
+				break;
+
+			}
+
+			proto_register_fields_section(proto_j1939, info, 1);
+
+			spnNumToHinfoId[*spnNumber] = info->id;
+
+		}
+
 	}
 
 	std::set<u32> pgns = J1939Factory::getInstance().getAllRegisteredPGNs();
@@ -366,15 +403,15 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 		const SPN *spn = genFrame->getSPN(*iter);
 
+		ti = proto_tree_add_uint(j1939_tree, hf_j1939_spn, tvb, spn->getOffset(), spn->getByteSize(), *iter);
+		spn_tree = proto_item_add_subtree(ti, ett_j1939_can);
+
 		switch(spn->getType()) {
 		case SPN::SPN_NUMERIC: {
 
 			const SPNNumeric *spnNum = (SPNNumeric *)(spn);
-			ti = proto_tree_add_uint(j1939_tree, hf_j1939_spn, tvb, spn->getOffset(), spnNum->getByteSize(), *iter);
 
-
-			spn_tree = proto_item_add_subtree(ti, ett_j1939_can);
-			ti = proto_tree_add_double_format(spn_tree, hf_j1939_value, tvb, spn->getOffset(),
+			ti = proto_tree_add_double_format(spn_tree, spnNumToHinfoId[*iter], tvb, spn->getOffset(),
 					spnNum->getByteSize(), spnNum->getFormatedValue(), "%s: %lf %s",
 					spn->getName().c_str(), spnNum->getFormatedValue(), spnNum->getUnits().c_str());
 
@@ -383,10 +420,7 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 			const SPNStatus *spnStatus = (SPNStatus *)(spn);
 
-			ti = proto_tree_add_uint(j1939_tree, hf_j1939_spn, tvb, spn->getOffset(), 1, *iter);
-			spn_tree = proto_item_add_subtree(ti, ett_j1939_can);
-
-			ti = proto_tree_add_uint_bits_format_value(spn_tree, hf_j1939_status, tvb,
+			ti = proto_tree_add_uint_bits_format_value(spn_tree, spnNumToHinfoId[*iter], tvb,
 					spn->getOffset() * sizeof(guint8) + 8 - spnStatus->getBitOffset() - spnStatus->getBitSize(),
 					spnStatus->getBitSize(), spnStatus->getValue(), "%s: %s (%u)",
 					spn->getName().c_str(), spnStatus->getValueDescription(spnStatus->getValue()).c_str(),
@@ -399,11 +433,7 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 			const SPNString *spnStr = (SPNString *)(spn);
 
-			ti = proto_tree_add_uint(j1939_tree, hf_j1939_spn, tvb, spn->getOffset(), spnStr->getValue().size(), *iter);
-
-			spn_tree = proto_item_add_subtree(ti, ett_j1939_can);
-
-			ti = proto_tree_add_item(spn_tree, hf_j1939_string, tvb, spn->getOffset(), spnStr->getValue().size(), ENC_NA);
+			ti = proto_tree_add_item(spn_tree, spnNumToHinfoId[*iter], tvb, spn->getOffset(), spnStr->getValue().size(), ENC_NA);
 
 		}	break;
 		default:
