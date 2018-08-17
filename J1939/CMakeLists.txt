@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(J1939)
+
+add_library(J1939 SHARED 
+    	./J1939Common.cpp
+	./Diagnosis/Frames/DM1.cpp
+	./FMS/TellTale/TellTale.cpp
+	./FMS/TellTale/FMS1Frame.cpp
+	./J1939Factory.cpp
+	./GenericFrame.cpp
+	./SPN/SPN.cpp
+	./SPN/SPNString.cpp
+	./SPN/SPNStatus.cpp
+	./SPN/SPNNumeric.cpp
+	./J1939DataBase.cpp
+	./J1939Frame.cpp
+	./jsoncpp.cpp
+	#./Addressing/AdressClaimFrame.cpp
+	./Transport/TPCMFrame.cpp
+	./Transport/BAM/BamReassembler.cpp
+	./Transport/BAM/BamFragmenter.cpp
+	#./Transport/RTSCTS/RTSCTSConnectionManager.cpp
+	./Transport/TPDTFrame.cpp
+
+)
+
+target_include_directories(J1939
+    PUBLIC 
+        . ${Common_SOURCE_DIR}
+)
+
+target_link_libraries(J1939
+    PUBLIC
+        Common
+)
+
+install (TARGETS J1939
+    LIBRARY DESTINATION lib)
+
