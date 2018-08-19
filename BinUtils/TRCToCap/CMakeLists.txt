@@ -20,7 +20,7 @@ add_executable(TRCToCap
 
 target_include_directories(TRCToCap
     PUBLIC 
-        . ${Can_SOURCE_DIR} ${Common_SOURCE_DIR} ${GLIB2_INCLUDE_DIRS}
+        include ${Can_SOURCE_DIR}/include ${Common_SOURCE_DIR}/include ${GLIB2_INCLUDE_DIRS}
 )
 
 target_link_libraries(TRCToCap

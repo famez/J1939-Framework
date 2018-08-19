@@ -5,7 +5,7 @@
  *      Author: famez
  */
 
-#include "PeakCanChannels.h"
+#include <Backends/PeakCan/PeakCanChannels.h>
 
 namespace Can {
 namespace PeakCan {

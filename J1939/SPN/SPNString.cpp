@@ -11,9 +11,9 @@
 #include <iostream>
 
 
-#include "SPNString.h"
-#include "../J1939Common.h"
-#include "../GenericFrame.h"
+#include <J1939Common.h>
+#include <SPN/SPNString.h>
+#include <GenericFrame.h>
 
 
 namespace J1939 {

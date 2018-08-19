@@ -7,7 +7,8 @@
 
 #include <dlfcn.h>
 
-#include "PeakCanSymbols.h"
+
+#include <Backends/PeakCan/PeakCanSymbols.h>
 
 namespace Can {
 namespace PeakCan {

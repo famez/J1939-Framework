@@ -18,7 +18,7 @@
 
 #include <Utils.h>
 
-#include "SocketCanSender.h"
+#include <Backends/Sockets/SocketCanSender.h>
 
 namespace Can {
 namespace Sockets {

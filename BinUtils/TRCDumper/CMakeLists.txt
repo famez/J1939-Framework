@@ -8,7 +8,7 @@ add_executable(TRCDumper
 
 target_include_directories(TRCDumper
     PUBLIC 
-        . ${Can_SOURCE_DIR} ${Common_SOURCE_DIR}
+        include ${Can_SOURCE_DIR}/include ${Common_SOURCE_DIR}/include
 )
 
 target_link_libraries(TRCDumper

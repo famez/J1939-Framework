@@ -5,10 +5,8 @@
  *      Author: fernado
  */
 
-#include "PeakCanReceiver.h"
-
-
-#include "PeakCanChannels.h"
+#include <Backends/PeakCan/PeakCanReceiver.h>
+#include <Backends/PeakCan/PeakCanChannels.h>
 
 using namespace Utils;
 

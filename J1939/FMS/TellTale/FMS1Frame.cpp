@@ -11,7 +11,7 @@
 
 #include <Utils.h>
 
-#include "FMS1Frame.h"
+#include <FMS/TellTale/FMS1Frame.h>
 
 #define FMS1_NAME				"FMS1"
 

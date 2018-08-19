@@ -5,8 +5,6 @@
  *      Author: famez
  */
 
-#include "BamReassembler.h"
-
 #include <string.h>
 
 //Common
@@ -14,7 +12,8 @@
 #include <Assert.h>
 
 //J1939
-#include "../../J1939Factory.h"
+#include <J1939Factory.h>
+#include <Transport/BAM/BamReassembler.h>
 
 namespace J1939 {
 

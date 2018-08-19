@@ -8,7 +8,7 @@ add_executable(j1939Decoder
 
 target_include_directories(j1939Decoder
     PUBLIC 
-        . ${J1939_SOURCE_DIR} ${Common_SOURCE_DIR}
+        include ${J1939_SOURCE_DIR}/include ${Common_SOURCE_DIR}/include
 )
 
 target_link_libraries(j1939Decoder

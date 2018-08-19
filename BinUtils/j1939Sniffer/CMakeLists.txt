@@ -16,7 +16,7 @@ add_executable(j1939Sniffer
 
 target_include_directories(j1939Sniffer
     PUBLIC 
-        . ${J1939_SOURCE_DIR} ${Can_SOURCE_DIR} ${Common_SOURCE_DIR}
+        include ${J1939_SOURCE_DIR}/include ${Can_SOURCE_DIR}/include ${Common_SOURCE_DIR}/include
 )
 
 target_link_libraries(j1939Sniffer

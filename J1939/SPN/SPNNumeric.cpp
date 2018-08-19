@@ -14,8 +14,8 @@
 #include <Utils.h>
 #include <Assert.h>
 
-#include "SPNNumeric.h"
-#include "../J1939Common.h"
+#include <J1939Common.h>
+#include <SPN/SPNNumeric.h>
 
 
 namespace J1939 {

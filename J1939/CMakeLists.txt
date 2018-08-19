@@ -4,7 +4,7 @@ project(J1939)
 
 add_library(J1939 SHARED 
     	./J1939Common.cpp
-	./Diagnosis/Frames/DM1.cpp
+	#./Diagnosis/Frames/DM1.cpp
 	./FMS/TellTale/TellTale.cpp
 	./FMS/TellTale/FMS1Frame.cpp
 	./J1939Factory.cpp
@@ -27,7 +27,7 @@ add_library(J1939 SHARED
 
 target_include_directories(J1939
     PUBLIC 
-        . ${Common_SOURCE_DIR}
+        include ${Common_SOURCE_DIR}/include
 )
 
 target_link_libraries(J1939
@@ -38,3 +38,6 @@ target_link_libraries(J1939
 install (TARGETS J1939
     LIBRARY DESTINATION lib)
 
+
+install(DIRECTORY include/ 
+    DESTINATION include)

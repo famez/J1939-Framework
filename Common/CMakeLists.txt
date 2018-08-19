@@ -7,7 +7,14 @@ add_library(Common STATIC
 )
 
 target_include_directories(Common
-    PRIVATE 
-        .
+    PUBLIC 
+        include
 )
 
+
+install (TARGETS Common
+    DESTINATION lib)
+
+
+install(DIRECTORY include/ 
+    DESTINATION include)

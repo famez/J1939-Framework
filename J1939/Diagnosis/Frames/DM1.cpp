@@ -5,7 +5,7 @@
  *      Author: famez
  */
 
-#include "DM1.h"
+#include <Diagnosis/Frames/DM1.h>
 
 namespace J1939 {
 

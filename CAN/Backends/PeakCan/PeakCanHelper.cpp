@@ -5,13 +5,12 @@
  *      Author: famez
  */
 
-#include "PeakCanHelper.h"
+#include <Backends/PeakCan/PeakCanHelper.h>
+#include <Backends/PeakCan/PeakCanSymbols.h>
+#include <Backends/PeakCan/PeakCanChannels.h>
+#include <Backends/PeakCan/PeakCanSender.h>
+#include <Backends/PeakCan/PeakCanReceiver.h>
 
-#include "PeakCanSymbols.h"
-#include "PeakCanChannels.h"
-
-#include "PeakCanSender.h"
-#include "PeakCanReceiver.h"
 
 
 struct BitrateItem

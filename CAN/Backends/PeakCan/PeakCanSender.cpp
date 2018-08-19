@@ -12,9 +12,9 @@
 #include <Types.h>
 #include <Utils.h>
 
+#include <Backends/PeakCan/PeakCanSender.h>
+#include <Backends/PeakCan/PeakCanChannels.h>
 
-#include "PeakCanSender.h"
-#include "PeakCanChannels.h"
 
 
 namespace Can {

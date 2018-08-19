@@ -22,7 +22,7 @@ add_library(Can SHARED
 
 target_include_directories(Can
     PUBLIC 
-        . ${Common_SOURCE_DIR}
+        include ${Common_SOURCE_DIR}/include
 )
 
 target_link_libraries(Can
@@ -33,3 +33,6 @@ target_link_libraries(Can
 
 install (TARGETS Can
     LIBRARY DESTINATION lib)
+
+install(DIRECTORY include/ 
+    DESTINATION include)

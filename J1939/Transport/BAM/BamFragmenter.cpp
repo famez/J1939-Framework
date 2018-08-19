@@ -6,8 +6,8 @@
  */
 
 #include <Utils.h>
+#include <Transport/BAM/BamFragmenter.h>
 
-#include "BamFragmenter.h"
 
 namespace J1939 {
 
