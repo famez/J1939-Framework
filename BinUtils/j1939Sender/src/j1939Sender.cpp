@@ -85,7 +85,9 @@
 #define TTS_STATUS			"status"
 
 
+#ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
+#endif
 
 
 

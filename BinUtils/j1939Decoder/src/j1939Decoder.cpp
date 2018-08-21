@@ -26,8 +26,10 @@
 #include <J1939Factory.h>
 #include <GenericFrame.h>
 
-
+#ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
+#endif
+
 
 using namespace J1939;
 

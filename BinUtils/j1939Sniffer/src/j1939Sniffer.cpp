@@ -28,7 +28,9 @@
 //Bitrate for J1939 protocol
 #define BAUD_250K			250000
 
+#ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
+#endif
 
 using namespace Can;
 using namespace Utils;
