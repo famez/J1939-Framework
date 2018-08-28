@@ -26,7 +26,7 @@ add_library(J1939 SHARED
 )
 
 target_include_directories(J1939
-    PUBLIC 
+    PRIVATE 
         include ${Common_SOURCE_DIR}/include
 )
 
@@ -35,9 +35,12 @@ target_link_libraries(J1939
         Common
 )
 
-install (TARGETS J1939
+install (TARGETS J1939 EXPORT J1939FrameworkTargets
     LIBRARY DESTINATION lib)
 
 
 install(DIRECTORY include/ 
-    DESTINATION include)
+    DESTINATION include
+COMPONENT
+    Devel
+)

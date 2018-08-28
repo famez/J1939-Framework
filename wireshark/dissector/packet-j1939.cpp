@@ -25,7 +25,9 @@ void proto_reg_handoff_j1939(void);
 #include <Transport/BAM/BamReassembler.h>
 
 
+#ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
+#endif
 
 
 using namespace J1939;

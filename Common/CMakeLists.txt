@@ -7,12 +7,12 @@ add_library(Common STATIC
 )
 
 target_include_directories(Common
-    PUBLIC 
+    PRIVATE 
         include
 )
 
 
-install (TARGETS Common
+install (TARGETS Common EXPORT J1939FrameworkTargets
     DESTINATION lib)
 
 
