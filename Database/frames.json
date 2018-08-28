@@ -586,6 +586,74 @@
 		]
 	},
 	{
+		"name" : "TCO1",
+		"pgn" : 65132,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"bitOffset" : 0,
+				"bitSize" : 3,
+				"descriptions" : 
+				[
+					"Rest",
+					"Driver Available",
+					"Work",
+					"Drive"
+				],
+				"name" : "Driver 1 Working State",
+				"number" : 1612,
+				"offset" : 0,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 3,
+				"bitSize" : 3,
+				"descriptions" : 
+				[
+					"Rest",
+					"Driver Available",
+					"Work",
+					"Drive"
+				],
+				"name" : "Driver 2 Working State",
+				"number" : 1613,
+				"offset" : 0,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Card not present",
+					"Card present",
+					"Error",
+					"Not available"
+				],
+				"name" : "Driver 1 Card",
+				"number" : 1615,
+				"offset" : 1,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Card not present",
+					"Card present",
+					"Error",
+					"Not available"
+				],
+				"name" : "Driver 2 Card",
+				"number" : 1616,
+				"offset" : 2,
+				"type" : 1
+			}
+		]
+	},
+	{
 		"name" : "DC1",
 		"pgn" : 65102,
 		"length" : 8,
