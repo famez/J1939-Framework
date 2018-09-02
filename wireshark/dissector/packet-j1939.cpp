@@ -493,8 +493,8 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 			ti = proto_tree_add_uint_bits_format_value(spn_tree, spnNumToHinfoId[*iter], tvb,
 					spn->getOffset() * sizeof(guint8) + 8 - spnStatus->getBitOffset() - spnStatus->getBitSize(),
-					spnStatus->getBitSize(), spnStatus->getValue(), "%s: %s (%u)",
-					spn->getName().c_str(), spnStatus->getValueDescription(spnStatus->getValue()).c_str(),
+					spnStatus->getBitSize(), spnStatus->getValue(), "%s (%u)"
+					, spnStatus->getValueDescription(spnStatus->getValue()).c_str(),
 					spnStatus->getValue());
 
 
