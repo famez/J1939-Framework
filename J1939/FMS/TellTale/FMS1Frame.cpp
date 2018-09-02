@@ -15,13 +15,6 @@
 
 #define FMS1_NAME				"FMS1"
 
-#define TTS_MASK				0x7
-#define BLOCKID_MASK			0xF
-#define TTS_HIGH_PART_SHIFT		4
-#define TTSS_PER_BLOCK			15
-#define TTS_ENCODING_MASK		0x8
-
-
 namespace J1939 {
 
 FMS1Frame::FMS1Frame() : J1939Frame(FMS1_PGN), mBlockID(0) {

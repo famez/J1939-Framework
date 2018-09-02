@@ -15,7 +15,6 @@
 #include <Types.h>
 
 
-
 class TellTale {
 private:
 	u8 mNumber;

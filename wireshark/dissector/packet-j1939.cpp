@@ -23,6 +23,7 @@ void proto_reg_handoff_j1939(void);
 #include <SPN/SPNStatus.h>
 #include <SPN/SPNString.h>
 #include <Transport/BAM/BamReassembler.h>
+#include <FMS/TellTale/FMS1Frame.h>
 
 
 #ifndef DATABASE_PATH
@@ -34,10 +35,14 @@ using namespace J1939;
 
 int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data);
 void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, GenericFrame *genFrame);
+void dissect_fms1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, const FMS1Frame *fms1Frame);
 
 
 static int hf_j1939_frame = -1;
 static int hf_j1939_spn = -1;
+
+static int hf_j1939_tts = -1;
+static int hf_j1939_blockId = -1;
 
 static int proto_j1939 = -1;
 static gint ett_j1939 = -1;
@@ -81,9 +86,19 @@ static const fragment_items bam_frag_items = {
   "BAM fragments"
 };
 
+
+static const value_string tts_status[] = {
+    { 0, "Off" },
+    { 1, "Red" },
+    { 2, "Yellow" },
+	{ 3, "Info" },
+	{ 7, "Not available" }
+};
+
 BamReassembler bamReassembler;
 
 std::map<u32/*SPN number*/, int/*header_field_info.id*/> spnNumToHinfoId;
+std::map<u32/*TTS number*/, int/*header_field_info.id*/> ttsNumToHinfoId;
 
 void proto_register_j1939(void) {
 
@@ -95,6 +110,14 @@ void proto_register_j1939(void) {
 		{ &hf_j1939_spn,
 			{"Spn", "j1939.spn",
 					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
+		},
+		{ &hf_j1939_tts,
+			{"Tts", "j1939.tts",
+					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
+		},
+		{ &hf_j1939_blockId,
+			{"Block ID", "j1939.fms1.blockId",
+					FT_UINT8, BASE_DEC, NULL, 0x0F, NULL, HFILL }
 		},
 		{ &hf_bam_fragment_overlap,
 			      { "Fragment overlap", "bam.fragment.overlap", FT_BOOLEAN, BASE_NONE,
@@ -235,6 +258,40 @@ void proto_reg_handoff_j1939(void) {
 			spnNumToHinfoId[*spnNumber] = info->id;
 
 		}
+
+	}
+
+
+	std::string tts_name;
+
+	for(unsigned int tts = 1; tts <= NUMBER_OF_BLOCKS * TTSS_PER_BLOCK; ++tts) {
+
+		info = (header_field_info*)g_malloc0(sizeof(header_field_info));
+
+		info->id = -1;
+		info->ref_type = HF_REF_TYPE_NONE;
+		info->same_name_prev_id = -1;
+
+		abbrev = std::string("j1939.tts.") + std::to_string(tts);
+		tts_name = std::string("TTS ") + std::to_string(tts) + std::string(" Status");
+
+		info->name = g_strdup(tts_name.c_str());
+		info->abbrev = g_strdup(abbrev.c_str());
+
+		info->type = FT_UINT8;
+		info->display = BASE_DEC;
+
+		info->strings = VALS(tts_status);
+
+		info->bitmask = 0x7;
+
+		if((((tts - 1) % TTSS_PER_BLOCK) % 2) == 0) {				//If TTS number is even, the bitmask corresponds to the 4 most significant bits. Otherwise, it corresponds to the 4 least significant bits.
+			info->bitmask <<= 4;
+		}
+
+		proto_register_fields_section(proto_j1939, info, 1);
+
+		ttsNumToHinfoId[tts] = info->id;
 
 	}
 
@@ -390,6 +447,18 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
 	} else {		//Another type of frame than the generic ones and the ones that belong to BAM protocol
 
+		switch(frame->getPGN()) {
+		case FMS1_PGN:
+		{
+
+			FMS1Frame* fms1 = (FMS1Frame *)(frame.get());
+
+			dissect_fms1_frame(tvb, j1939_tree, ti, fms1);
+
+		}	break;
+		default:
+			break;
+		}
 	}
 
 	return tvb_captured_length(tvb);
@@ -442,6 +511,20 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 			break;
 		}
 
+	}
+
+}
+
+
+void dissect_fms1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *, const FMS1Frame *fms1Frame) {
+
+	u8 firstTts = TTSS_PER_BLOCK * fms1Frame->getBlockID() + 1;
+
+	proto_tree_add_item(j1939_tree, hf_j1939_blockId, tvb, 0, 1, ENC_NA);
+
+	for(int tts = firstTts; tts < firstTts + TTSS_PER_BLOCK; ++tts) {
+
+		proto_tree_add_item(j1939_tree, ttsNumToHinfoId[tts], tvb, (((tts - 1) % TTSS_PER_BLOCK) + 1)/ 2, 1, ENC_NA);
 	}
 
 }
