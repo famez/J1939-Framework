@@ -21,8 +21,8 @@ private:
 	size_t mLength;
 	std::map<u32, SPN*> mSPNs;
 protected:
-	void decodeData(const u8* buffer, size_t length);
-	void encodeData(u8* buffer, size_t length) const;
+	virtual void decodeData(const u8* buffer, size_t length);
+	virtual void encodeData(u8* buffer, size_t length) const;
 public:
     GenericFrame(u32 pgn);
 	GenericFrame(const GenericFrame& other);
@@ -50,7 +50,7 @@ public:
 
 	std::set<u32> getSPNNumbers() const;
 
-	size_t getDataLength() const;
+	virtual size_t getDataLength() const;
 
 	void setLength(size_t length) { mLength = length; }
 
@@ -58,7 +58,7 @@ public:
 
     bool isGenericFrame() const { return true; }
 
-    std::string toString() override;
+    virtual std::string toString();
 
 	IMPLEMENT_CLONEABLE(J1939Frame,GenericFrame);
 };

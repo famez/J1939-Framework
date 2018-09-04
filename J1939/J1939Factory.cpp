@@ -5,14 +5,15 @@
  *      Author: famez
  */
 
-#include "J1939Factory.h"
-#include "J1939Frame.h"
+#include <J1939Factory.h>
+#include <J1939Frame.h>
 
-#include "Transport/TPCMFrame.h"
-#include "Transport/TPDTFrame.h"
-#include "Diagnosis/Frames/DM1.h"
-#include "Addressing/AdressClaimFrame.h"
-#include "FMS/TellTale/FMS1Frame.h"
+#include <Transport/TPCMFrame.h>
+#include <Transport/TPDTFrame.h>
+#include <Diagnosis/Frames/DM1.h>
+#include <Addressing/AdressClaimFrame.h>
+#include <FMS/TellTale/FMS1Frame.h>
+#include <Diagnosis/Frames/DM1.h>
 
 
 
@@ -128,10 +129,10 @@ void J1939Factory::registerPredefinedFrames() {
     }
 
 
-//	{
-//		DM1 frame;
-//		registerFrame(frame);
-//	}
+	{
+		DM1 frame;
+		registerFrame(frame);
+	}
 
 //	{
 //		AdressClaimFrame frame;

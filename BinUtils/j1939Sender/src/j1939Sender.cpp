@@ -31,6 +31,7 @@
 #include <SPN/SPNString.h>
 #include <FMS/TellTale/FMS1Frame.h>
 #include <Transport/BAM/BamFragmenter.h>
+#include <Diagnosis/Frames/DM1.h>
 
 
 //CAN includes
@@ -65,6 +66,12 @@
 
 #define INTERFACE_TOKEN		"interface"
 #define INTERFACES_TOKEN	"interfaces"
+
+#define ADD_TOKEN			"add"
+#define DTC_TOKEN			"dtc"
+
+#define OC_TOKEN			"oc"
+#define FMI_TOKEN			"fmi"
 
 
 #define NAME_TOKEN			"name"
@@ -177,6 +184,7 @@ void parseSendFrameCommand(std::list<std::string> arguments);
 void parseSendTTSCommand(std::list<std::string> arguments);
 void parseExecCommand(std::list<std::string> arguments);
 void parseUnsendFrameCommand(std::list<std::string> arguments);
+void parseAddDtcCommand(std::list<std::string> arguments);
 
 std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFrames);
 
@@ -363,6 +371,8 @@ void registerCommands() {
 			CommandHelper(EXEC_TOKEN, parseExecCommand)
 	).addSubCommand(
 			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand))
+	).addSubCommand(
+			CommandHelper(ADD_TOKEN).addSubCommand(CommandHelper(DTC_TOKEN, parseAddDtcCommand))
 	);
 
 }
@@ -1537,4 +1547,99 @@ std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFram
 	}
 
 	return frames;
+}
+
+
+void parseAddDtcCommand(std::list<std::string> arguments) {
+
+	std::string name = arguments.front();
+	arguments.pop_front();
+	auto frameIter = framesToSend.find(name);
+
+
+	if(frameIter == framesToSend.end()) {
+		std::cerr << "Frame not defined..." << std::endl;
+		return;
+	}
+
+	J1939Frame* frame = frameIter->second;
+
+	if(frame->getPGN() != DM1_PGN) {
+		std::cerr << "Not a DM1 frame..." << std::endl;
+		return;
+	}
+
+	u32 spn = 0;
+	u8 oc = 0xFF;
+	u8 fmi = 0xFF;
+
+	auto func = [&spn, &oc, &fmi](const std::string& key, const std::string& value) {
+
+		if(key == SPN_TOKEN) {
+
+			try {
+
+				spn = std::stoul(value);
+
+			} catch (std::invalid_argument& e) {
+				std::cerr << "Spn is not a number..." << std::endl;
+			}
+
+		} else if(key == OC_TOKEN) {
+
+			try {
+
+				u32 ocNumber = std::stoul(value);
+
+				if(ocNumber == (ocNumber & DTC_OC_MASK)) {
+					oc = static_cast<u8>(ocNumber);
+				} else {
+
+					std::cerr << "Occurrence Count is out of range..." << std::endl;
+				}
+
+			} catch (std::invalid_argument& e) {
+				std::cerr << "Occurrence Count is not a number..." << std::endl;
+			}
+		} else if(key == FMI_TOKEN) {
+
+			try {
+
+				u32 fmiNumber = std::stoul(value);
+
+				if(fmiNumber == (fmiNumber & DTC_FMI_MASK)) {
+					fmi = static_cast<u8>(fmiNumber);
+				} else {
+
+					std::cerr << "Failure Mode Identifier is out of range..." << std::endl;
+				}
+
+			} catch (std::invalid_argument& e) {
+				std::cerr << "Failure Mode Identifier is not a number..." << std::endl;
+			}
+		}
+
+	};
+
+	processCommandParameters(arguments, func);
+
+	if(spn == 0) {
+		std::cerr << "SPN not set..." << std::endl;
+		return;
+	}
+
+	if(oc == 0xFF) {
+		std::cerr << "Occurrence Count not set..." << std::endl;
+		return;
+	}
+
+	if(fmi == 0xFF) {
+		std::cerr << "Failure Mode Identifier not set..." << std::endl;
+		return;
+	}
+
+	DM1* dm1Frame = static_cast<DM1*>(frame);
+
+	dm1Frame->addDTC(DTC(spn, fmi, oc));
+
 }
