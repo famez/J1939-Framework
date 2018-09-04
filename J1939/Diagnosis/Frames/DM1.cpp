@@ -91,13 +91,13 @@ void DM1::encodeData(u8* buffer, size_t length) const {
 
 	size_t offset = lampStatLength;
 
-	/*for(auto dtc = mDtcs.begin(); dtc != mDtcs.end(); ++dtc) {
+	for(auto dtc = mDtcs.begin(); dtc != mDtcs.end(); ++dtc) {
 
 		dtc->encode(buffer + offset);
 
 		offset += DTC_SIZE;
 
-	}*/
+	}
 
 }
 
