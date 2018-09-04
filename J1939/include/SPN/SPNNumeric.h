@@ -8,7 +8,7 @@
 #ifndef SPN_SPNNUMERIC_H_
 #define SPN_SPNNUMERIC_H_
 
-#include "SPN.h"
+#include <SPN/SPN.h>
 
 
 namespace J1939 {

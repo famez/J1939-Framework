@@ -4,7 +4,8 @@ project(J1939)
 
 add_library(J1939 SHARED 
     	./J1939Common.cpp
-	#./Diagnosis/Frames/DM1.cpp
+	./Diagnosis/Frames/DM1.cpp
+	./Diagnosis/DTC.cpp
 	./FMS/TellTale/TellTale.cpp
 	./FMS/TellTale/FMS1Frame.cpp
 	./J1939Factory.cpp

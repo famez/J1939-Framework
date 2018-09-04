@@ -10,7 +10,7 @@
 
 #include <map>
 
-#include "SPN.h"
+#include <SPN/SPN.h>
 
 namespace J1939 {
 
