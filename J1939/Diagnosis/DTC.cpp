@@ -46,7 +46,7 @@ void DTC::encode(u8* buffer) const {
 	buffer[1] = (mSPN >> 8) & 0xFF;
 	buffer[2] = (mSPN >> 11) & (~DTC_FMI_MASK);
 	buffer[2] |= (mFMI & DTC_FMI_MASK);
-	buffer[3] = (mOC & DTC_OC_MASK) | 0x80;
+	buffer[3] = (mOC & DTC_OC_MASK) & (~DTC_CM_MASK);
 
 }
 
