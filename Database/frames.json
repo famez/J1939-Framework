@@ -740,6 +740,36 @@
 				"number" : 3354,
 				"offset" : 2,
 				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Alternator 3 not charging",
+					"Alternator 3 charging",
+					"Error",
+					"Not available"
+				],
+				"name" : "Alternator 3 Status",
+				"number" : 3355,
+				"offset" : 2,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 6,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Alternator 4 not charging",
+					"Alternator 4 charging",
+					"Error",
+					"Not available"
+				],
+				"name" : "Alternator 4 Status",
+				"number" : 3356,
+				"offset" : 2,
+				"type" : 1
 			}
 		]
 	},
@@ -749,6 +779,23 @@
 		"length" : 8,
 		"spns" : 
 		[
+			{
+				"bitOffset" : 0,
+				"bitSize" : 5,
+				"descriptions" : 
+				[
+					"Off",
+					"",
+					"",
+					"",
+					"",
+					"Set"
+				],
+				"name" : "PTO State",
+				"number" : 976,
+				"offset" : 6,
+				"type" : 1
+			},
 			{
 				"byteSize" : 2,
 				"formatGain" : 0.00390625,
@@ -807,6 +854,29 @@
 		]
 	},
 	{
+		"name" : "PTODE",
+		"pgn" : 64932,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"bitOffset" : 0,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"No PTO drive is engaged",
+					"At least one PTO drive is engaged",
+					"Error",
+					"Not available"
+				],
+				"name" : "At least one PTO engaged",
+				"number" : 3948,
+				"offset" : 6,
+				"type" : 1
+			}
+		]
+	},
+	{
 		"name" : "EEC1",
 		"pgn" : 61444,
 		"length" : 8,
@@ -849,6 +919,74 @@
 				"offset" : 0,
 				"type" : 0,
 				"units" : "kPa"
+			}
+		]
+	},
+	{
+		"name" : "DC2",
+		"pgn" : 64933,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"bitOffset" : 2,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Closed",
+					"Open",
+					"Error",
+					"Not available"
+				],
+				"name" : "Open Status Door 1",
+				"number" : 3413,
+				"offset" : 0,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 0,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Closed",
+					"Open",
+					"Error",
+					"Not available"
+				],
+				"name" : "Open Status Door 2",
+				"number" : 3416,
+				"offset" : 1,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 6,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Closed",
+					"Open",
+					"Error",
+					"Not available"
+				],
+				"name" : "Open Status Door 3",
+				"number" : 3419,
+				"offset" : 1,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 4,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"Closed",
+					"Open",
+					"Error",
+					"Not available"
+				],
+				"name" : "Open Status Door 3",
+				"number" : 3422,
+				"offset" : 2,
+				"type" : 1
 			}
 		]
 	},
