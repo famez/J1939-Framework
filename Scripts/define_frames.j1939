@@ -22,15 +22,19 @@ create frame name: ebc1 title: EBC1
 create frame name: as title: AS
 create frame name: at1t1i title: AT1T1I
 create frame name: dc1 title: DC1
+create frame name: dc2 title: DC2
+create frame name: ptode title: PTODE
 
 
 
 set frame ccvs period: 100 priority: 2 source: 20
+set frame ptode period: 100 priority: 2 source: 20
 set frame eec1 period: 20 priority: 2 source: 20
 set frame lfc period: 1000 priority: 2 source: 20
 set frame vdhr period: 1000 priority: 2 source: 20
 set frame dd period: 1000 priority: 2 source: 20
 set frame dc1 period: 100 priority: 2 source: 20
+set frame dc2 period: 100 priority: 2 source: 20
 set frame efl period: 500 priority: 2 source: 20
 set frame et1 period: 1000 priority: 2 source: 20
 set frame tco1 period: 50 priority: 2 source: 20
