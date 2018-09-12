@@ -47,6 +47,8 @@ public:
 	u8 getValue() const { return mValue; }
 	bool setValue(u8 value);
 
+	u8 getBitMask() const { return (0xFF >> (8 - mBitSize)) << mBitOffset; }
+
 
     /*
      * Methods to add/get descriptions over the different status numbers

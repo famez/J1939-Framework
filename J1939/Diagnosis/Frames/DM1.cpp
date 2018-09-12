@@ -71,7 +71,7 @@ void DM1::decodeData(const u8* buffer, size_t length) {
 
 	DTC dtc;
 
-	while(offset + DTC_SIZE < length) {
+	while(offset + DTC_SIZE <= length) {
 
 		dtc.decode(buffer + offset);
 

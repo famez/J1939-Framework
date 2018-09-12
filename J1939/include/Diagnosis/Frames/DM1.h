@@ -33,6 +33,8 @@ public:
 
 	void addDTC(const DTC& dtc) { mDtcs.push_back(dtc); };
 
+	const std::vector<DTC>& getDTCs() const { return mDtcs; }
+
 	size_t getDataLength() const override;
 	std::string toString() override;
 

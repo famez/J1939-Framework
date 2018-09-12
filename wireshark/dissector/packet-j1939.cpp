@@ -24,6 +24,7 @@ void proto_reg_handoff_j1939(void);
 #include <SPN/SPNString.h>
 #include <Transport/BAM/BamReassembler.h>
 #include <FMS/TellTale/FMS1Frame.h>
+#include <Diagnosis/Frames/DM1.h>
 
 
 #ifndef DATABASE_PATH
@@ -36,16 +37,21 @@ using namespace J1939;
 int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* data);
 void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, GenericFrame *genFrame);
 void dissect_fms1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, const FMS1Frame *fms1Frame);
+void dissect_dm1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, const DM1 *dm1Frame);
 
 
 static int hf_j1939_frame = -1;
 static int hf_j1939_spn = -1;
+static int hf_j1939_dtc = -1;
+static int hf_j1939_fmi = -1;
+static int hf_j1939_oc = -1;
 
 static int hf_j1939_blockId = -1;
 
 static int proto_j1939 = -1;
 static gint ett_j1939 = -1;
 static gint ett_j1939_can = -1;
+static gint ett_j1939_dtc = -1;
 static gint ett_j1939_message = -1;
 
 
@@ -110,6 +116,18 @@ void proto_register_j1939(void) {
 			{"Spn", "j1939.spn",
 					FT_UINT32, BASE_DEC, NULL, 0x0, NULL, HFILL }
 		},
+		{ &hf_j1939_dtc,
+			{"Diagnosis Trouble Code", "j1939.dtc",
+					FT_NONE, BASE_NONE, NULL, 0x0, NULL, HFILL }
+		},
+		{ &hf_j1939_oc,
+			{"Ocurrence Count", "j1939.oc",
+					FT_UINT8, BASE_DEC, NULL, 0x0, NULL, HFILL }
+		},
+		{ &hf_j1939_fmi,
+			{"Failure Mode Identifier", "j1939.fmi",
+					FT_UINT8, BASE_DEC, NULL, 0x0, NULL, HFILL }
+		},
 		{ &hf_j1939_blockId,
 			{"Block ID", "j1939.fms1.blockId",
 					FT_UINT8, BASE_DEC, NULL, 0x0F, NULL, HFILL }
@@ -165,6 +183,7 @@ void proto_register_j1939(void) {
 	static gint *ett[] = {
 		&ett_j1939,
 		&ett_j1939_can,
+		&ett_j1939_dtc,
 		&ett_j1939_message,
 		&ett_bam_fragment,
 		&ett_bam_fragments
@@ -350,6 +369,12 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 	ti = proto_tree_add_string(tree, hf_j1939_frame, canIdTvb, 1, 2, frame->getName().c_str());
 	j1939_tree = proto_item_add_subtree(ti, ett_j1939);
 
+	if(frame->getPGN() == DM1_PGN) {
+		DM1 *dm1Frame = static_cast<DM1 *>(frame.get());
+
+		dissect_dm1_frame(tvb, j1939_tree, ti, dm1Frame);
+	}
+
 
 	if(frame->isGenericFrame()) {		//If the frame is a generic frame (this means that it contains several defined SPNs), call a proper function to handle it
 		GenericFrame * genFrame = (GenericFrame *)(frame.get());
@@ -373,7 +398,16 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
 		if(!pinfo->fd->flags.visited) {		//Only treat the frames if it is the first time we see them!!!
 
-			expected_size = bamReassembler.handleFrame(*frame);
+			try {
+
+				expected_size = bamReassembler.handleFrame(*frame);
+
+			} catch(J1939EncodeException &) {
+
+				return -1;
+
+			}
+
 
 			switch(frame->getPGN()) {
 
@@ -497,7 +531,7 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 			const SPNStatus *spnStatus = (SPNStatus *)(spn);
 
 			ti = proto_tree_add_uint_bits_format_value(spn_tree, spnNumToHinfoId[*iter], tvb,
-					spn->getOffset() * sizeof(guint8) + 8 - spnStatus->getBitOffset() - spnStatus->getBitSize(),
+					(spn->getOffset() << 3) + 8 - spnStatus->getBitOffset() - spnStatus->getBitSize()/* + spnStatus->getBitOffset()*/,
 					spnStatus->getBitSize(), spnStatus->getValue(), "%s (%u)"
 					, spnStatus->getValueDescription(spnStatus->getValue()).c_str(),
 					spnStatus->getValue());
@@ -530,6 +564,43 @@ void dissect_fms1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *, con
 	for(int tts = firstTts; tts < firstTts + TTSS_PER_BLOCK; ++tts) {
 
 		proto_tree_add_item(j1939_tree, ttsNumToHinfoId[tts], tvb, (((tts - 1) % TTSS_PER_BLOCK) + 1)/ 2, 1, ENC_NA);
+	}
+
+}
+
+
+void dissect_dm1_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti, const DM1 *dm1Frame) {
+
+	const std::vector<DTC>& dtcs = dm1Frame->getDTCs();
+
+	proto_tree *dtc_tree;
+
+	size_t offset = 2;
+
+	for(auto dtc = dtcs.begin(); dtc != dtcs.end(); ++dtc) {
+
+		ti = proto_tree_add_item(j1939_tree, hf_j1939_dtc, tvb, offset, DTC_SIZE, ENC_NA);
+		dtc_tree = proto_item_add_subtree(ti, ett_j1939_dtc);
+
+		ti = proto_tree_add_uint_bits_format_value(dtc_tree, hf_j1939_spn, tvb,
+			(offset << 3),
+			SPN_NUMBER_MAX_BITS, dtc->getSpn(), "%u"
+			, dtc->getSpn());
+
+		ti = proto_tree_add_uint_bits_format_value(dtc_tree, hf_j1939_fmi, tvb,
+					(offset << 3) + SPN_NUMBER_MAX_BITS,
+					5, dtc->getFmi(), "%u"
+					, dtc->getFmi());
+
+		ti = proto_tree_add_uint_bits_format_value(dtc_tree, hf_j1939_oc, tvb,
+							(offset << 3) + SPN_NUMBER_MAX_BITS + 5 + 1,
+							7, dtc->getOc(), "%u"
+							, dtc->getOc());
+
+
+
+		offset += DTC_SIZE;
+
 	}
 
 }
