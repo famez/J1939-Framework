@@ -19,10 +19,13 @@
 
 namespace J1939 {
 
-SPNStatus::SPNStatus(u32 number, const std::string& name, size_t offset, u8 bitOffset, u8 bitSize) : SPN(number, name, offset), mBitOffset(bitOffset), mBitSize(bitSize), mValue(0) {
+SPNStatus::SPNStatus(u32 number, const std::string& name, size_t offset, u8 bitOffset, u8 bitSize) : SPN(number, name, offset), mBitOffset(bitOffset), mBitSize(bitSize) {
 
 	ASSERT(mBitSize > 0)
 	ASSERT(mBitOffset + mBitSize <= 8)
+
+	mValue = (0xFF >> (8 - mBitSize));		//Always initialized to invalid value
+
 }
 
 SPNStatus::~SPNStatus() {

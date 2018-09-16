@@ -88,7 +88,7 @@ void J1939Frame::encode(u32& identifier, u8* buffer, size_t& length) const {
 
 	identifier |= (prio << J1939_PRIORITY_OFFSET);
 
-	memset(buffer, 0 , length);
+	memset(buffer, 0xFF, length);
 
 	encodeData(buffer, length);
 

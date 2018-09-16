@@ -22,7 +22,7 @@ namespace J1939 {
 
 SPNNumeric::SPNNumeric(u32 number, const std::string& name, size_t offset, double formatGain, double formatOffset, u8 byteSize, const std::string& units) :
     SPN(number, name, offset),
-	 mFormatGain(formatGain), mFormatOffset(formatOffset), mByteSize(byteSize), mUnits(units), mValue(0) {
+	 mFormatGain(formatGain), mFormatOffset(formatOffset), mByteSize(byteSize), mUnits(units), mValue(0xFFFFFFFF) {
 
 	ASSERT(byteSize > 0)
 	ASSERT(byteSize <= SPN_NUMERIC_MAX_BYTE_SYZE)
