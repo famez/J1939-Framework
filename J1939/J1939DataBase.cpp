@@ -16,7 +16,7 @@
 #include "SPN/SPNStatus.h"
 #include "SPN/SPNString.h"
 
-#include "json.h"
+#include <json/json.h>
 
 #define PGN_KEY						"pgn"
 #define SPNS_KEY					"spns"

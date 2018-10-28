@@ -13,7 +13,7 @@ target_include_directories(j1939Sender
 
 target_link_libraries(j1939Sender
     PUBLIC
-        J1939 Can rt -rdynamic
+        J1939 Can rt -rdynamic jsoncpp
 )
 
 

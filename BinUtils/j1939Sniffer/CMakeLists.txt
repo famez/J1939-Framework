@@ -21,7 +21,7 @@ target_include_directories(j1939Sniffer
 
 target_link_libraries(j1939Sniffer
     PUBLIC
-        J1939 Can ncurses -rdynamic
+        J1939 Can ncurses -rdynamic jsoncpp
 )
 
 

@@ -13,7 +13,7 @@ target_include_directories(j1939Decoder
 
 target_link_libraries(j1939Decoder
     PUBLIC
-        J1939
+        J1939 jsoncpp
 )
 
 install (TARGETS j1939Decoder

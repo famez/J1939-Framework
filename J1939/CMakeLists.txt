@@ -16,7 +16,7 @@ add_library(J1939 SHARED
 	./SPN/SPNNumeric.cpp
 	./J1939DataBase.cpp
 	./J1939Frame.cpp
-	./jsoncpp.cpp
+	#./jsoncpp.cpp
 	#./Addressing/AdressClaimFrame.cpp
 	./Transport/TPCMFrame.cpp
 	./Transport/BAM/BamReassembler.cpp

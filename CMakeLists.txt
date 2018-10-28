@@ -5,6 +5,8 @@ project(J1939Framework)
 set(J1939Framework_VERSION 1.0.0)
 
 find_package (Threads REQUIRED)
+find_package (jsoncpp REQUIRED)
+
 
 set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
