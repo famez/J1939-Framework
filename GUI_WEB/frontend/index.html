@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angular with Directives</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+
+
+  <style>
+ul {
+  list-style-type: none;
+}
+
+
+.caret {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 16px;
+  	
+}
+
+.caret::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+
+.nested {
+  display: block;
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  font-size: 14px;
+}
+
+</style>
+
+
+</head>
+<body>
+
+<div ng-app="J1939Gui" ng-controller="J1939">
+
+	<select ng-model="selFrame">
+		<option ng-repeat="pgn in pgns" value="{{ pgn.pgn }}">{{ pgn.name }} : {{ pgn.pgn | hex | uppercase }}</option>
+	</select>
+
+	 <button ng-click="addFrame()" ng-init="count=0">Add frame</button> 
+
+  <ul>
+
+    <li ng-repeat="frame in frames">
+	<span class="caret" ng-click="showSpns[$index] = !showSpns[$index]">
+		<span>{{ frame.name }} ({{ frame.pgn | hex | uppercase }})</span>
+		<span>
+			Priority: 
+			<input type="number" number-mask="" ng-enter="changePrio($index)" ng-click="$event.stopPropagation();" ng-model="frame.priority" value="{{ frame.priority }}">
+		</span>	
+		<span>
+			Source: 
+			<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source" value="{{ frame.source }}">
+		</span>	
+		<span>
+			Dest: 
+			<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest" value="{{ frame.dest }}">
+		</span>		
+		<span>
+			Period: 
+			<input type="number" number-mask="" ng-enter="changePeriod($index)" ng-click="$event.stopPropagation();" ng-model="frame.period" value="{{ frame.period }}">
+		</span>	
+
+
+		<span ng-repeat="(iface, isChecked) in frame.interfaces">
+			{{ iface }}
+			<input type="checkbox" ng-click="$event.stopPropagation();" ng-change="ifaceChecked($parent.$index, iface)" ng-model="frame.interfaces[iface]" value="{{ isChecked }}">
+		</span>
+		
+	</span>
+	 <ul ng-show="showSpns[$index]" class="nested">
+		
+		<li  ng-repeat="spn in frame.spns">
+			<span>SPN {{ spn.number }} ({{ spn.name }})</span>
+			<span ng-switch on="spn.type">
+				Value: 
+				<span ng-switch-when="1"> <!-- Type Status -->
+					<select ng-model="spn.value" ng-change="updateSpn($parent.$parent.$index, $parent.$index)">
+						<option ng-repeat="desc in spn.descriptions | filter:emptyOrNull" value="{{$index}}" ng-selected="$index == spn.value">{{ desc }}</option>
+					</select>
+				</span>
+				<span ng-switch-default> <!-- Type String, Numeric or Unknown -->
+					<input type="text" ng-enter="updateSpn($parent.$parent.$index, $parent.$index)" ng-model="spn.value" value="{{ spn.value }}">
+					<span ng-show="spn.units">{{ spn.units }}</span>
+				</span>
+			</span>
+		
+		</li>
+	</ul>
+	  
+    </li>
+  </ul>
+</div>
+
+</body>
+<script type="text/javascript">
+
+var app = angular.module("J1939Gui", []);
+
+
+app.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if (event.which === 13) {
+                scope.$apply(function () {
+                    scope.$eval(attrs.ngEnter);
+                });
+                event.preventDefault();
+            }
+        });
+    };
+})
+
+app.filter('hex', function () {
+  
+  return function(input) {
+    return Number(input).toString(16);
+  };
+});
+
+app.controller('J1939', function($scope) {
+
+	var SPN_TYPES = {
+		NUMERIC : 0,
+		STATUS : 1,
+		STRING : 2
+	}
+	
+	$scope.showSpns = [];
+
+	$scope.addFrame = function() {
+	
+		var request = { "command" : "add frame" , "data" : Number($scope.selFrame) };
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);		
+
+	};
+
+	$scope.changePrio = function(index) {
+	
+		var request = { "command" : "set frame", "prio" : Number($scope.frames[index].priority), "index" : index};
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);		
+
+	 };
+
+
+	$scope.changeSrc = function(index) {
+
+	
+		var request = { "command" : "set frame", "src" : Number($scope.frames[index].source), "index" : index};
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);		
+
+	};
+
+
+	$scope.changeDest = function(index) {
+
+	
+		var request = { "command" : "set frame", "dest" : Number($scope.frames[index].dest), "index" : index};
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);		
+
+	};
+
+
+	$scope.changePeriod = function(index) {
+
+	
+		var request = { "command" : "set frame", "period" : Number($scope.frames[index].period), "index" : index};
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);	
+
+	};
+
+	$scope.ifaceChecked = function(index, iface) {
+		
+		
+		var request = { "command" : "set frame", "interface" : {}, "index" : index };
+		request.interface[iface] = $scope.frames[index]['interfaces'][iface];
+
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);	
+
+	};
+
+
+	$scope.updateSpn = function(frameIndex, spnIndex) {
+
+		var spn = $scope.frames[frameIndex].spns[spnIndex];
+		
+		var value = spn.value;
+
+		if(spn.type !== SPN_TYPES.STRING) {
+		
+			value = Number(value);
+			
+		}
+			
+		var request = { "command" : "set frame", "spn" : spn.number, "value" :  value, "index" : frameIndex };
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);	
+
+	};
+
+
+	$scope.emptyOrNull = function(item) {
+		
+		return !(item === null || item.length === 0);
+
+	};
+	
+
+	var webSocket;
+
+	var hostName = window.location.hostname;
+
+	if(hostName.length == 0) { hostName = "127.0.0.1"; }
+    
+    	console.log("openWSConnection::Connecting to --> ws://" + hostName + ":8000");
+    	try {
+		webSocket = new WebSocket("ws://" + hostName + ":8000", "j1939-protocol");
+
+		
+		webSocket.onopen = function(openEvent) {
+
+		    	console.log("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
+			
+
+			var request = { "command" : "list frames" };
+			var jsonReq = JSON.stringify(request);
+			webSocket.send(jsonReq);
+
+			request  = { "command" : "list interfaces" };
+			jsonReq = JSON.stringify(request);
+			webSocket.send(jsonReq);
+		   
+		};
+		webSocket.onclose = function (closeEvent) {
+
+		    console.log("WebSocket CLOSE: " + JSON.stringify(closeEvent, null, 4));
+		    
+		};
+		webSocket.onerror = function (errorEvent) {
+		    console.log("WebSocket ERROR: " + JSON.stringify(errorEvent, null, 4));
+		};
+		webSocket.onmessage = function (messageEvent) {
+
+		    	var wsMsg = messageEvent.data;
+		    	console.log("WebSocket MESSAGE: " + wsMsg);
+
+			var response = JSON.parse(wsMsg);
+
+			if(response.hasOwnProperty("frames")) {
+
+				console.log("Setting frames");
+				
+				$scope.$apply(function(x) { x.frames = response.frames; });
+				
+			}
+
+			if(response.command == "list frames") {
+
+				$scope.$apply(function(x) { x.pgns = response.data; });
+
+			} else if (response.command == "add frame"){
+
+				console.log("Adding frame");
+				
+			} else if (response.command == "list interfaces"){
+
+				console.log("List interfaces");
+								
+				$scope.$apply(function(x) { x.listedIfaces = response.interfaces; });
+
+			}
+			
+		};
+
+	    } catch (exception) {
+		console.error("Errorcito " + exception.message);
+	    }
+
+	});  
+
+
+</script>
+
+</html>
