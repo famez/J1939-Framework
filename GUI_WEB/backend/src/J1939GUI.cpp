@@ -42,6 +42,7 @@ extern "C" {
 #define LIST_FRAMES_REQUEST		"list frames"
 #define ADD_FRAME_REQUEST		"add frame"
 #define SET_FRAME_REQUEST		"set frame"
+#define DELETE_FRAME_REQUEST	"delete frame"
 #define LIST_INTERFACES			"list interfaces"
 
 
@@ -236,6 +237,54 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 		}
 
 		framesToSend.push_back(frameToAdd.release());
+
+
+
+		return true;
+	}
+
+
+	//Delete frame
+	if(request["command"] == DELETE_FRAME_REQUEST) {
+
+		//Sanity checks...
+
+		if(!request.isMember("index") || !request["index"].isUInt()) {
+			lwsl_err("Index not specified");
+			return false;
+		}
+
+		size_t index = request["index"].asUInt();
+
+		if(index >= framesToSend.size()) {
+			lwsl_err("Index out of range... Someone is playing maliciously with the frontend...");
+			return false;
+		}
+
+		J1939Frame *frame = framesToSend[index];
+
+		//At this point, if the frame is being sent, refresh the information to the sender
+		for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+
+			if(isFrameSent(frame, sender->first)) {
+
+				auto period = framePeriods.find(frame);
+
+				if(period != framePeriods.end()) {
+
+					unsendFrameThroughInterface(frame, sender->first);
+
+				} else {
+
+					lwsl_err("Period not defined");
+
+				}
+
+			}
+
+		}
+
+		framesToSend.erase(framesToSend.begin() + index);
 
 		return true;
 	}
