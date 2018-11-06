@@ -68,7 +68,7 @@ ul {
 			Source: 
 			<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source" value="{{ frame.source }}">
 		</span>	
-		<span>
+		<span ng-show="frame.dest">
 			Dest: 
 			<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest" value="{{ frame.dest }}">
 		</span>		
