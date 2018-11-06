@@ -4,8 +4,12 @@ project(J1939Framework)
 
 set(J1939Framework_VERSION 1.0.0)
 
+set(CMAKE_MODULE_PATH "./cmake/;${CMAKE_MODULE_PATH}")
+
+
 find_package (Threads REQUIRED)
 find_package (jsoncpp REQUIRED)
+find_package (LibWebSockets REQUIRED)
 
 
 set (CMAKE_CXX_STANDARD 11)
