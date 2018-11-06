@@ -923,6 +923,24 @@
 		]
 	},
 	{
+		"name" : "SERV",
+		"pgn" : 65216,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 5,
+				"formatOffset" : -160635,
+				"name" : "Service distance",
+				"number" : 914,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "km"
+			}
+		]
+	},
+	{
 		"name" : "DC2",
 		"pgn" : 64933,
 		"length" : 8,
