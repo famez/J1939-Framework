@@ -31,7 +31,11 @@ public:
 	DM1();
 	virtual ~DM1();
 
-	void addDTC(const DTC& dtc) { mDtcs.push_back(dtc); };
+	void addDTC(DTC&& dtc) { mDtcs.push_back(dtc); };
+
+	bool deleteDTC(size_t pos) { if(pos >= mDtcs.size()) return false; mDtcs.erase(mDtcs.begin() + pos); return true; }
+
+	bool setDTC(size_t pos, DTC&& dtc) { if(pos >= mDtcs.size()) return false; mDtcs[pos] = dtc; }
 
 	const std::vector<DTC>& getDTCs() const { return mDtcs; }
 

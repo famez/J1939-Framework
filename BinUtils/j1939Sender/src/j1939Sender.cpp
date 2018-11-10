@@ -68,6 +68,8 @@
 #define INTERFACES_TOKEN	"interfaces"
 
 #define ADD_TOKEN			"add"
+#define CHANGE_TOKEN		"change"
+#define DELETE_TOKEN		"delete"
 #define DTC_TOKEN			"dtc"
 
 #define OC_TOKEN			"oc"
@@ -185,6 +187,10 @@ void parseSendTTSCommand(std::list<std::string> arguments);
 void parseExecCommand(std::list<std::string> arguments);
 void parseUnsendFrameCommand(std::list<std::string> arguments);
 void parseAddDtcCommand(std::list<std::string> arguments);
+void parseSetDtcCommand(std::list<std::string> arguments);
+void parseDeleteDtcCommand(std::list<std::string> arguments);
+
+bool parseDtcCommand(std::list<std::string> arguments, DTC& dtc);
 
 std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFrames);
 
@@ -363,7 +369,8 @@ void registerCommands() {
 			CommandHelper(PRINT_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parsePrintFrameCommand))
 	).addSubCommand(
 			CommandHelper(SET_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSetFrameCommand)).
-					addSubCommand(CommandHelper(TTS_TOKEN, parseSetTTSCommand))
+					addSubCommand(CommandHelper(TTS_TOKEN, parseSetTTSCommand)).
+					addSubCommand(CommandHelper(DTC_TOKEN, parseSetDtcCommand))
 	).addSubCommand(
 			CommandHelper(SEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseSendFrameCommand)).
 					addSubCommand(CommandHelper(TTS_TOKEN, parseSendTTSCommand))
@@ -373,10 +380,11 @@ void registerCommands() {
 			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand))
 	).addSubCommand(
 			CommandHelper(ADD_TOKEN).addSubCommand(CommandHelper(DTC_TOKEN, parseAddDtcCommand))
+	).addSubCommand(
+			CommandHelper(DELETE_TOKEN).addSubCommand(CommandHelper(DTC_TOKEN, parseDeleteDtcCommand))
 	);
 
 }
-
 
 
 
@@ -1549,25 +1557,7 @@ std::vector<CanFrame> ttsFramesToCanFrames(const std::vector<FMS1Frame>& ttsFram
 	return frames;
 }
 
-
-void parseAddDtcCommand(std::list<std::string> arguments) {
-
-	std::string name = arguments.front();
-	arguments.pop_front();
-	auto frameIter = framesToSend.find(name);
-
-
-	if(frameIter == framesToSend.end()) {
-		std::cerr << "Frame not defined..." << std::endl;
-		return;
-	}
-
-	J1939Frame* frame = frameIter->second;
-
-	if(frame->getPGN() != DM1_PGN) {
-		std::cerr << "Not a DM1 frame..." << std::endl;
-		return;
-	}
+bool parseDtcCommand(std::list<std::string> arguments, DTC& dtc) {
 
 	u32 spn = 0;
 	u8 oc = 0xFF;
@@ -1625,21 +1615,137 @@ void parseAddDtcCommand(std::list<std::string> arguments) {
 
 	if(spn == 0) {
 		std::cerr << "SPN not set..." << std::endl;
-		return;
+		return false;
 	}
 
 	if(oc == 0xFF) {
 		std::cerr << "Occurrence Count not set..." << std::endl;
-		return;
+		return false;
 	}
 
 	if(fmi == 0xFF) {
 		std::cerr << "Failure Mode Identifier not set..." << std::endl;
+		return false;
+	}
+
+	dtc = DTC(spn, fmi, oc);
+
+	return true;
+
+}
+
+
+//Example: add dtc abb spn: 87 oc: 3 fmi: 8 (To add a dtc to frame aaa to the tail).
+void parseAddDtcCommand(std::list<std::string> arguments) {
+
+	std::string name = arguments.front();
+	arguments.pop_front();
+	auto frameIter = framesToSend.find(name);
+
+	if(frameIter == framesToSend.end()) {
+		std::cerr << "Frame not defined..." << std::endl;
 		return;
 	}
 
+	J1939Frame* frame = frameIter->second;
+
+	if(frame->getPGN() != DM1_PGN) {
+		std::cerr << "Not a DM1 frame..." << std::endl;
+		return;
+	}
+
+	DTC dtc;
+
+	if(parseDtcCommand(arguments, dtc)) {
+		DM1* dm1Frame = static_cast<DM1*>(frame);
+		dm1Frame->addDTC(std::move(dtc));
+	}
+
+}
+
+//Example: set dtc aaa 1 spn: 14 oc: 2 fmi: 5 (To set second dtc for frame aaa).
+void parseSetDtcCommand(std::list<std::string> arguments) {
+
+	//Take frame name from arguments
+	std::string name = arguments.front();
+	arguments.pop_front();
+	auto frameIter = framesToSend.find(name);
+
+	if(frameIter == framesToSend.end()) {
+		std::cerr << "Frame not defined..." << std::endl;
+		return;
+	}
+
+	J1939Frame* frame = frameIter->second;
+
+	if(frame->getPGN() != DM1_PGN) {
+		std::cerr << "Not a DM1 frame..." << std::endl;
+		return;
+	}
+
+
+	//Take dtc postion from arguments
+	std::string posStr = arguments.front();
+	arguments.pop_front();
+
+	size_t pos;
+
+	try {
+
+		pos = std::stoul(posStr);
+
+	} catch (std::invalid_argument& e) {
+		std::cerr << "Position is not a number..." << std::endl;
+	}
+
+	DTC dtc;
+
+	if(parseDtcCommand(arguments, dtc)) {
+		DM1* dm1Frame = static_cast<DM1*>(frame);
+		dm1Frame->setDTC(pos, std::move(dtc));
+	}
+
+}
+
+//Example: delete dtc abb 0 (To delete first dtc from frame abb).
+
+void parseDeleteDtcCommand(std::list<std::string> arguments) {
+
+	//Take frame name from arguments
+	std::string name = arguments.front();
+	arguments.pop_front();
+	auto frameIter = framesToSend.find(name);
+
+	if(frameIter == framesToSend.end()) {
+		std::cerr << "Frame not defined..." << std::endl;
+		return;
+	}
+
+	J1939Frame* frame = frameIter->second;
+
+	if(frame->getPGN() != DM1_PGN) {
+		std::cerr << "Not a DM1 frame..." << std::endl;
+		return;
+	}
+
+
+	//Take dtc postion from arguments
+	std::string posStr = arguments.front();
+	arguments.pop_front();
+
+	size_t pos;
+
+	try {
+
+		pos = std::stoul(posStr);
+
+	} catch (std::invalid_argument& e) {
+		std::cerr << "Position is not a number..." << std::endl;
+	}
+
+
 	DM1* dm1Frame = static_cast<DM1*>(frame);
 
-	dm1Frame->addDTC(DTC(spn, fmi, oc));
+	dm1Frame->deleteDTC(pos);
 
 }
