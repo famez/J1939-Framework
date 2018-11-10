@@ -33,7 +33,7 @@ target_include_directories(J1939
 
 target_link_libraries(J1939
     PUBLIC
-        Common
+        Common jsoncpp
 )
 
 install (TARGETS J1939 EXPORT J1939FrameworkTargets
