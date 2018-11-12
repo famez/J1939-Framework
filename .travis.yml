@@ -1,5 +1,5 @@
 dist: trusty
-sudo: false
+sudo: true
 language: cpp
 
 addons:
@@ -8,7 +8,13 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6 
-      - libjsoncpp-dev
+      
+install:
+  - git clone https://github.com/open-source-parsers/jsoncpp.git
+  - pushd jsoncpp
+  - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
+  - make install
+  - popd
 
 script:
   - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake .
