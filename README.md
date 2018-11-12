@@ -1,3 +1,5 @@
+[![Travis Build Status](https://travis-ci.com/famez/J1939-Framework.svg)](https://travis-ci.com/famez/J1939-Framework)
+
 # J1939-Framework
 Framework to work with J1939 protocol. 
 
