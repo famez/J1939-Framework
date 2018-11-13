@@ -8,6 +8,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6 
+      - libwebsockets
       
 install:
   - git clone https://github.com/open-source-parsers/jsoncpp.git
