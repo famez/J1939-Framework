@@ -16,6 +16,7 @@ install:
   - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
   - sudo make install
   - popd
+  - cat /usr/include/libwebsockets.h
 
 script:
   - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake .
