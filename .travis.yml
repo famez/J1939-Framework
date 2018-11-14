@@ -7,16 +7,23 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - g++-6 
-      - libwebsockets-dev
+      - g++-6
       
 install:
+  - pushd ~
   - git clone https://github.com/open-source-parsers/jsoncpp.git
   - pushd jsoncpp
   - cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
   - sudo make install
   - popd
-  - cat /usr/include/libwebsockets.h
+  - popd
+  - pushd ~
+  - git clone https://github.com/warmcat/libwebsockets.git
+  - pushd libwebsockets
+  - cmake
+  - sudo make install
+  - popd
+  - popd
 
 script:
   - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake .
