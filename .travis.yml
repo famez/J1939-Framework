@@ -20,7 +20,7 @@ install:
   - pushd ~
   - git clone https://github.com/warmcat/libwebsockets.git
   - pushd libwebsockets
-  - cmake
+  - cmake .
   - sudo make install
   - popd
   - popd
