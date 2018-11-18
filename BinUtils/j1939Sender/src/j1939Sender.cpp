@@ -318,17 +318,12 @@ int main(int argc, char **argv) {
 
 		for(auto iface = interfaces.begin(); iface != interfaces.end(); ++iface) {
 
-			if((*iter)->initialized(*iface)) {
-				if(!silent)	std::cout << "Interface " << *iface << " is already initialized (by another app?)"  << std::endl;
 
-			} else {
-
-				//Initialize the interface
-				if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
-					std::cerr << "Interface " << *iface << " could not be correctly initialized" << std::endl;
-				}
-
+			//Initialize the interface
+			if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
+				std::cerr << "Interface " << *iface << " could not be correctly initialized" << std::endl;
 			}
+
 
 		}
 

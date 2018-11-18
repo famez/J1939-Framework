@@ -257,12 +257,10 @@ int main (int argc, char **argv)
 			if(interface == *iface || interface.empty()) {
 				helper = *iter;
 
-				if(!helper->initialized(*iface)) {
 
-					if(!helper->initialize(*iface, BAUD_250K)) {
-						std::cerr << "Could not initialize the interface" << std::endl;
-						return 9;
-					}
+				if(!helper->initialize(*iface, BAUD_250K)) {
+					std::cerr << "Could not initialize the interface" << std::endl;
+					return 9;
 				}
 
 				CommonCanReceiver* receiver = helper->allocateCanReceiver();
