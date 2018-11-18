@@ -215,7 +215,8 @@ bool SocketCanReceiver::receive(CanFrame& canFrame, TimeStamp& timestamp) {
 
 
 		//Copy Frame
-		canFrame.setId(frame.can_id);
+		canFrame.setExtendedFormat(frame.can_id & CAN_EFF_FLAG);
+		canFrame.setId(frame.can_id & ~CAN_EFF_FLAG);
 
 		std::string data;
 		data.append((char*)(frame.data), frame.len);
