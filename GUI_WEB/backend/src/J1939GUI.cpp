@@ -6,27 +6,31 @@ extern "C" {
 }
 
 
-#include <json/json.h>
 #include <string>
 #include <iostream>
 #include <sstream>
-
 #include <map>
 #include <vector>
+#include <thread>
+#include <mutex>
 
+#include <json/json.h>
 
 //J1939 libraries
 #include <J1939DataBase.h>
 #include <J1939Factory.h>
 #include <GenericFrame.h>
 #include <Transport/BAM/BamFragmenter.h>
+#include <Transport/BAM/BamReassembler.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
 #include <SPN/SPNString.h>
+#include <Utils.h>
 
 
 //Can includes
 #include <ICanHelper.h>
+#include <CanSniffer.h>
 
 
 #ifndef DATABASE_PATH
@@ -48,9 +52,7 @@ extern "C" {
 
 bool processRequest(const Json::Value& request, Json::Value& response);
 
-//bool listInterfaces(Json::Value& response);
-
-
+void resetReceiver();
 
 bool sentFramesToJson(Json::Value& jsonVal);
 
@@ -63,6 +65,7 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 std::string rcvRequest;
 std::string sendResp;
+Json::Value rxFrames;
 
 
 static struct lws_protocols protocols[] = {
@@ -78,12 +81,20 @@ static struct lws_protocols protocols[] = {
 	}, { NULL, NULL, 0, 0 } /* terminator */
 };
 
+
 using namespace J1939;
 using namespace Can;
+using namespace Utils;
 
 bool isFrameSent(const J1939Frame* frame, const std::string& interface);
 void sendFrameThroughInterface(const J1939Frame* j1939Frame, u32 period, const std::string& interface);
 void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string& interface);
+
+Json::Value frameToJson(const J1939Frame* frame);
+
+
+void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface, void*);
+bool onTimeout();
 
 
 //Map of the created frames to be sent to the CAN interface
@@ -98,6 +109,21 @@ std::set<ICanHelper*> canHelpers;
 //Backends in charge of sending the corresponding frames
 std::map<std::string, ICanSender*> senders;
 
+//To reassemble frames fragmented by means of Broadcast Announce Message protocol
+BamReassembler reassembler;
+
+//Thread in charge of sniffing the Can Network
+std::unique_ptr<std::thread> rxThread = nullptr;
+std::mutex rxLock;
+
+//Cached received frames to avoid processing frames that did not change
+std::map<u32/*Can ID*/, CanFrame> rcvFramesCache;
+
+//To track how many frames have been received
+std::map<u32/*Can ID*/, u32/*Count*/> rcvFramesCount;
+
+
+CanSniffer sniffer;
 
 int callback_http(struct lws *wsi, enum lws_callback_reasons reason,
 		void *user, void *in, size_t len) {
@@ -114,9 +140,15 @@ int callback_http(struct lws *wsi, enum lws_callback_reasons reason,
 int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 		void *user, void *in, size_t len) {
 
-	printf("Reason: %d\n", reason);
 
 	switch (reason) {
+
+	case LWS_CALLBACK_ESTABLISHED: {
+
+		resetReceiver();
+
+	}	break;
+
 	case LWS_CALLBACK_RECEIVE: {
 
 		std::stringstream sstr;
@@ -132,23 +164,50 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 		if(jSonReader->parse(rcvRequest.c_str(), rcvRequest.c_str() + rcvRequest.size(), &rcvjson, &errs)) {		//Verify if we received the whole Json string
 
-			printf("Json request: %s\n", rcvRequest.c_str());
+			//printf("Json request: %s\n", rcvRequest.c_str());
 
 			rcvRequest.clear();
 
-			if(processRequest(rcvjson, respjson)) {
+			if(rcvjson.isMember("command") && rcvjson["command"].isString()) {
+				
+				if(rcvjson["command"] == "reset rx") {
+
+					resetReceiver();
+
+				} else if(rcvjson["command"] == "check rx") {
+
+					rxLock.lock();
+					std::cout << "Sending rx" << std::endl;
+					sstr << rxFrames;
+					rxFrames["rx"].clear();
+					std::cout << "Sent" << std::endl;
+					rxLock.unlock();
+
+					sendResp = sstr.str();
+
+					//printf("Json rx frames: %s\n", sendResp.c_str());
+
+					lws_callback_on_writable_all_protocol(lws_get_context(wsi),
+												lws_get_protocol(wsi));
 
 
-				sentFramesToJson(respjson["frames"]);
+				} else if(processRequest(rcvjson, respjson)) {
 
-				sstr << respjson;
 
-				sendResp = sstr.str();
+					sentFramesToJson(respjson["frames"]);
 
-				printf("Json response: %s\n", sendResp.c_str());
+					sstr << respjson;
 
-				lws_callback_on_writable_all_protocol(lws_get_context(wsi),
-											lws_get_protocol(wsi));
+					sendResp = sstr.str();
+
+					//printf("Json response: %s\n", sendResp.c_str());
+
+					lws_callback_on_writable_all_protocol(lws_get_context(wsi),
+												lws_get_protocol(wsi));
+				} else {
+					sendResp.clear();
+				}
+				
 			} else {
 				sendResp.clear();
 			}
@@ -194,9 +253,6 @@ enum protocols {
 
 bool processRequest(const Json::Value& request, Json::Value& response) {
 
-	if(!request.isMember("command") || !request["command"].isString()) {
-		return false;
-	}
 
 	response["command"] = request["command"].asString();
 
@@ -226,8 +282,6 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 		if(!request.isMember("data") || !request["data"].isUInt())	return false;
 
 		u32 pgn = request["data"].asUInt();
-
-		printf("PGN: %u\n", pgn);
 
 		std::unique_ptr<J1939Frame> frameToAdd = J1939Factory::getInstance().getJ1939Frame(pgn);
 
@@ -521,6 +575,9 @@ int main(int argc, char *argv[]) {
 	//Initialize can
 	canHelpers = ICanHelper::getCanHelpers();
 
+	sniffer.setOnRecv(onRcv);
+	sniffer.setOnTimeout(onTimeout);
+
 	for(auto iter = canHelpers.begin(); iter != canHelpers.end(); ++iter) {
 
 		std::set<std::string> interfaces = (*iter)->getCanIfaces();
@@ -529,15 +586,11 @@ int main(int argc, char *argv[]) {
 
 			bool allOk = true;
 
-			if((*iter)->initialized(*iface)) {
 
-			} else {
+			//Initialize the interface
+			if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
 
-				//Initialize the interface
-				if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
-
-					allOk = false;
-				}
+				allOk = false;
 			}
 
 			if(allOk) {
@@ -545,15 +598,20 @@ int main(int argc, char *argv[]) {
 				ICanSender* sender = (*iter)->allocateCanSender();
 				sender->initialize(*iface);
 				senders[*iface] = sender;
+				
+				CommonCanReceiver* receiver = (*iter)->allocateCanReceiver();
+				receiver->initialize(*iface);
+				sniffer.addReceiver(receiver);
 
 			}
 
 		}
 
 	}
-
-
-
+	
+	rxFrames["command"] = "check rx";
+	
+	//Websockets work 
 	int n;
 
 	do {
@@ -575,87 +633,14 @@ bool sentFramesToJson(Json::Value& jsonVal) {
 	for(auto iter = framesToSend.begin(); iter != framesToSend.end(); ++iter) {
 
 		J1939Frame* frame = *iter;
-
-		jsonVal[i]["pgn"] = (u32)(frame->getPGN());
-		jsonVal[i]["name"] = frame->getName();
-		jsonVal[i]["priority"] = frame->getPriority();
-		jsonVal[i]["source"] = frame->getSrcAddr();
-
-		//Only the first froup has destination address
-		if(frame->getPDUFormatGroup() == PDU_FORMAT_1) {
-			jsonVal[i]["dest"] = frame->getDstAddr();
-		}
-
+		
+		jsonVal[i] = frameToJson(frame);
+		
 		auto period = framePeriods.find(frame);
 
 		if(period != framePeriods.end()) {
 			jsonVal[i]["period"] = period->second;
 		}
-
-
-		//If generic frame, list SPNs
-		if(frame->isGenericFrame()) {
-
-			unsigned int j = 0;
-
-			GenericFrame *genFrame = static_cast<GenericFrame *>(frame);
-
-			std::set<u32> spnNumbers = genFrame->getSPNNumbers();
-
-			for(auto spnNumber = spnNumbers.begin(); spnNumber != spnNumbers.end(); ++spnNumber) {
-
-				SPN *spn = genFrame->getSPN(*spnNumber);
-
-				jsonVal[i]["spns"][j]["number"] = *spnNumber;
-				jsonVal[i]["spns"][j]["name"] = spn->getName();
-				jsonVal[i]["spns"][j]["type"] = spn->getType();
-
-				switch(spn->getType()) {
-				case SPN::SPN_NUMERIC: {
-
-					SPNNumeric *spnNum = static_cast<SPNNumeric *>(spn);
-
-					jsonVal[i]["spns"][j]["value"] = spnNum->getFormatedValue();
-					jsonVal[i]["spns"][j]["units"] = spnNum->getUnits();
-
-				}	break;
-				case SPN::SPN_STATUS: {
-
-					SPNStatus *spnStat = static_cast<SPNStatus *>(spn);
-
-					jsonVal[i]["spns"][j]["value"] = spnStat->getValue();
-
-					SPNStatus::DescMap descriptions = spnStat->getValueDescriptionsMap();
-
-					for(auto desc = descriptions.begin(); desc != descriptions.end(); ++desc) {
-
-						jsonVal[i]["spns"][j]["descriptions"][desc->first] = desc->second;
-
-					}
-
-
-				}	break;
-
-				case SPN::SPN_STRING: {
-
-					SPNString *spnStr = static_cast<SPNString *>(spn);
-
-					jsonVal[i]["spns"][j]["value"] = spnStr->getValue();
-
-
-				}	break;
-
-				default:
-					break;
-
-				}
-
-				++j;
-
-			}
-
-		}
-
 
 
 		for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
@@ -879,5 +864,176 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 	if(!found) {
 		std::cerr << "Frame not sent through the given interface..." << std::endl;
 	}
+
+}
+
+
+void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface, void*) {
+	
+	rxLock.lock();
+	rxFrames["rx"][std::to_string(frame.getId())]["count"] = ++rcvFramesCount[frame.getId()];
+	rxLock.unlock();
+	
+	if(rcvFramesCache.find(frame.getId()) != rcvFramesCache.end() && 
+			frame.getData() == rcvFramesCache[frame.getId()].getData()) {
+		
+		//The raw data is exactly the same.
+		return;
+	}
+	
+	//At least a SPN has changed
+	
+	std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
+				getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());
+
+	if(!j1939Frame.get())		return;						//Frame not registered in the factory. Skipping.
+
+	if(reassembler.toBeHandled(*j1939Frame)) {				//Check if the frame is part of a fragmented frame (BAM protocol)
+		//Actually it is, reassembler will handle it.
+		reassembler.handleFrame(*j1939Frame);
+
+		if(reassembler.reassembledFramesPending()) {
+
+			j1939Frame = reassembler.dequeueReassembledFrame();
+			
+			//For frames that have been decoded from BAM protocol.
+			rxLock.lock();
+			rxFrames["rx"][std::to_string(j1939Frame->getIdentifier())]["count"] = ++rcvFramesCount[j1939Frame->getIdentifier()];
+			rxLock.unlock();
+			
+
+		} else {
+			return;				//Frame handled by reassembler but the original frame to be reassembled is not complete.
+		}
+
+	} else {
+		
+		//Only save in cache unfragmented frames to avoid filtering frames that are part of BAM protocol. 
+		//Frames whose length is bigger than 8 bytes are not cached, because the TX rate is usually several seconds. 
+		rcvFramesCache[frame.getId()] = frame;
+	}
+	
+	//At this point we have either a simple frame or a reassembled frame.
+	
+	u32 j1939ID = j1939Frame->getIdentifier();
+	
+	rxLock.lock();
+	std::cout << "Add" << j1939ID << std::endl;
+	rxFrames["rx"][std::to_string(j1939ID)]["frame"] = frameToJson(j1939Frame.get());
+	std::cout << "Added" << std::endl;
+	rxLock.unlock();
+	
+}
+
+
+bool onTimeout() {
+	
+	return true;
+	
+}
+
+
+Json::Value frameToJson(const J1939Frame* frame) {
+	
+	Json::Value jsonVal;
+	
+	jsonVal["pgn"] = (u32)(frame->getPGN());
+	jsonVal["name"] = frame->getName();
+	jsonVal["priority"] = frame->getPriority();
+	jsonVal["source"] = frame->getSrcAddr();
+
+	//Only the first froup has destination address
+	if(frame->getPDUFormatGroup() == PDU_FORMAT_1) {
+		jsonVal["dest"] = frame->getDstAddr();
+	}
+
+	//If generic frame, list SPNs
+	if(frame->isGenericFrame()) {
+
+		unsigned int j = 0;
+
+		const GenericFrame *genFrame = static_cast<const GenericFrame *>(frame);
+
+		std::set<u32> spnNumbers = genFrame->getSPNNumbers();
+
+		for(auto spnNumber = spnNumbers.begin(); spnNumber != spnNumbers.end(); ++spnNumber) {
+
+			const SPN *spn = genFrame->getSPN(*spnNumber);
+
+			jsonVal["spns"][j]["number"] = *spnNumber;
+			jsonVal["spns"][j]["name"] = spn->getName();
+			jsonVal["spns"][j]["type"] = spn->getType();
+
+			switch(spn->getType()) {
+			case SPN::SPN_NUMERIC: {
+
+				const SPNNumeric *spnNum = static_cast<const SPNNumeric *>(spn);
+
+				jsonVal["spns"][j]["value"] = spnNum->getFormatedValue();
+				jsonVal["spns"][j]["units"] = spnNum->getUnits();
+
+			}	break;
+			case SPN::SPN_STATUS: {
+
+				const SPNStatus *spnStat = static_cast<const SPNStatus *>(spn);
+
+				jsonVal["spns"][j]["value"] = spnStat->getValue();
+
+				SPNStatus::DescMap descriptions = spnStat->getValueDescriptionsMap();
+
+				for(auto desc = descriptions.begin(); desc != descriptions.end(); ++desc) {
+
+					jsonVal["spns"][j]["descriptions"][desc->first] = desc->second;
+
+				}
+
+
+			}	break;
+
+			case SPN::SPN_STRING: {
+
+				const SPNString *spnStr = static_cast<const SPNString *>(spn);
+
+				jsonVal["spns"][j]["value"] = spnStr->getValue();
+
+
+			}	break;
+
+			default:
+				break;
+
+			}
+
+			++j;
+
+		}
+
+	}
+	
+	return jsonVal;
+	
+}
+
+
+void resetReceiver() {
+
+	//Stop receive thread to clean the cache of received frames. Not done the first time.
+	if(rxThread.get()) {
+
+		sniffer.finish();
+		rxThread->join();
+
+		rcvFramesCache.clear();
+
+	}
+
+	//Once the cache is cleaned or it it the first initialization, reinitialize a new thread
+	sniffer.reset();
+
+	rxThread = std::unique_ptr<std::thread>(new std::thread([](){
+
+		sniffer.sniff(1000);
+
+	}));
 
 }

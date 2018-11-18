@@ -1,114 +1,215 @@
 <!doctype html>
 <html lang=en>
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>J1939GUI</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>J1939GUI</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+
+	<style>
+
+		body {
+
+			font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;		
+
+		}
+
+		ul {
+		  	list-style-type: none;
+		}
+
+		.caret {
+			  cursor: pointer;
+			  -webkit-user-select: none; /* Safari 3.1+ */
+			  -moz-user-select: none; /* Firefox 2+ */
+			  -ms-user-select: none; /* IE 10+ */
+			  user-select: none;
+			  font-size: 16px;
+		  	
+		}
+
+		.caret::before {
+			  content: "\25B6";
+			  color: black;
+			  display: inline-block;
+			  margin-right: 6px;
+		}
 
 
-  <style>
-ul {
-  list-style-type: none;
-}
+		.nested {
+			  display: block;
+			  font-size: 14px;
+		}
+
+		#transmission {
+
+			border: 1px solid #25B28F;		
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 1px 1px 1px 1px grey;
+		}
 
 
-.caret {
-  cursor: pointer;
-  -webkit-user-select: none; /* Safari 3.1+ */
-  -moz-user-select: none; /* Firefox 2+ */
-  -ms-user-select: none; /* IE 10+ */
-  user-select: none;
-  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-  font-size: 16px;
-  	
-}
+		#tx_text {
+			
+			color: #25B28F;
+			
 
-.caret::before {
-  content: "\25B6";
-  color: black;
-  display: inline-block;
-  margin-right: 6px;
-}
+		}
+
+		#reception {
+
+			border: 1px solid #FD353A;		
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 1px 1px 1px 1px grey;
+		}
 
 
-.nested {
-  display: block;
-  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-  font-size: 14px;
-}
+		#rx_text {
+			
+			color: #FD353A;
 
-</style>
+		}
 
+		td, label {
+		
+			padding-right: 30px;		
+
+		}
+
+	</style>
 
 </head>
 <body>
 
 <div ng-app="J1939Gui" ng-controller="J1939">
 
-	<select ng-model="selFrame">
-		<option ng-repeat="pgn in pgns" value="{{ pgn.pgn }}">{{ pgn.name }} : {{ pgn.pgn | hex | uppercase }}</option>
-	</select>
+	<h2 id=tx_text>Transmission</h2> 
 
-	 <button ng-click="addFrame()" ng-init="count=0">Add frame</button> 
+	<div id=transmission>
 
-  <ul>
+		<select ng-model="selFrame">
+			<option ng-repeat="pgn in pgns" value="{{ pgn.pgn }}">{{ pgn.name }} : {{ pgn.pgn | hex | uppercase }}</option>
+		</select>
 
-    <li ng-repeat="frame in frames">
-	<span class="caret" ng-click="showSpns[$index] = !showSpns[$index]">
-		<span>{{ frame.name }} ({{ frame.pgn | hex | uppercase }})</span>
-		<span>
-			Priority: 
-			<input type="number" number-mask="" ng-enter="changePrio($index)" ng-click="$event.stopPropagation();" ng-model="frame.priority" value="{{ frame.priority }}">
-		</span>	
-		<span>
-			Source: 
-			<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source" value="{{ frame.source }}">
-		</span>	
-		<span ng-show="frame.dest">
-			Dest: 
-			<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest" value="{{ frame.dest }}">
-		</span>		
-		<span>
-			Period: 
-			<input type="number" number-mask="" ng-enter="changePeriod($index)" ng-click="$event.stopPropagation();" ng-model="frame.period" value="{{ frame.period }}">
-		</span>	
+		 <button ng-click="addFrame()" ng-init="count=0">Add frame</button> 
+
+		  <ul>
+
+		    <li ng-repeat="frame in tx_frames">
+			<span class="caret" ng-click="showSpns[$index] = !showSpns[$index]">
+				<span>{{ frame.name }} ({{ frame.pgn | hex | uppercase }})</span>
+				<span>
+					Priority: 
+					<input type="number" number-mask="" ng-enter="changePrio($index)" ng-click="$event.stopPropagation();" ng-model="frame.priority" value="{{ frame.priority }}">
+				</span>	
+				<span>
+					Source: 
+					<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source" value="{{ frame.source }}">
+				</span>	
+				<span ng-show="frame.dest">
+					Dest: 
+					<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest" value="{{ frame.dest }}">
+				</span>		
+				<span>
+					Period: 
+					<input type="number" number-mask="" ng-enter="changePeriod($index)" ng-click="$event.stopPropagation();" ng-model="frame.period" value="{{ frame.period }}">
+				</span>	
 
 
-		<span ng-repeat="(iface, isChecked) in frame.interfaces">
-			{{ iface }}
-			<input type="checkbox" ng-click="$event.stopPropagation();" ng-change="ifaceChecked($parent.$index, iface)" ng-model="frame.interfaces[iface]" value="{{ isChecked }}">
-		</span>
-		<button ng-click="deleteFrame($index, $event)">
-			Delete 
-			
-		</button>	
-		
-	</span>
-	 <ul ng-show="showSpns[$index]" class="nested">
-		
-		<li  ng-repeat="spn in frame.spns">
-			<span>SPN {{ spn.number }} ({{ spn.name }})</span>
-			<span ng-switch on="spn.type">
-				Value: 
-				<span ng-switch-when="1"> <!-- Type Status -->
-					<select ng-model="spn.value" ng-change="updateSpn($parent.$parent.$index, $parent.$index)">
-						<option ng-repeat="desc in spn.descriptions | filter:emptyOrNull" value="{{$index}}" ng-selected="$index == spn.value">{{ desc }}</option>
-					</select>
+				<span ng-repeat="(iface, isChecked) in frame.interfaces">
+					{{ iface }}
+					<input type="checkbox" ng-click="$event.stopPropagation();" ng-change="ifaceChecked($parent.$index, iface)" ng-model="frame.interfaces[iface]" value="{{ isChecked }}">
 				</span>
-				<span ng-switch-default> <!-- Type String, Numeric or Unknown -->
-					<input type="text" ng-enter="updateSpn($parent.$parent.$index, $parent.$index)" ng-model="spn.value" value="{{ spn.value }}">
-					<span ng-show="spn.units">{{ spn.units }}</span>
-				</span>
+				<button ng-click="deleteFrame($index, $event)">
+					Delete 
+					
+				</button>	
+				
 			</span>
-		
-		</li>
-	</ul>
-	  
-    </li>
-  </ul>
+			 <ul ng-show="showSpns[$index]" class="nested">
+				
+				<li  ng-repeat="spn in frame.spns">
+					<span>SPN {{ spn.number }} ({{ spn.name }})</span>
+					<span ng-switch on="spn.type">
+						Value: 
+						<span ng-switch-when="1"> <!-- Type Status -->
+							<select ng-model="spn.value" ng-change="updateSpn($parent.$parent.$index, $parent.$index)">
+								<option ng-repeat="desc in spn.descriptions | filter:emptyOrNull" value="{{$index}}" ng-selected="$index == spn.value">{{ desc }}</option>
+							</select>
+						</span>
+						<span ng-switch-default> <!-- Type String, Numeric or Unknown -->
+							<input type="text" ng-enter="updateSpn($parent.$parent.$index, $parent.$index)" ng-model="spn.value" value="{{ spn.value }}">
+							<span ng-show="spn.units">{{ spn.units }}</span>
+						</span>
+					</span>
+				
+				</li>
+			</ul>
+			  
+		    </li>
+		  </ul>
+
+	</div>
+
+	<h2 id=rx_text>Reception</h2> 
+	<div id="reception">
+
+		<label>PGN: <input ng-model="search_pgn"></label>
+		<label>Name: <input ng-model="search_name"></label>
+		<label>SPN: <input ng-model="search_spn"></label>
+
+		  <ul>
+
+		    <li ng-repeat="(id, frame) in filterRxFrames(rx_frames, search_pgn, search_name, search_spn)">
+			<span class="caret" ng-click="showRxSpns[id] = !showRxSpns[id]">
+				<span>{{ frame.name }} ({{ frame.pgn | hex | uppercase }})</span>
+				<span>
+					Priority: {{ frame.priority }}
+				</span>	
+				<span>
+					Source: {{ frame.source }}
+				</span>	
+				<span ng-show="frame.dest">
+					Dest: {{ frame.dest }}
+				</span>	
+				<span ng-show="frame.count">
+					Count: {{ frame.count }}
+				</span>	
+
+			</span>
+			 <table ng-show="showRxSpns[id]" class="nested">
+				
+				<tr ng-repeat="spn in frame.spns | filter:{'number':search_spn}">
+					<td>SPN {{ spn.number }} ({{ spn.name }})</td>
+					<td ng-switch on="spn.type">
+						Value: 
+						<span style='color: {{ ($even != $parent.$even) ? "blue" : "red" }};'>
+							<span ng-switch-when="1"> <!-- Type Status -->
+								{{ spn.descriptions[spn.value] }} ({{spn.value}})
+							</span>
+							<span ng-switch-default> <!-- Type String, Numeric or Unknown -->
+								{{ spn.value }}
+							</span>
+						</span>
+						<span ng-show="spn.units">{{ spn.units }}</span>
+					</td>
+				
+				</tr>
+			</table>
+			  
+		    </li>
+		  </ul>
+
+		  <button ng-click="reset_rx_frame($event)">
+					Reset 
+		  </button>
+
+	</div>
+
 </div>
 
 </body>
@@ -137,7 +238,7 @@ app.filter('hex', function () {
   };
 });
 
-app.controller('J1939', function($scope) {
+app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $interval, $filter) {
 
 	var SPN_TYPES = {
 		NUMERIC : 0,
@@ -146,6 +247,8 @@ app.controller('J1939', function($scope) {
 	}
 	
 	$scope.showSpns = [];
+	$scope.showRxSpns = {};
+	$scope.rx_frames = {};
 
 	$scope.addFrame = function() {
 	
@@ -157,7 +260,7 @@ app.controller('J1939', function($scope) {
 
 	$scope.changePrio = function(index) {
 	
-		var request = { "command" : "set frame", "prio" : Number($scope.frames[index].priority), "index" : index};
+		var request = { "command" : "set frame", "prio" : Number($scope.tx_frames[index].priority), "index" : index};
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);		
 
@@ -167,7 +270,7 @@ app.controller('J1939', function($scope) {
 	$scope.changeSrc = function(index) {
 
 	
-		var request = { "command" : "set frame", "src" : Number($scope.frames[index].source), "index" : index};
+		var request = { "command" : "set frame", "src" : Number($scope.tx_frames[index].source), "index" : index};
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);		
 
@@ -177,7 +280,7 @@ app.controller('J1939', function($scope) {
 	$scope.changeDest = function(index) {
 
 	
-		var request = { "command" : "set frame", "dest" : Number($scope.frames[index].dest), "index" : index};
+		var request = { "command" : "set frame", "dest" : Number($scope.tx_frames[index].dest), "index" : index};
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);		
 
@@ -187,7 +290,7 @@ app.controller('J1939', function($scope) {
 	$scope.changePeriod = function(index) {
 
 	
-		var request = { "command" : "set frame", "period" : Number($scope.frames[index].period), "index" : index};
+		var request = { "command" : "set frame", "period" : Number($scope.tx_frames[index].period), "index" : index};
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);	
 
@@ -197,7 +300,7 @@ app.controller('J1939', function($scope) {
 		
 		
 		var request = { "command" : "set frame", "interface" : {}, "index" : index };
-		request.interface[iface] = $scope.frames[index]['interfaces'][iface];
+		request.interface[iface] = $scope.tx_frames[index]['interfaces'][iface];
 
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);	
@@ -207,7 +310,7 @@ app.controller('J1939', function($scope) {
 
 	$scope.updateSpn = function(frameIndex, spnIndex) {
 
-		var spn = $scope.frames[frameIndex].spns[spnIndex];
+		var spn = $scope.tx_frames[frameIndex].spns[spnIndex];
 		
 		var value = spn.value;
 
@@ -241,7 +344,62 @@ app.controller('J1939', function($scope) {
 		return !(item === null || item.length === 0);
 
 	};
+
+	$scope.reset_rx_frame = function($event) {
 	
+		$scope.rx_frames = {};
+			
+		var request = { "command" : "reset rx"};
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);
+
+		$event.stopPropagation();
+
+	}
+
+	$scope.filterRxFrames = function(rx_frames, search_pgn, search_name, search_spn) {
+
+		var filtered_frames = {};
+		
+		search_pgn = $filter('lowercase')(search_pgn);
+		search_name = $filter('lowercase')(search_name);
+
+		for(key in rx_frames) {
+
+			var pgn = $filter('lowercase')($filter('hex')(rx_frames[key].pgn));
+			var name = $filter('lowercase')(rx_frames[key].name);
+
+			if(search_pgn && !pgn.includes(search_pgn))	continue;
+			if(search_name && !name.includes(search_name))	continue;
+
+
+			var spn_filter_pass = false;
+
+			if(search_spn) {
+				for(i in rx_frames[key].spns) {
+					var spn = rx_frames[key].spns[i];
+					if(spn.number.toString().includes(search_spn)) {
+						spn_filter_pass = true;
+						break;
+					}				
+
+				}
+			} else {	
+				spn_filter_pass = true;
+			}
+
+
+			if(spn_filter_pass) {
+			
+				filtered_frames[key] = rx_frames[key];
+
+			}
+
+		}
+
+		return filtered_frames;
+
+	}
 
 	var webSocket;
 
@@ -266,6 +424,16 @@ app.controller('J1939', function($scope) {
 			request  = { "command" : "list interfaces" };
 			jsonReq = JSON.stringify(request);
 			webSocket.send(jsonReq);
+
+
+			//Every 200 milliseconds we request the new incoming frames.
+			$interval(function(){
+				var request = { "command" : "check rx" };
+				var jsonReq = JSON.stringify(request);
+				webSocket.send(jsonReq);			
+		
+
+			}, 200);
 		   
 		};
 		webSocket.onclose = function (closeEvent) {
@@ -283,11 +451,40 @@ app.controller('J1939', function($scope) {
 
 			var response = JSON.parse(wsMsg);
 
+			//Check if the we received new frames
+			if(response.command == "check rx") {
+			
+				$scope.$apply(function(x) { 
+
+					for(id in response.rx) {
+
+						if(response.rx[id].hasOwnProperty("frame")) {	
+							x.rx_frames[id] = response.rx[id].frame; 						
+				
+						}
+
+						if(x.rx_frames.hasOwnProperty(id)) {
+					
+							x.rx_frames[id].count = response.rx[id].count;
+
+						}
+						
+
+					}
+
+					
+
+				});
+
+
+			}
+
+
 			if(response.hasOwnProperty("frames")) {
 
 				console.log("Setting frames");
 				
-				$scope.$apply(function(x) { x.frames = response.frames; });
+				$scope.$apply(function(x) { x.tx_frames = response.frames; });
 				
 			}
 
@@ -304,16 +501,17 @@ app.controller('J1939', function($scope) {
 				console.log("List interfaces");
 								
 				$scope.$apply(function(x) { x.listedIfaces = response.interfaces; });
-
 			}
-			
+
 		};
 
-	    } catch (exception) {
-		console.error("Errorcito " + exception.message);
-	    }
+		
 
-	});  
+    	} catch (exception) {
+		console.error("Error " + exception.message);
+    	}
+
+}]);  
 
 
 </script>
