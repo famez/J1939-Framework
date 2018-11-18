@@ -104,19 +104,19 @@
 				<span>{{ frame.name }} ({{ frame.pgn | hex | uppercase }})</span>
 				<span>
 					Priority: 
-					<input type="number" number-mask="" ng-enter="changePrio($index)" ng-click="$event.stopPropagation();" ng-model="frame.priority" value="{{ frame.priority }}">
+					<input type="number" number-mask="" ng-enter="changePrio($index)" ng-click="$event.stopPropagation();" ng-model="frame.priority">
 				</span>	
 				<span>
 					Source: 
-					<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source" value="{{ frame.source }}">
+					<input type="number" number-mask="" ng-enter="changeSrc($index)" ng-click="$event.stopPropagation();" ng-model="frame.source">
 				</span>	
 				<span ng-show="frame.dest">
 					Dest: 
-					<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest" value="{{ frame.dest }}">
+					<input type="number" number-mask="" ng-enter="changeDest($index)" ng-click="$event.stopPropagation();" ng-model="frame.dest">
 				</span>		
 				<span>
 					Period: 
-					<input type="number" number-mask="" ng-enter="changePeriod($index)" ng-click="$event.stopPropagation();" ng-model="frame.period" value="{{ frame.period }}">
+					<input type="number" number-mask="" ng-enter="changePeriod($index)" ng-click="$event.stopPropagation();" ng-model="frame.period">
 				</span>	
 
 
@@ -142,7 +142,7 @@
 							</select>
 						</span>
 						<span ng-switch-default> <!-- Type String, Numeric or Unknown -->
-							<input type="text" ng-enter="updateSpn($parent.$parent.$index, $parent.$index)" ng-model="spn.value" value="{{ spn.value }}">
+							<input type="text" ng-enter="updateSpn($parent.$parent.$index, $parent.$index)" ng-model="spn.value">
 							<span ng-show="spn.units">{{ spn.units }}</span>
 						</span>
 					</span>
