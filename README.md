@@ -13,14 +13,18 @@ Requirements:
 
 - Linux distribution with SocketCan support.
 - Cmake 3.5.1 or higher.
+- LibWebSockets
+- JsonCpp
 
 Steps:
 
-```bash
-git clone https://github.com/famez/J1939-Framework.git
-cd J1939-Framework
-cmake .
-make
-sudo make install
-```
+Steps can be found in travis.yml file.
     
+    
+## Wireshark dissector
+
+![alt text](https://github.com/famez/J1939-Framework/blob/master/wireshark/dissector/J1939-plugin.png)
+
+## J1939GUI
+
+![alt text](https://github.com/famez/J1939-Framework/blob/master/GUI_WEB/J1939GUI.png)
