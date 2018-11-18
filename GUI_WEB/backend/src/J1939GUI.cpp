@@ -13,6 +13,7 @@ extern "C" {
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <queue>
 
 #include <json/json.h>
 
@@ -64,7 +65,8 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 
 std::string rcvRequest;
-std::string sendResp;
+std::queue<Json::Value> jsonResponses;
+
 Json::Value rxFrames;
 
 
@@ -151,8 +153,6 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 	case LWS_CALLBACK_RECEIVE: {
 
-		std::stringstream sstr;
-
 		Json::Value rcvjson;
 		Json::Value respjson;
 
@@ -177,15 +177,9 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 				} else if(rcvjson["command"] == "check rx") {
 
 					rxLock.lock();
-					std::cout << "Sending rx" << std::endl;
-					sstr << rxFrames;
+					jsonResponses.push(rxFrames);
 					rxFrames["rx"].clear();
-					std::cout << "Sent" << std::endl;
 					rxLock.unlock();
-
-					sendResp = sstr.str();
-
-					//printf("Json rx frames: %s\n", sendResp.c_str());
 
 					lws_callback_on_writable_all_protocol(lws_get_context(wsi),
 												lws_get_protocol(wsi));
@@ -196,20 +190,13 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 					sentFramesToJson(respjson["frames"]);
 
-					sstr << respjson;
+					jsonResponses.push(respjson);
 
-					sendResp = sstr.str();
-
-					//printf("Json response: %s\n", sendResp.c_str());
 
 					lws_callback_on_writable_all_protocol(lws_get_context(wsi),
 												lws_get_protocol(wsi));
-				} else {
-					sendResp.clear();
 				}
 				
-			} else {
-				sendResp.clear();
 			}
 
 		}
@@ -221,16 +208,25 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 	case LWS_CALLBACK_SERVER_WRITEABLE: {
 
-		if(!sendResp.empty()) {
+		std::stringstream sstr;
 
-			char *buff = new char[LWS_SEND_BUFFER_PRE_PADDING + sendResp.size() + LWS_SEND_BUFFER_POST_PADDING];
+		while(!jsonResponses.empty()) {
 
-			memcpy(buff + LWS_SEND_BUFFER_PRE_PADDING, sendResp.c_str(), sendResp.size());
+
+			sstr << jsonResponses.front();
+
+			printf("RESPONSE!!!: %s\n", sstr.str().c_str());
+
+			char *buff = new char[LWS_SEND_BUFFER_PRE_PADDING + sstr.str().size() + LWS_SEND_BUFFER_POST_PADDING];
+
+			memcpy(buff + LWS_SEND_BUFFER_PRE_PADDING, sstr.str().c_str(), sstr.str().size());
 
 			lws_write(wsi, (unsigned char*)(buff + LWS_SEND_BUFFER_PRE_PADDING),
-					sendResp.size(), LWS_WRITE_TEXT);
+					sstr.str().size(), LWS_WRITE_TEXT);
 
-			sendResp.clear();
+			jsonResponses.pop();
+
+			sstr.clear();
 
 			delete[] buff;
 
