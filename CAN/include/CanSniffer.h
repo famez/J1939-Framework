@@ -24,14 +24,21 @@ private:
 	OnTimeoutPtr mTimeoutCB = nullptr;
 	void* mData = nullptr;		//Data to be passed to the OnReceiveFramePtr callback
 	std::vector<CommonCanReceiver*> mReceivers;
+	bool mRunning = true;
 
 public:
+	CanSniffer() {}
 	CanSniffer(OnReceiveFramePtr recvCB, OnTimeoutPtr timeoutCB, void* data = nullptr);
 	virtual ~CanSniffer();
 	void addReceiver(CommonCanReceiver *receiver) { mReceivers.push_back(receiver); }
 	void sniff(u32 timeout);
 	void setFilters(std::set<CanFilter> filters);
 	int getNumberOfReceivers() const { return mReceivers.size(); }
+	void reset() { mRunning = true; }
+	void finish() { mRunning = false; }
+	void setOnRecv(OnReceiveFramePtr recvCB) { mRcvCB = recvCB; }
+	void setOnTimeout(OnTimeoutPtr timeoutCB) { mTimeoutCB = timeoutCB; }
+	void setData(void* data) { mData = data; }
 
 };
 

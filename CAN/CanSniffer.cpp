@@ -34,7 +34,6 @@ void CanSniffer::setFilters(std::set<CanFilter> filters) {
 
 void CanSniffer::sniff(u32 timeout) {
 
-	bool running = true;
 	int result;
 	fd_set rdfs;
 	timeval tv;
@@ -77,19 +76,14 @@ void CanSniffer::sniff(u32 timeout) {
 						(mRcvCB)(canFrame, timestamp, (*receiver)->getInterface(), mData);
 
 					}
-
 				}
 			}
 
-
-
 		} else if (result == 0) {		//Timeout expired
-			running = (mTimeoutCB)();
-		} else {
-			running = false;
+			(mTimeoutCB)();
 		}
 
-	} while (running);
+	} while (mRunning);
 
 
 
