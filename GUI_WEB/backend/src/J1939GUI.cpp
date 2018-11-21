@@ -208,14 +208,17 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 	case LWS_CALLBACK_SERVER_WRITEABLE: {
 
-		std::stringstream sstr;
+
 
 		while(!jsonResponses.empty()) {
 
+			std::stringstream sstr;
 
 			sstr << jsonResponses.front();
 
 			printf("RESPONSE!!!: %s\n", sstr.str().c_str());
+
+			printf("END!!!\n");
 
 			char *buff = new char[LWS_SEND_BUFFER_PRE_PADDING + sstr.str().size() + LWS_SEND_BUFFER_POST_PADDING];
 
@@ -225,8 +228,6 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 					sstr.str().size(), LWS_WRITE_TEXT);
 
 			jsonResponses.pop();
-
-			sstr.clear();
 
 			delete[] buff;
 
