@@ -210,15 +210,11 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 
 
-		while(!jsonResponses.empty()) {
+		if(!jsonResponses.empty()) {			//Check if there are enqueued responses to send
 
 			std::stringstream sstr;
 
 			sstr << jsonResponses.front();
-
-			printf("RESPONSE!!!: %s\n", sstr.str().c_str());
-
-			printf("END!!!\n");
 
 			char *buff = new char[LWS_SEND_BUFFER_PRE_PADDING + sstr.str().size() + LWS_SEND_BUFFER_POST_PADDING];
 
@@ -231,6 +227,11 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 			delete[] buff;
 
+		}
+		
+		if(!jsonResponses.empty()) {									//Check again if there are enqueued responses to have another chance to send them		
+			lws_callback_on_writable_all_protocol(lws_get_context(wsi),
+															lws_get_protocol(wsi));
 		}
 
 
