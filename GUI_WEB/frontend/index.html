@@ -43,34 +43,24 @@
 			  font-size: 14px;
 		}
 
-		#transmission {
 
-			border: 1px solid #25B28F;		
-			border-radius: 10px;
-			padding: 20px;
-			box-shadow: 1px 1px 1px 1px grey;
-		}
+		.win_container {	
 
-
-		#tx_text {
-			
-			color: #25B28F;
-			
+			border: 3px solid #F1F1F1;
+			border-top-left-radius: 4px;
+			border-top-left-radius: 4px;
 
 		}
 
-		#reception {
+	
+		.win_title {	
 
-			border: 1px solid #FD353A;		
-			border-radius: 10px;
-			padding: 20px;
-			box-shadow: 1px 1px 1px 1px grey;
-		}
-
-
-		#rx_text {
+			padding: 5px;
+			border-top-left-radius: 4px;
+			border-top-left-radius: 4px;
+			background: #F1F1F1;
 			
-			color: #FD353A;
+
 
 		}
 
@@ -87,9 +77,14 @@
 
 <div ng-app="J1939Gui" ng-controller="J1939">
 
-	<h2 id=tx_text>Transmission</h2> 
+	
 
-	<div id=transmission>
+	<div class="win_container" id=transmission>
+
+		<div class="win_title">
+			<div id=tx_text>Transmission</div> 
+		</div>
+
 
 		<select ng-model="selFrame">
 			<option ng-repeat="pgn in pgns" value="{{ pgn.pgn }}">{{ pgn.name }} : {{ pgn.pgn | hex | uppercase }}</option>
@@ -155,8 +150,15 @@
 
 	</div>
 
-	<h2 id=rx_text>Reception</h2> 
-	<div id="reception">
+	<br>
+
+
+	 
+	<div class="win_container" id="reception">
+
+		<div class="win_title">
+			<div id=rx_text>Reception</div> 
+		</div>
 
 		<label>PGN: <input ng-model="search_pgn"></label>
 		<label>Name: <input ng-model="search_name"></label>
