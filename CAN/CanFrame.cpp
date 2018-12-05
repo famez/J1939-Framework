@@ -5,17 +5,31 @@
  *      Author: famez
  */
 
+#include <sstream>
+#include <iomanip>
+
 #include "CanFrame.h"
 
 namespace Can {
 
 CanFrame::CanFrame() : mId (0) {
-	// TODO Auto-generated constructor stub
 
 }
 
 CanFrame::~CanFrame() {
-	// TODO Auto-generated destructor stub
 }
+
+std::string CanFrame::hexDump() const {
+	
+	std::stringstream sstr;
+
+	for(auto c = mData.begin(); c != mData.end(); ++c) {
+		sstr << std::setfill('0') << std::setw(2) << std::hex << (static_cast<u32>(*c) & 0xFF) << " ";
+	}
+	
+	return sstr.str();
+	
+}
+
 
 } /* namespace Can */

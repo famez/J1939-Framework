@@ -47,10 +47,6 @@ public:
 		mId = id;
 	}
 
-
-
-
-
 	void clear() { mId = 0; mData.clear(); }
 
 	bool isExtendedFormat() const {
@@ -60,6 +56,12 @@ public:
 	void setExtendedFormat(bool extendedFormat) {
 		mExtendedFormat = extendedFormat;
 	}
+	
+	//To show human readable data
+	
+	std::string hexDump() const;
+	
+	
 };
 
 } /* namespace Can */
