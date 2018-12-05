@@ -905,7 +905,7 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 	if(!j1939Frame.get()) {			//Frame not registered in the factory.
 		
 		if(showRaw) {
-			
+			std::unique_lock<std::mutex> lock(rxLock);
 			rxFrames["rx"][std::to_string(frame.getId())]["raw"] = frame.hexDump();
 			rcvFramesCache[frame.getId()] = frame;
 		}
