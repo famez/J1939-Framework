@@ -49,6 +49,7 @@ extern "C" {
 #define SET_FRAME_REQUEST		"set frame"
 #define DELETE_FRAME_REQUEST	"delete frame"
 #define LIST_INTERFACES			"list interfaces"
+#define SHOW_RAW				"show raw"
 
 
 bool processRequest(const Json::Value& request, Json::Value& response);
@@ -68,6 +69,8 @@ std::string rcvRequest;
 std::queue<Json::Value> jsonResponses;
 
 Json::Value rxFrames;
+
+bool showRaw;		//Option to show packets not able to decode
 
 
 static struct lws_protocols protocols[] = {
@@ -255,6 +258,17 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 	response["command"] = request["command"].asString();
 
 	unsigned int i = 0;
+	
+	
+	//Activate show raw functionality
+	if(request["command"] == SHOW_RAW) {
+		
+		if(request.isMember("raw") && request["raw"].isBool()) {
+			showRaw = request["raw"].asBool();
+		}
+		
+		return false;		//No need to send a response
+	}
 
 	if(request["command"] == LIST_FRAMES_REQUEST) {
 
@@ -543,7 +557,7 @@ int main(int argc, char *argv[]) {
 	
 	struct lws_context_creation_info info;
 	
-	
+	showRaw = false;
 	
 	memset(&info, 0, sizeof(info));
 
@@ -888,7 +902,17 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 	std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
 				getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());
 
-	if(!j1939Frame.get())		return;						//Frame not registered in the factory. Skipping.
+	if(!j1939Frame.get()) {			//Frame not registered in the factory.
+		
+		if(showRaw) {
+			
+			rxFrames["rx"][std::to_string(frame.getId())]["raw"] = frame.hexDump();
+			rcvFramesCache[frame.getId()] = frame;
+		}
+		
+		
+		return;						
+	}
 
 	if(reassembler.toBeHandled(*j1939Frame)) {				//Check if the frame is part of a fragmented frame (BAM protocol)
 		//Actually it is, reassembler will handle it.

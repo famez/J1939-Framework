@@ -205,6 +205,19 @@
 			  
 		    </li>
 		  </ul>
+		
+		  <div>Show raw<input type="checkbox" ng-change="show_raw()" ng-model="showRaw"></div>
+
+		  <ul ng-show="showRaw">
+
+		    <li ng-repeat="(id, raw) in rx_raw">
+			<span style='font-weight: bold; color: {{ ($even != $parent.$even) ? "blue" : "red" }};'>{{ id | hex }}</span>: {{ raw.data }} 
+			<span ng-show="raw.count">
+				Count: {{ raw.count }}
+			</span>	
+			  
+		    </li>
+		  </ul>
 
 		  <button ng-click="reset_rx_frame($event)">
 					Reset 
@@ -251,6 +264,7 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 	$scope.showSpns = [];
 	$scope.showRxSpns = {};
 	$scope.rx_frames = {};
+	$scope.rx_raw = {};
 
 	$scope.addFrame = function() {
 	
@@ -347,6 +361,7 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 
 	};
 
+	//Reset the reception of frames
 	$scope.reset_rx_frame = function($event) {
 	
 		$scope.rx_frames = {};
@@ -359,6 +374,7 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 
 	}
 
+	//To filter received frames by its PGN, Name or SPN.
 	$scope.filterRxFrames = function(rx_frames, search_pgn, search_name, search_spn) {
 
 		var filtered_frames = {};
@@ -400,6 +416,15 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 		}
 
 		return filtered_frames;
+
+	}
+
+	//Show undecoded frames?
+	$scope.show_raw = function() {
+
+		var request = { "command" : "show raw", "raw" : $scope.showRaw };
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);
 
 	}
 
@@ -453,13 +478,14 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 
 			var response = JSON.parse(wsMsg);
 
-			//Check if the we received new frames
+			//Check if we received new frames
 			if(response.command == "check rx") {
 			
 				$scope.$apply(function(x) { 
 
 					for(id in response.rx) {
-
+						
+						//Decoded frames
 						if(response.rx[id].hasOwnProperty("frame")) {	
 							x.rx_frames[id] = response.rx[id].frame; 						
 				
@@ -470,6 +496,18 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 							x.rx_frames[id].count = response.rx[id].count;
 
 						}
+
+						//Raw
+						if(response.rx[id].hasOwnProperty("raw")) {	
+							x.rx_raw[id] =  { data: response.rx[id].raw }; 						
+				
+						}
+
+						if(x.rx_raw.hasOwnProperty(id)) {
+					
+							x.rx_raw[id].count = response.rx[id].count;
+
+						}	
 						
 
 					}
