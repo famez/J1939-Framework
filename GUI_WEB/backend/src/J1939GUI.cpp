@@ -167,7 +167,7 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 
 		if(jSonReader->parse(rcvRequest.c_str(), rcvRequest.c_str() + rcvRequest.size(), &rcvjson, &errs)) {		//Verify if we received the whole Json string
 
-			//printf("Json request: %s\n", rcvRequest.c_str());
+			lwsl_info("Json request: %s\n", rcvRequest.c_str());
 
 			rcvRequest.clear();
 
@@ -218,6 +218,8 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 			std::stringstream sstr;
 
 			sstr << jsonResponses.front();
+			
+			lwsl_info("Response: %s", sstr.str().c_str());
 
 			char *buff = new char[LWS_SEND_BUFFER_PRE_PADDING + sstr.str().size() + LWS_SEND_BUFFER_POST_PADDING];
 
@@ -298,7 +300,7 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 		std::unique_ptr<J1939Frame> frameToAdd = J1939Factory::getInstance().getJ1939Frame(pgn);
 
 		if(!frameToAdd.get()) {
-			fprintf(stderr, "Frame not recognized...\n");
+			lwsl_err("Frame not recognized...\n");
 			return false;
 		}
 
@@ -568,7 +570,7 @@ int main(int argc, char *argv[]) {
 
 	struct lws_context *context = lws_create_context(&info);
 
-	lws_set_log_level(LLL_INFO | LLL_ERR | LLL_WARN | LLL_NOTICE, NULL);
+	//lws_set_log_level(LLL_INFO | LLL_ERR | LLL_WARN | LLL_NOTICE, NULL);
 
 	//Initialization of J1939 Framework
 
@@ -944,9 +946,7 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 	u32 j1939ID = j1939Frame->getIdentifier();
 	
 	rxLock.lock();
-	std::cout << "Add" << j1939ID << std::endl;
 	rxFrames["rx"][std::to_string(j1939ID)]["frame"] = frameToJson(j1939Frame.get());
-	std::cout << "Added" << std::endl;
 	rxLock.unlock();
 	
 }
