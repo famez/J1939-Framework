@@ -18,8 +18,11 @@ namespace Sockets {
 
 class SocketCanHelper : public Can::ICanHelper {
 private:
-	bool setIfFlag(std::string interface, short flag, bool value);
-	bool getIfFlag(std::string interface, short flag);
+	bool isUp(std::string interface) const;
+	bool bringUp(std::string interface) const;
+	bool bringDown(std::string interface) const;
+	bool setBitrate(std::string interface, u32 bitrate) const;	
+	bool isVirtual(std::string interface) const;
 
 public:
 	SocketCanHelper();
