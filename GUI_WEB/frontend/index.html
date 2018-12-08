@@ -209,14 +209,15 @@
 		  <div>Show raw<input type="checkbox" ng-change="show_raw()" ng-model="showRaw"></div>
 
 		  <ul ng-show="showRaw">
-
-		    <li ng-repeat="(id, raw) in rx_raw">
-			<span style='font-weight: bold; color: {{ ($even != $parent.$even) ? "blue" : "red" }};'>{{ id | hex }}</span>: {{ raw.data }} 
-			<span ng-show="raw.count">
-				Count: {{ raw.count }}
-			</span>	
-			  
-		    </li>
+			<table>
+			    <tr ng-repeat="(id, raw) in rx_raw">
+				<td style='font-weight: bold; color: {{ $even ? "blue" : "red" }};'>{{ id | hex }}:</td> <td>{{ raw.data }}</td>
+				<td ng-show="raw.count">
+					Count: {{ raw.count }}
+				</td>	
+				  
+			    </tr>
+			</table>
 		  </ul>
 
 		  <button ng-click="reset_rx_frame($event)">
