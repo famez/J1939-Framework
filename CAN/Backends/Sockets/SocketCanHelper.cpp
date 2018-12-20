@@ -5,11 +5,10 @@
  *      Author: famez
  */
 
-
-
-
 #include <unistd.h>
 #include <stdio.h>
+#include <limits.h>
+#include <stdlib.h>
 
 
 #include <net/if.h>
@@ -24,9 +23,16 @@
 #include <Backends/Sockets/SocketCanReceiver.h>
 
 
-
 #define SYS_CLASS_NET_PATH		"/sys/class/net/"
-#define BITRATE_SUBPATH			"/can_bittiming/bitrate"
+
+/**
+ * System commands to get/configure the interfaces. Much better than handling netlink sockets...
+ */
+#define GET_IFACE_STAT_CMD		"ip link show %s up"
+#define SET_IFACE_UP_CMD		"ip link set %s up"
+#define SET_IFACE_DOWN_CMD		"ip link set %s down"
+#define SET_IFACE_BITRATE_CMD	"ip link set %s type can bitrate %d"
+
 
 namespace Can {
 namespace Sockets {
@@ -36,6 +42,19 @@ SocketCanHelper::SocketCanHelper() {
 }
 
 SocketCanHelper::~SocketCanHelper() {
+}
+
+bool SocketCanHelper::isVirtual(std::string interface) const {
+	
+	char resolvedPath[PATH_MAX];
+	
+	std::string path = SYS_CLASS_NET_PATH + interface;
+	
+	realpath(path.c_str(), resolvedPath);
+	std::string realPath = resolvedPath;
+	
+	return realPath.find("virtual") != std::string::npos;
+	
 }
 
 
@@ -92,99 +111,78 @@ bool SocketCanHelper::isCompatible() {
 }
 
 
-bool SocketCanHelper::getIfFlag(std::string interface, short flag) {
 
-	ifreq ifr;
-
-	memset(&ifr, 0, sizeof(ifreq));
-
-
-	/* open socket */
-	int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-
-	if(sock < 0)
-	{
+bool SocketCanHelper::isUp(std::string interface) const {
+	
+	char aux[1024];
+	
+	snprintf(aux, 1024, GET_IFACE_STAT_CMD, interface.c_str());
+	
+	FILE *fp = popen(aux, "r");
+	
+	if(fp == NULL) {
 		return false;
 	}
-
-
-	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
-
-	if(ioctl(sock, SIOCGIFFLAGS, &ifr))
-	{
-		close(sock);
-		return false;
+	
+	if(fgets(aux, sizeof(aux), fp) != NULL) {		//if there is some output, interface up, otherwise, interface down.
+		return true;
 	}
-
-	close(sock);
-
-	return (ifr.ifr_flags & flag);
-
+	
+	return false;
+	
 }
 
-bool SocketCanHelper::setIfFlag(std::string interface, short flag, bool value) {
 
-	ifreq ifr;
-
-	memset(&ifr, 0, sizeof(ifreq));
-
-
-	/* open socket */
-	int sock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-
-	if(sock < 0)
-	{
-		return false;
-	}
+bool SocketCanHelper::bringUp(std::string interface) const {
+	
+	char aux[1024];
+		
+	snprintf(aux, 1024, SET_IFACE_UP_CMD, interface.c_str());
+		
+	int ret = system(aux);
+		
+	return ret == 0;
+	
+}
 
 
-	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
+bool SocketCanHelper::bringDown(std::string interface) const {
+	
+	char aux[1024];
+			
+	snprintf(aux, 1024, SET_IFACE_DOWN_CMD, interface.c_str());
+		
+	int ret = system(aux);
+		
+	return ret == 0;
+	
+}
 
-	if(ioctl(sock, SIOCGIFFLAGS, &ifr))
-	{
-		close(sock);
-		return false;
-	}
-
-	if(value)
-	{
-		ifr.ifr_flags |= flag;
-	}else{
-		ifr.ifr_flags &= ~(flag);
-	}
-
-	if(ioctl(sock, SIOCSIFFLAGS, &ifr))
-	{
-		close(sock);
-		return false;
-	}
-
-	close(sock);
-
-	return true;
+bool SocketCanHelper::setBitrate(std::string interface, u32 bitrate) const {
+	char aux[1024];
+			
+	snprintf(aux, 1024, SET_IFACE_BITRATE_CMD, interface.c_str(), bitrate);
+		
+	int ret = system(aux);
+		
+	return ret == 0;
 }
 
 
 bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 
-	if(!getIfFlag(interface, IFF_UP)) {		//Interface is down?
+	if(!isUp(interface)) {		//Interface is down?
+		
+		if(!isVirtual(interface)) {		//Avoid setting bitrate for virtual interfaces...  
+			if(!setBitrate(interface, bitrate)) {
+				return false;	//Something went wrong
+			}
+		}
 
-		//Up interface
-		if(!setIfFlag(interface, IFF_UP, true)) {		//Try to set the interface up
+		//Bring the interface up
+		if(!bringUp(interface)) {		
 			return false;	//Something went wrong
 		}
-	}
-
-
-	//Set bitrate
-	std::string bitratePath = SYS_CLASS_NET_PATH + interface + BITRATE_SUBPATH;
-
-	FILE* fp = fopen(bitratePath.c_str(), "w");
-
-	if(fp == nullptr) {
-	} else {		//Can write bitrate
-		fprintf(fp, "%u\n", bitrate);
-		fclose(fp);
 	}
 
 	return true;
@@ -194,13 +192,13 @@ bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 void SocketCanHelper::finalize(std::string interface) {
 
 	//Down interface
-	setIfFlag(interface, IFF_UP, false);
+	bringDown(interface);
 
 }
 
 bool SocketCanHelper::initialized(std::string interface) {
 
-	return getIfFlag(interface, IFF_UP);		//If the interface is already up, means that it has been already initialized by
+	return isUp(interface);						//If the interface is already up, that means that it has been already initialized by
 												//another application or by ourselves
 }
 
