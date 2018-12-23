@@ -12,6 +12,7 @@
 #include <Transport/TPDTFrame.h>
 #include <Diagnosis/Frames/DM1.h>
 #include <Addressing/AdressClaimFrame.h>
+#include <Addressing/RequestFrame.h>
 #include <FMS/TellTale/FMS1Frame.h>
 #include <Diagnosis/Frames/DM1.h>
 
@@ -134,10 +135,15 @@ void J1939Factory::registerPredefinedFrames() {
 		registerFrame(frame);
 	}
 
-//	{
-//		AdressClaimFrame frame;
-//		registerFrame(frame);
-//	}
+	{
+		AdressClaimFrame frame;
+		registerFrame(frame);
+	}
+
+	{
+		RequestFrame frame;
+		registerFrame(frame);
+	}
 
 
 }
