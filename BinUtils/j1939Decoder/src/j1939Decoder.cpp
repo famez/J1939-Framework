@@ -15,6 +15,9 @@
 #include <iterator>
 
 #include <iostream>
+#include <iomanip>
+
+#include <sstream>
 #include <string.h>
 
 #include <Types.h>
@@ -25,6 +28,7 @@
 #include <J1939DataBase.h>
 #include <J1939Factory.h>
 #include <GenericFrame.h>
+
 
 #ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
@@ -84,14 +88,10 @@ main (int argc, char **argv)
 			"[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$");
 
 	//Data regex will match the format XXXXXXXXXXXXXXXX where X is an hexadecimal digit.
-	std::string dataRegex("^([0-9a-fA-F][0-9a-fA-F])\\s{0,1}([0-9a-fA-F][0-9a-fA-F])\\s{0,1}"
-			"([0-9a-fA-F][0-9a-fA-F])\\s{0,1}([0-9a-fA-F][0-9a-fA-F])\\s{0,1}([0-9a-fA-F][0-9a-fA-F])\\s{0,1}"
-			"([0-9a-fA-F][0-9a-fA-F])\\s{0,1}([0-9a-fA-F][0-9a-fA-F])\\s{0,1}([0-9a-fA-F][0-9a-fA-F])$");
-
+	std::string dataRegex("^(\\s{0,1}([0-9a-fA-F][0-9a-fA-F]))+$");
 
 	regex_t regex;
 	int retVal;
-	regmatch_t match[9];
 
 	retVal = regcomp(&regex, idRegex.c_str(), 0);
 	if (retVal) {
@@ -118,9 +118,7 @@ main (int argc, char **argv)
 		exit(2);
 	}
 
-	size_t matchSize = sizeof(match) / sizeof(regmatch_t);
-
-	retVal = regexec(&regex, data.c_str(), matchSize, match, 0);
+	retVal = regexec(&regex, data.c_str(), 0, NULL, 0);
 	if (retVal == REG_NOMATCH) {
 		std::cerr << "The introduced data has wrong format..." << std::endl;
 		exit(3);
@@ -130,26 +128,23 @@ main (int argc, char **argv)
 		exit(2);
 	}
 
-	//String where to store the data of the frame ready to be passed to the frame factory with the correct format.
-	std::string formattedData;
-
-	//Iterate over all the matches
-	for(unsigned int i = 1; i < matchSize; ++i) {
-
-		char buff[3];
-		strncpy(buff, data.c_str() + match[i].rm_so, 2);
-		buff[2] = 0;
-		std::string aux = buff;
-		formattedData.push_back(static_cast<char>(std::stoul(aux, nullptr, 16)));
-	}
-
-
 	regfree(&regex);
+
+	std::stringstream dataStream;
+	dataStream << std::hex << data;
+
+	//String where to store the data of the frame ready to be passed to the frame factory with the correct format.
+	std::basic_string<u8> formattedData;
+	std::string token;
+
+	do {
+		dataStream >> std::ws >> std::setw(2) >> token;
+		formattedData.push_back(static_cast<u8>(std::stoul(token, nullptr, 16)));
+	} while(!(dataStream.rdstate() & std::ios_base::eofbit));		//End of file
+
 
 	//Convert the introduced string to a number to be interpreted by the frame factory when using it.
 	u32 formattedId = std::stoul(id, nullptr, 16);
-
-
 
 	//Read database if available
 	J1939DataBase database;
@@ -166,10 +161,18 @@ main (int argc, char **argv)
 		J1939Factory::getInstance().registerFrame(*iter);
 	}
 
-
 	//The rest is easy
-	std::unique_ptr<J1939Frame> frame = J1939Factory::getInstance().getJ1939Frame(formattedId,
-			(const u8*)(formattedData.c_str()), formattedData.size());
+	std::unique_ptr<J1939Frame> frame;
+
+	try {
+		frame = J1939Factory::getInstance().getJ1939Frame(formattedId,
+				formattedData.c_str(), formattedData.size());
+
+	} catch(J1939DecodeException& e) {
+		std::cerr << "Error decoding frame: " << e.getMessage() << std::endl;
+				exit(6);
+	}
+
 
 	if(!frame.get()) {
 
@@ -178,10 +181,7 @@ main (int argc, char **argv)
 
 	}
 
-
 	std::cout << frame->toString();
-
-
 
 	exit (0);
 }
