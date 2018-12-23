@@ -35,7 +35,7 @@ install (TARGETS TRCToCap
 else(GLIB2_FOUND)
 
 message(WARNING "-- GLIB2 is not available")
-message(WARNING "-- Project " ${CMAKE_PROJECT_NAME} " is skipped...")
+message(WARNING "-- Project " ${PROJECT_NAME} " is skipped...")
 message(WARNING "-- Try to install GLIB2 and run cmake again...")
 
 endif(GLIB2_FOUND)
