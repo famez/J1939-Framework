@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(J1939Framework)
 
+#set(CMAKE_BUILD_TYPE Debug)    #For debug purposes
+
 set(J1939Framework_VERSION 1.0.0)
 
 set(CMAKE_MODULE_PATH "./cmake/;${CMAKE_MODULE_PATH}")
