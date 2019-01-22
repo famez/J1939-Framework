@@ -11,8 +11,8 @@
 #include <Transport/TPCMFrame.h>
 #include <Transport/TPDTFrame.h>
 #include <Diagnosis/Frames/DM1.h>
-#include <Addressing/AdressClaimFrame.h>
-#include <Addressing/RequestFrame.h>
+#include <Addressing/AddressClaimFrame.h>
+#include <Frames/RequestFrame.h>
 #include <FMS/TellTale/FMS1Frame.h>
 #include <Diagnosis/Frames/DM1.h>
 
@@ -136,7 +136,7 @@ void J1939Factory::registerPredefinedFrames() {
 	}
 
 	{
-		AdressClaimFrame frame;
+		AddressClaimFrame frame;
 		registerFrame(frame);
 	}
 
@@ -144,7 +144,6 @@ void J1939Factory::registerPredefinedFrames() {
 		RequestFrame frame;
 		registerFrame(frame);
 	}
-
 
 }
 
