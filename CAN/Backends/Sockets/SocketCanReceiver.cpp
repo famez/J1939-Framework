@@ -25,7 +25,7 @@ using namespace Utils;
 namespace Can {
 namespace Sockets {
 
-SocketCanReceiver::SocketCanReceiver() : mSock(-1), mTimeStamp(true) {
+SocketCanReceiver::SocketCanReceiver(int sock, bool timeStamp) : mSock(sock), mTimeStamp(timeStamp) {
 
 
 	iov.iov_base = &frame;
@@ -37,73 +37,6 @@ SocketCanReceiver::SocketCanReceiver() : mSock(-1), mTimeStamp(true) {
 }
 
 SocketCanReceiver::~SocketCanReceiver() {
-}
-
-bool SocketCanReceiver::_initialize(const std::string& interface) {
-
-	ifreq ifr;
-	sockaddr_can addr;
-
-	memset(&ifr, 0, sizeof(ifreq));
-	memset(&addr, 0, sizeof(sockaddr_can));
-
-	/* open socket */
-	mSock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-
-	if(mSock < 0)
-	{
-		return false;
-	}
-
-
-	const int timestamp_flags = (SOF_TIMESTAMPING_SOFTWARE | \
-									SOF_TIMESTAMPING_RX_SOFTWARE | \
-									SOF_TIMESTAMPING_RAW_HARDWARE);
-
-	//Activate timestamp
-	if (setsockopt(mSock, SOL_SOCKET, SO_TIMESTAMPING,
-			&timestamp_flags, sizeof(timestamp_flags)) < 0) {
-		mTimeStamp = false;			//Option not supported by kernel. Timestamp cannot be obtained.
-	}
-
-
-	//Bind to socket to start receiving frames from the specified interface
-	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
-
-	if (ioctl(mSock, SIOCGIFINDEX, &ifr) < 0)
-	{
-		close(mSock);
-		mSock = -1;
-		return false;
-	}
-
-	addr.can_family = AF_CAN;
-	addr.can_ifindex = ifr.ifr_ifindex;
-
-	if (bind(mSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-	{
-		close(mSock);
-		mSock = -1;
-		return false;
-	}
-
-	//Succeeded to open and bind the socket on this interface
-	return true;
-
-}
-
-
-bool SocketCanReceiver::finalize(const std::string& interface) {
-
-	int retVal = 0;
-
-	if(mSock != -1) {
-		retVal = close(mSock);
-		mSock = -1;
-	}
-
-	return (retVal == 0);
-
 }
 
 

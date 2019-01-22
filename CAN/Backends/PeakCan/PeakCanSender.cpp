@@ -20,39 +20,11 @@
 namespace Can {
 namespace PeakCan {
 
-PeakCanSender::PeakCanSender() : mCurrentHandle(PCAN_NONEBUS) {
+PeakCanSender::PeakCanSender(TPCANHandle handle) : mCurrentHandle(handle) {
 
 }
 
 PeakCanSender::~PeakCanSender() {
-
-}
-
-bool PeakCanSender::_initialize(std::string interface) {
-
-
-	//Get the interface
-	Channel channel = PeakCanChannels::getInstance().getChannel(interface);
-
-
-	if(channel.getName() != interface) {		//The interface does not exist
-		return false;
-	}
-
-	int value = 0;
-
-	//Callback to PeakCan library to get the condition of channel
-	TPCANStatus status = PeakCanSymbols::getInstance().CAN_GetValue(channel.getIndex(), PCAN_CHANNEL_CONDITION,
-													&value, sizeof(value));
-
-	if((status == PCAN_ERROR_OK) && (value & PCAN_CHANNEL_OCCUPIED)) {	//Channel already initialized?
-
-		mCurrentHandle = channel.getIndex();
-		return true;
-	}
-
-	return false;
-
 }
 
 void PeakCanSender::_sendFrame(const CanFrame& frame) const {
@@ -76,16 +48,6 @@ void PeakCanSender::_sendFrame(const CanFrame& frame) const {
 	} else {
 		//ERROR
 	}
-
-}
-
-bool PeakCanSender::_finalize() {
-
-
-	mCurrentHandle = PCAN_NONEBUS;
-
-	return true;
-
 
 }
 

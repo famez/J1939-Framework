@@ -23,9 +23,6 @@ public:
 	ICanSender() {}
 	virtual ~ICanSender() {}
 
-	virtual bool initialize(std::string interface) = 0;
-	virtual bool finalize() = 0;
-	
 	/**
 	 * Sends a frame through the can interface with the specified period
 	 */
@@ -42,6 +39,8 @@ public:
 	 */
 	virtual bool sendFrames(std::vector<CanFrame> frames, u32 period) = 0;
 	
+	virtual void sendFrameOnce(const CanFrame& frame) = 0;
+
 	/*
 	 * Stop sending the set of frames whose ids match the ones given as arguments
 	 */

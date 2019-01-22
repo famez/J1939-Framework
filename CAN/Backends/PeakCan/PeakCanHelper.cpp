@@ -40,35 +40,22 @@ namespace Can {
 namespace PeakCan {
 
 PeakCanHelper::PeakCanHelper() {
-
-
+	if(!PeakCanSymbols::getInstance().areSymbolsLoaded()) {
+		PeakCanSymbols::getInstance().tryLoadSymbols();
+	}
 }
 
 PeakCanHelper::~PeakCanHelper() {
 }
 
-bool PeakCanHelper::isCompatible() {
-
-	//Are symbols already loaded?
-	if(PeakCanSymbols::getInstance().areSymbolsLoaded()) {
-		return true;
-	}
-
-	//Have there been any errors?
-	if(PeakCanSymbols::getInstance().getLoadingError()) {
-		return false;
-	}
-
-	//It not, try to load them and return the returned value...
-	return PeakCanSymbols::getInstance().tryLoadSymbols();
-
-}
 
 std::set<std::string> PeakCanHelper::getCanIfaces() {
 
 	std::set<std::string> retVal;
 
-	if(!PeakCanSymbols::getInstance().areSymbolsLoaded()) {
+
+	if(PeakCanSymbols::getInstance().getLoadingError() ||
+			(!PeakCanSymbols::getInstance().areSymbolsLoaded() && !PeakCanSymbols::getInstance().tryLoadSymbols())) {
 		return retVal;		//Symbols not available. Cannot keep going...
 	}
 
@@ -140,45 +127,31 @@ bool PeakCanHelper::initialize(std::string interface, u32 bitrate) {
 	//Try to initialize the channel
 	status = PeakCanSymbols::getInstance().CAN_Initialize(channel.getIndex(), baudrate, 0, 0, 0);
 
-	if(status == PCAN_ERROR_OK) {
+	if(status != PCAN_ERROR_OK) {
 
-		return true;
-	}
-
-	return false;
-
-}
-
-
-void PeakCanHelper::finalize(std::string interface) {
-
-	//Get the interface
-	Channel channel = PeakCanChannels::getInstance().getChannel(interface);
-
-
-	if(channel.getName() != interface) {		//The interface does not exist
-		return;
-	}
-
-	//uninitialize PCAN device...
-	PeakCanSymbols::getInstance().CAN_Uninitialize(channel.getIndex());
-
-}
-
-bool PeakCanHelper::initialized(std::string interface) {
-
-	//Get the interface
-	Channel channel = PeakCanChannels::getInstance().getChannel(interface);
-
-
-	if(channel.getName() != interface) {		//The interface does not exist
 		return false;
 	}
+
+	mCurrentHandle = channel.getIndex();
+
+	return true;
+
+}
+
+
+void PeakCanHelper::finalize() {
+
+	//uninitialize PCAN device...
+	PeakCanSymbols::getInstance().CAN_Uninitialize(mCurrentHandle);
+
+}
+
+bool PeakCanHelper::initialized() {
 
 	int value = 0;
 
 	//Callback to PeakCan library to get the condition of channel
-	TPCANStatus status = PeakCanSymbols::getInstance().CAN_GetValue(channel.getIndex(), PCAN_CHANNEL_CONDITION,
+	TPCANStatus status = PeakCanSymbols::getInstance().CAN_GetValue(mCurrentHandle, PCAN_CHANNEL_CONDITION,
 													&value, sizeof(value));
 
 	return ((status == PCAN_ERROR_OK) && (value & PCAN_CHANNEL_OCCUPIED));	//Channel already initialized?
@@ -187,11 +160,11 @@ bool PeakCanHelper::initialized(std::string interface) {
 
 
 ICanSender* PeakCanHelper::allocateCanSender() {
-	return new PeakCanSender;
+	return new PeakCanSender(mCurrentHandle);
 }
 
 CommonCanReceiver* PeakCanHelper::allocateCanReceiver() {
-	return new PeakCanReceiver;
+	return new PeakCanReceiver(mCurrentHandle);
 }
 
 

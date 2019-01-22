@@ -23,52 +23,12 @@
 namespace Can {
 namespace Sockets {
 
-SocketCanSender::SocketCanSender() : mSock(-1) {
+SocketCanSender::SocketCanSender(int sock) : mSock(sock) {
 
 }
 
 SocketCanSender::~SocketCanSender() {
-}
-
-bool SocketCanSender::_initialize(std::string interface) {
-
-	ifreq ifr;
-	sockaddr_can addr;
-
-	memset(&ifr, 0, sizeof(ifreq));
-	memset(&addr, 0, sizeof(sockaddr_can));
-
-
-	/* open socket */
-	mSock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-
-	if(mSock < 0)
-	{
-		return false;
-	}
-
-	addr.can_family = AF_CAN;
-	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
-
-	if (ioctl(mSock, SIOCGIFINDEX, &ifr) < 0)
-	{
-		return false;
-	}
-
-	addr.can_ifindex = ifr.ifr_ifindex;
-
-	fcntl(mSock, F_SETFL, O_NONBLOCK);
-
-
-	if (bind(mSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-	{
-		return false;
-	}
-
-
-	//Succeeded to open and bind the socket on this interface
-	return true;
-
+	finalize();
 }
 
 void SocketCanSender::_sendFrame(const CanFrame& frame) const {
@@ -89,19 +49,6 @@ void SocketCanSender::_sendFrame(const CanFrame& frame) const {
 	{
 		printf("[SocketCanSender::_sendFrame] retval: %d, error: %s\n", retval, strerror(errno));
 	}
-
-}
-
-bool SocketCanSender::_finalize() {
-
-	int retVal = 0;
-
-	if(mSock != -1) {
-		retVal = close(mSock);
-		mSock = -1;
-	}
-
-	return (retVal == 0);
 
 }
 

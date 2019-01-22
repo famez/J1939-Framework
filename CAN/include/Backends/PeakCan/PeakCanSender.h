@@ -9,9 +9,9 @@
 #ifndef BACKENDS_SOCKETS_PEAKCANSENDER_H_
 #define BACKENDS_SOCKETS_PEAKCANSENDER_H_
 
-#include "../../CommonCanSender.h"
+#include <CommonCanSender.h>
 
-#include "PeakCanSymbols.h"
+#include <Backends/PeakCan/PeakCanSymbols.h>
 
 namespace Can {
 namespace PeakCan {
@@ -23,10 +23,8 @@ private:
 	TPCANHandle mCurrentHandle;
 protected:
 	void _sendFrame(const CanFrame& frame) const override;
-	bool _initialize(std::string interface) override;
-	bool _finalize() override;
 public:
-	PeakCanSender();
+	PeakCanSender(TPCANHandle handle);
 	virtual ~PeakCanSender();
 
 };

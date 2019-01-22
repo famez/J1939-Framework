@@ -8,13 +8,16 @@
 #ifndef BACKENDS_SOCKETS_SOCKETCANRECEIVER_H_
 #define BACKENDS_SOCKETS_SOCKETCANRECEIVER_H_
 
-#include "../../CommonCanReceiver.h"
+#include <CommonCanReceiver.h>
 
 namespace Can {
 namespace Sockets {
 
 class SocketCanReceiver : public CommonCanReceiver {
 private:
+	/*
+	 * An already initialized socket where to send the frames
+	 */
 	int mSock;
 	bool mTimeStamp;
 
@@ -25,12 +28,11 @@ private:
 	char ctrlmsg[CMSG_SPACE(sizeof(timeval) + 3*sizeof(timespec) + sizeof(u32))];
 
 public:
-	SocketCanReceiver();
+	SocketCanReceiver(int sock, bool timeStamp);
 	virtual ~SocketCanReceiver();
 
 	/*ICanReceiver implementation*/
 
-	bool finalize(const std::string& interface) override;
 	bool setFilters(std::set<CanFilter> filters) override;
 
 	bool filter(u32 id) override { return true; }		//Filtering is already done in kernel space
@@ -39,7 +41,6 @@ public:
 
 	int getFD() override;
 
-	bool _initialize(const std::string& interface) override;
 
 };
 

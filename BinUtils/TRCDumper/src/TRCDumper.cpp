@@ -13,10 +13,8 @@
 
 
 //Can includes
-#include <ICanHelper.h>
-#include <CanSniffer.h>
-#include <CommonCanReceiver.h>
 #include <TRCWriter.h>
+#include <CanEasy.h>
 
 
 //Bitrate for J1939 protocol
@@ -72,36 +70,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	std::set<ICanHelper*> helpers = ICanHelper::getCanHelpers();
+	CanEasy::initialize(BAUD_250K, onRcv, onTimeout);
 
-	ICanHelper* helper = nullptr;
+	CanSniffer& sniffer = CanEasy::getSniffer();
 
-	CanSniffer sniffer(onRcv, onTimeout);
-
-	for(auto iter = helpers.begin(); iter != helpers.end(); ++iter) {
-
-		std::set<std::string> ifaces = (*iter)->getCanIfaces();
-
-		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
-			if(interface == *iface || interface.empty()) {
-				helper = *iter;
-
-				if(!helper->initialized(*iface)) {
-
-					if(!helper->initialize(*iface, BAUD_250K)) {
-						std::cerr << "Could not initialize the interface" << std::endl;
-						return 1;
-					}
-				}
-
-				CommonCanReceiver* receiver = helper->allocateCanReceiver();
-
-				receiver->initialize(*iface);
-
-				sniffer.addReceiver(receiver);
-			}
-		}
-	}
 
 	if(sniffer.getNumberOfReceivers() == 0) {
 		std::cerr << "No interface available from to sniffer" << std::endl;

@@ -30,8 +30,7 @@ extern "C" {
 
 
 //Can includes
-#include <ICanHelper.h>
-#include <CanSniffer.h>
+#include <CanEasy.h>
 
 
 #ifndef DATABASE_PATH
@@ -107,12 +106,6 @@ std::vector<J1939Frame*> framesToSend;
 
 //Map to specify the period for the different frames (in millis)
 std::map<J1939Frame*, u32> framePeriods;
-
-//Backends to determine the available interfaces
-std::set<ICanHelper*> canHelpers;
-
-//Backends in charge of sending the corresponding frames
-std::map<std::string, ICanSender*> senders;
 
 //To reassemble frames fragmented by means of Broadcast Announce Message protocol
 BamReassembler reassembler;
@@ -332,15 +325,18 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 		J1939Frame *frame = framesToSend[index];
 
 		//At this point, if the frame is being sent, refresh the information to the sender
-		for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+		const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-			if(isFrameSent(frame, sender->first)) {
+		for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+			std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+			if(isFrameSent(frame, *iter)) {
 
 				auto period = framePeriods.find(frame);
 
 				if(period != framePeriods.end()) {
 
-					unsendFrameThroughInterface(frame, sender->first);
+					unsendFrameThroughInterface(frame, *iter);
 
 				} else {
 
@@ -487,15 +483,19 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 
 
 		//At this point, if the frame is being sent, refresh the information to the sender
-		for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-			if(isFrameSent(frame, sender->first)) {
+		const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
+
+		for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+			std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+			if(isFrameSent(frame, *iter)) {
 
 				auto period = framePeriods.find(frame);
 
 				if(period != framePeriods.end()) {
 
-					sendFrameThroughInterface(frame, period->second, sender->first);
+					sendFrameThroughInterface(frame, period->second, *iter);
 
 				} else {
 
@@ -591,41 +591,10 @@ int main(int argc, char *argv[]) {
 
 
 	//Initialize can
-	canHelpers = ICanHelper::getCanHelpers();
+	CanEasy::initialize(BAUD_250K, onRcv, onTimeout);
 
-	sniffer.setOnRecv(onRcv);
-	sniffer.setOnTimeout(onTimeout);
+	CanSniffer& sniffer = CanEasy::getSniffer();
 
-	for(auto iter = canHelpers.begin(); iter != canHelpers.end(); ++iter) {
-
-		std::set<std::string> interfaces = (*iter)->getCanIfaces();
-
-		for(auto iface = interfaces.begin(); iface != interfaces.end(); ++iface) {
-
-			bool allOk = true;
-
-
-			//Initialize the interface
-			if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
-
-				allOk = false;
-			}
-
-			if(allOk) {
-
-				ICanSender* sender = (*iter)->allocateCanSender();
-				sender->initialize(*iface);
-				senders[*iface] = sender;
-				
-				CommonCanReceiver* receiver = (*iter)->allocateCanReceiver();
-				receiver->initialize(*iface);
-				sniffer.addReceiver(receiver);
-
-			}
-
-		}
-
-	}
 	
 	rxFrames["command"] = "check rx";
 	
@@ -661,17 +630,10 @@ bool sentFramesToJson(Json::Value& jsonVal) {
 		}
 
 
-		for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+		const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-			std::set<std::string> interfaces = (*helper)->getCanIfaces();
-
-			for(auto iface = interfaces.begin(); iface != interfaces.end(); ++iface) {
-
-				if((*helper)->initialized(*iface))
-				{
-					jsonVal[i]["interfaces"][*iface] = isFrameSent(frame, *iface);
-				}
-			}
+		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
+			jsonVal[i]["interfaces"][*iface] = isFrameSent(frame, *iface);
 		}
 
 		++i;
@@ -687,18 +649,12 @@ bool listInterfaces(Json::Value& response) {
 
 	unsigned int i = 0;
 
-	for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-		std::set<std::string> interfaces = (*helper)->getCanIfaces();
-
-		for(auto iter = interfaces.begin(); iter != interfaces.end(); ++iter) {
-
-			if((*helper)->initialized(*iter))
-			{
-				response["interfaces"][i++] = *iter;
-			}
-		}
+	for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
+		response["interfaces"][i++] = *iface;
 	}
+
 
 	return true;
 
@@ -710,9 +666,9 @@ bool isFrameSent(const J1939Frame* frame, const std::string& interface) {
 
 	std::vector<u32> ids;
 
-	if(senders.find(interface) == senders.end())	return false;
+	std::shared_ptr<ICanSender> sender = CanEasy::getSender(interface);
 
-	ICanSender* sender = senders[interface];
+	if(!sender)		return false;
 
 	//If the frame is bigger than 8 bytes, we use BAM
 	if(frame->getDataLength() > MAX_CAN_DATA_SIZE) {
@@ -745,11 +701,11 @@ bool isFrameSent(const J1939Frame* frame, const std::string& interface) {
 void sendFrameThroughInterface(const J1939Frame* j1939Frame, u32 period, const std::string& interface) {
 
 	//Sanity check. We do not trust the foreground app
-	if(senders.find(interface) == senders.end())	return;
+	std::shared_ptr<ICanSender> sender = CanEasy::getSender(interface);
+
+	if(!sender)		return;
 
 	//Send the frame with the configured periodicity
-	ICanSender* sender = senders[interface];
-
 
 	size_t length = j1939Frame->getDataLength();
 	CanFrame canFrame;
@@ -834,7 +790,6 @@ void sendFrameThroughInterface(const J1939Frame* j1939Frame, u32 period, const s
 
 	}
 
-
 }
 
 
@@ -869,15 +824,19 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 		ids.push_back(j1939Frame->getIdentifier());
 	}
 
-	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-		if(interface.empty() || interface == sender->first) {
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
 
-			sender->second->unSendFrames(ids);
+		if(interface.empty() || interface == *iter) {
+
+			sender->unSendFrames(ids);
 			found = true;
 		}
 
 	}
+
 
 	if(!found) {
 		std::cerr << "Frame not sent through the given interface..." << std::endl;

@@ -18,6 +18,7 @@ add_library(Can SHARED
 	./CommonCanSender.cpp
 	./ICanHelper.cpp
 	./CommonCanReceiver.cpp
+	./CanEasy.cpp
 )
 
 target_include_directories(Can

@@ -53,22 +53,18 @@ u32 CommonCanSender::CanFrameRing::getCurrentPeriod() const {
 }
 
 CommonCanSender::CommonCanSender() : mFinished(false) {
-
+	initialize();
 }
 
 CommonCanSender::~CommonCanSender() {
 	finalize();
 }
 
-bool CommonCanSender::initialize(std::string interface) {
+bool CommonCanSender::initialize() {
 
-	bool retVal = _initialize(interface);
+	mThread = std::unique_ptr<std::thread>(new std::thread(&CommonCanSender::run, this));			//Initialize the thread in charge of sending the frames
 
-	if(retVal) {
-		mThread = std::unique_ptr<std::thread>(new std::thread(&CommonCanSender::run, this));			//Initialize the thread in charge of sending the frames
-	}
-
-	return retVal;
+	return true;
 
 }
 
@@ -79,9 +75,6 @@ bool CommonCanSender::finalize() {
 	mFinished = true;		//This makes the thread finish
 
 	mThread->join();					//Wait for thread to finish doing proper cleaning and claim resources
-
-	//End of thread, execute _finalize
-	_finalize();
 
 	return true;
 }
@@ -189,7 +182,6 @@ void CommonCanSender::run() {
 		}
 
 		mFramesLock.unlock();
-
 
 		usleep(1000);
 	}

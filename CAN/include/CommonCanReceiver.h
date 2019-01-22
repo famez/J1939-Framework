@@ -12,8 +12,8 @@
 
 #include <Utils.h>
 
-#include "CanFilter.h"
-#include "CanFrame.h"
+#include <CanFilter.h>
+#include <CanFrame.h>
 
 namespace Can {
 
@@ -21,8 +21,6 @@ class CommonCanReceiver {
 private:
 	std::set<CanFilter> mFilters;
 	std::string mInterface;
-protected:
-	virtual bool _initialize(const std::string& interface) = 0;
 public:
 	CommonCanReceiver() {}
 	virtual ~CommonCanReceiver() {}
@@ -31,10 +29,6 @@ public:
 	 * Initializes the receiver to be used with the specified interface
 	 */
 	bool initialize(const std::string& interface);
-	/*
-	 * Finalize the interface releasing the resources that have been taken to initialize the interface.
-	 */
-	virtual bool finalize(const std::string& interface) = 0;
 
 	/*
 	 * There is the default implementation which is based in a check in user space, but there are specific implementations that let delegate the work to kernel space

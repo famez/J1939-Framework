@@ -62,18 +62,21 @@ private:
 
 protected:
 	virtual void _sendFrame(const CanFrame& frame) const = 0;
-	virtual bool _initialize(std::string interface) = 0;
-	virtual bool _finalize() = 0;
 
 public:
 	CommonCanSender();
 	virtual ~CommonCanSender();
 
 	//ICanSender implementation
-	bool initialize(std::string interface);
+	bool initialize();
 	bool finalize();
 	bool sendFrame(CanFrame frame, u32 period);
 	bool sendFrames(std::vector<CanFrame> frames, u32 period);
+
+	/*
+	 * Sends the frame given as argument to the CAN network only once.
+	 */
+	void sendFrameOnce(const CanFrame& frame) override { _sendFrame(frame); }
 	void unSendFrame(u32 id);
 	void unSendFrames(const std::vector<u32>& ids);
 	bool isSent(const std::vector<u32>& ids);

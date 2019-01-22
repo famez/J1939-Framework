@@ -13,15 +13,15 @@
 #include <iostream>
 
 #include <Utils.h>
-#include <ICanHelper.h>
-#include <CommonCanReceiver.h>
 #include <Transport/BAM/BamReassembler.h>
 #include <J1939Factory.h>
 #include <J1939DataBase.h>
 #include <GenericFrame.h>
 #include <Transport/TPCMFrame.h>
 #include <Transport/TPDTFrame.h>
-#include <CanSniffer.h>
+
+
+#include <CanEasy.h>
 
 
 
@@ -68,7 +68,6 @@ int main (int argc, char **argv)
 			{"source", required_argument, NULL, 'o'},
 			{NULL, 0, NULL, 0}
 		};
-
 
 
 	while (1)
@@ -221,7 +220,7 @@ int main (int argc, char **argv)
 	}
 
 
-	if(!frame.get()) {
+	if(!frame) {
 		std::cerr << "The frame given by the pgn or title is not defined..." << std::endl;
 		return 5;
 	}
@@ -243,41 +242,14 @@ int main (int argc, char **argv)
 
 	}
 
-	std::set<ICanHelper*> helpers = ICanHelper::getCanHelpers();
+	CanEasy::initialize(BAUD_250K, onRcv, onTimeout);
 
-	ICanHelper* helper = nullptr;
-
-	CanSniffer sniffer(onRcv, onTimeout);
-
-	for(auto iter = helpers.begin(); iter != helpers.end(); ++iter) {
-
-		std::set<std::string> ifaces = (*iter)->getCanIfaces();
-
-		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
-			if(interface == *iface || interface.empty()) {
-				helper = *iter;
-
-
-				if(!helper->initialize(*iface, BAUD_250K)) {
-					std::cerr << "Could not initialize the interface" << std::endl;
-					return 9;
-				}
-
-				CommonCanReceiver* receiver = helper->allocateCanReceiver();
-
-				receiver->initialize(*iface);
-
-				sniffer.addReceiver(receiver);
-			}
-		}
-	}
+	CanSniffer& sniffer = CanEasy::getSniffer();
 
 	if(sniffer.getNumberOfReceivers() == 0) {
 		std::cerr << "No interface available from to sniffer" << std::endl;
 		return 8;
 	}
-
-
 
 	std::set<CanFilter> filters;
 
@@ -323,7 +295,7 @@ void onRcv(const Can::CanFrame& frame, const TimeStamp&, const std::string& inte
 	std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
 			getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());
 
-	if(!j1939Frame.get())		return;						//Frame not registered in the factory. Should never happen
+	if(!j1939Frame)		return;						//Frame not registered in the factory. Should never happen
 
 	if(reassembler.toBeHandled(*j1939Frame)) {				//Check if the frame is part of a fragmented frame (BAM protocol)
 		//Actually it is, reassembler will handle it.

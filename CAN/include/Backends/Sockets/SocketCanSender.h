@@ -18,14 +18,15 @@ namespace Sockets {
 
 class SocketCanSender : public CommonCanSender {
 private:
+	/*
+	 * An already initialized socket where to send the frames
+	 */
 	int mSock;
 
 protected:
 	void _sendFrame(const CanFrame& frame) const override;
-	bool _initialize(std::string interface) override;
-	bool _finalize() override;
 public:
-	SocketCanSender();
+	SocketCanSender(int sock);
 	virtual ~SocketCanSender();
 
 };

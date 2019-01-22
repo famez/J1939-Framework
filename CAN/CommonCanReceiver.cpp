@@ -8,7 +8,7 @@ bool CommonCanReceiver::initialize(const std::string& interface) {
 
 	mInterface = interface;
 
-	return _initialize(interface);
+	return true;
 
 }
 

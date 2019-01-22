@@ -35,7 +35,7 @@
 
 
 //CAN includes
-#include <ICanHelper.h>
+#include <CanEasy.h>
 
 
 
@@ -92,6 +92,7 @@
 #define TTS_TOKEN			"tts"
 #define TTS_NUMBER			"number"
 #define TTS_STATUS			"status"
+#define TTS_ALL				"all"
 
 
 #ifndef DATABASE_PATH
@@ -148,14 +149,6 @@ std::map<std::string, u32> framePeriods;
 
 //Take all the tokens from a line (separated by spaces) and introduces them in the list
 std::list<std::string> splitTokens(std::string);
-
-
-//Backends in charge of sending the corresponding frames
-std::map<std::string, ICanSender*> senders;
-
-
-//Backends to determine the available interfaces
-std::set<ICanHelper*> canHelpers;
 
 //TTS
 std::vector<FMS1Frame> fms1Frames;
@@ -309,26 +302,27 @@ int main(int argc, char **argv) {
 
 	//Determine the possible backends
 
-	canHelpers = ICanHelper::getCanHelpers();
+	std::set<std::string> ifaces = CanEasy::getCanIfaces();
 
-	for(auto iter = canHelpers.begin(); iter != canHelpers.end(); ++iter) {
-		if(!silent)	std::cout << (*iter)->getBackend() << " backend detected" << std::endl;
+	if(!silent)	std::cout << "Interfaces: " << std::endl;
 
-		std::set<std::string> interfaces = (*iter)->getCanIfaces();
-
-		for(auto iface = interfaces.begin(); iface != interfaces.end(); ++iface) {
-
-
-			//Initialize the interface
-			if(!(*iter)->initialize(*iface, BAUD_250K)) {		//J1939 protocol needs as physical layer a bitrate of 250 kbps
-				std::cerr << "Interface " << *iface << " could not be correctly initialized" << std::endl;
-			}
-
-
-		}
-
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		if(!silent)	std::cout << *iter << " ";
 	}
 
+	if(!silent)	std::cout << std::endl;
+
+	CanEasy::initialize(BAUD_250K);
+
+	ifaces = CanEasy::getInitializedCanIfaces();
+
+	if(!silent)	std::cout << "Initialized: ";
+
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		if(!silent)	std::cout << *iter << " ";
+	}
+
+	if(!silent)	std::cout << std::endl;
 
 	//If any file is defined, first execute commands from it
 	if(!file.empty()) {
@@ -571,12 +565,15 @@ void parseListFramesCommand() {
 
 
 			//Check if the frame is being sent through an interface
-			for(auto iter = senders.begin(); iter != senders.end(); ++iter) {
-				if(isFrameSent(frame, iter->first)) {
-					txInterfaces.push_back(iter->first);
-				}
-			}
+			const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
+			for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+
+				if(isFrameSent(frame, *iter)) {
+					txInterfaces.push_back(*iter);
+				}
+
+			}
 
 
 		} catch (J1939EncodeException& e) {
@@ -640,7 +637,10 @@ void parseListTTSCommand(std::list<std::string> arguments) {
 
 	};
 
-	processCommandParameters(arguments, paramParser);
+	if(arguments.front() != TTS_ALL) {
+		processCommandParameters(arguments, paramParser);
+	}
+
 
 	bool somePrinted = false;
 
@@ -666,11 +666,14 @@ void parseListTTSCommand(std::list<std::string> arguments) {
 
 	if(somePrinted) {
 
-		//Print the interface from which tts are sent
-		for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+		const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-			if(sender->second->isSent(ids)) {
-				std::cout << "Sent from interface " << sender->first << std::endl;
+		for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+			//Print the interface from which tts are sent
+			std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+			if(sender->isSent(ids)) {
+				std::cout << "Sent from interface " << *iter << std::endl;
 			}
 
 		}
@@ -685,21 +688,17 @@ void parseSendTTSCommand(std::list<std::string> arguments) {
 	std::string interface;
 
 	bool periodValid = false;
-	ICanHelper* canHelper = nullptr;		//Backend to use
 
-	auto paramParser = [&interface, &periodValid, &canHelper](const std::string& key, const std::string& value) {
+	auto paramParser = [&interface, &periodValid](const std::string& key, const std::string& value) {
 
 		if(key == INTERFACE_TOKEN) {
 
-			for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+			const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
+			for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
 
-				//Check that the corresponding interface really exists
-				std::set<std::string> interfaces = (*helper)->getCanIfaces();
-
-				if(interfaces.find(value) != interfaces.end() && (*helper)->initialized(value)) {
+				if(*iter == value) {
 					interface = value;
-					canHelper = *helper;
 					return;
 				}
 			}
@@ -731,23 +730,11 @@ void parseSendTTSCommand(std::list<std::string> arguments) {
 		return;
 	}
 
-
-	//Is there an available layer for Can TX?
-	if(canHelper == nullptr) {
-		std::cerr << "No Can support..." << std::endl;
-		return;
-	}
-
-	//The corresponding sender is created for the interface?
-	if(senders.find(interface) == senders.end()) {
-		ICanSender* sender = canHelper->allocateCanSender();
-		sender->initialize(interface);
-		senders[interface] = sender;
-	}
-
 	std::vector<CanFrame> frames = ttsFramesToCanFrames(fms1Frames);
 
-	senders[interface]->sendFrames(frames, ttsPeriod);
+	std::shared_ptr<ICanSender> sender = CanEasy::getSender(interface);
+
+	sender->sendFrames(frames, ttsPeriod);
 
 }
 
@@ -832,13 +819,15 @@ void parseSetTTSCommand(std::list<std::string> arguments) {
 				ids.push_back(iter->getIdentifier());
 			}
 
-			for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-				if(sender->second->isSent(ids)) {
+			const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
+			for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+				std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+				if(sender->isSent(ids)) {
 					std::vector<CanFrame> frames = ttsFramesToCanFrames(fms1Frames);
-
-					sender->second->sendFrames(frames, ttsPeriod);
+					sender->sendFrames(frames, ttsPeriod);
 				}
 
 			}
@@ -1005,11 +994,14 @@ void parseSetFrameCommand(std::list<std::string> arguments) {
 	delete[] buff;
 
 	//If the frame is being sent, refresh the information to the sender
-	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
 
-		if(isFrameSent(frame, sender->first)) {
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-			sendFrameThroughInterface(frame, period->second, sender->first);
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+		if(isFrameSent(frame, *iter)) {
+			sendFrameThroughInterface(frame, period->second, *iter);
 		}
 
 	}
@@ -1095,17 +1087,10 @@ std::list<std::string> getSubCommandNames(const CommandHelper& command) {
 
 void parseListInterfacesCommand() {
 
-	for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-		std::set<std::string> interfaces = (*helper)->getCanIfaces();
-
-		for(auto iter = interfaces.begin(); iter != interfaces.end(); ++iter) {
-
-			if((*helper)->initialized(*iter))
-			{
-				std::cout << *iter << std::endl;
-			}
-		}
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		std::cout << *iter << std::endl;
 	}
 
 }
@@ -1125,23 +1110,19 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 		return;
 	}
 
-
 	const J1939Frame* j1939Frame = frameIter->second;
-	ICanHelper* canHelper = nullptr;		//Backend to use
 
-	auto func = [&interface, &canHelper](const std::string& key, const std::string& value) {
+	auto func = [&interface](const std::string& key, const std::string& value) {
 
 		if(key == INTERFACE_TOKEN) {
 
-			for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
+			const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
+			for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
 
 				//Check that the corresponding interface really exists
-				std::set<std::string> interfaces = (*helper)->getCanIfaces();
-
-				if(interfaces.find(value) != interfaces.end() && (*helper)->initialized(value)) {
+				if(*iface == value) {
 					interface = value;
-					canHelper = *helper;
 					return;
 				}
 			}
@@ -1154,20 +1135,6 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 	if(interface.empty()) {
 		std::cerr << "Interface not defined or not initialized..." << std::endl;
 		return;
-	}
-
-
-	//Is there an available layer for Can TX?
-	if(canHelper == nullptr) {
-		std::cerr << "No Can support..." << std::endl;
-		return;
-	}
-
-	//The corresponding sender is created for the interface?
-	if(senders.find(interface) == senders.end()) {
-		ICanSender* sender = canHelper->allocateCanSender();
-		sender->initialize(interface);
-		senders[interface] = sender;
 	}
 
 	//The frame has a periodicity associated?
@@ -1186,8 +1153,8 @@ void parseSendFrameCommand(std::list<std::string> arguments) {
 void sendFrameThroughInterface(const J1939Frame* j1939Frame, u32 period, const std::string& interface) {
 
 
-	//Send the frame with the configured periodicity
-	ICanSender* sender = senders[interface];
+	//Send the frame with the configured period
+	std::shared_ptr<ICanSender> sender = CanEasy::getSender(interface);
 
 
 	size_t length = j1939Frame->getDataLength();
@@ -1308,11 +1275,14 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 		ids.push_back(j1939Frame->getIdentifier());
 	}
 
-	for(auto sender = senders.begin(); sender != senders.end(); ++sender) {
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
 
-		if(interface.empty() || interface == sender->first) {
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+		std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
 
-			sender->second->unSendFrames(ids);
+		if(interface.empty() || interface == *iter) {
+
+			sender->unSendFrames(ids);
 			found = true;
 		}
 
@@ -1327,7 +1297,7 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 bool isFrameSent(const J1939Frame* frame, const std::string& interface) {
 
 	std::vector<u32> ids;
-	ICanSender* sender = senders[interface];
+	std::shared_ptr<ICanSender> sender = CanEasy::getSender(interface);
 
 	//If the frame is bigger than 8 bytes, we use BAM
 	if(frame->getDataLength() > MAX_CAN_DATA_SIZE) {
@@ -1431,30 +1401,12 @@ void uninitializeVariables() {
 		delete iter->second;
 	}
 
-	//Stop and delete senders
-	for(auto iter = senders.begin(); iter != senders.end(); ++iter) {
-		iter->second->finalize();		//Finish threads
-		delete iter->second;
-	}
 
-
-	//Finalize interfaces
-	for(auto helper = canHelpers.begin(); helper != canHelpers.end(); ++helper) {
-
-		std::set<std::string> ifaces = (*helper)->getCanIfaces();
-
-		for(auto iface = ifaces.begin(); iface != ifaces.end(); ++iface) {
-			(*helper)->finalize(*iface);
-		}
-	}
-
-	//Dealloc canHelpers
-	ICanHelper::deallocateCanHelpers();
-
+	//Finalize Can Backends...
+	CanEasy::finalize();
 
 	//Deallocate frames
 	J1939Factory::getInstance().releaseInstance();
-
 
 }
 

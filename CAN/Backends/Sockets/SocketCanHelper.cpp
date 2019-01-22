@@ -16,6 +16,9 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <linux/can.h>
+#include <linux/can/raw.h>
+#include <linux/net_tstamp.h>
+
 #include <string.h>
 
 #include <Backends/Sockets/SocketCanHelper.h>
@@ -44,11 +47,11 @@ SocketCanHelper::SocketCanHelper() {
 SocketCanHelper::~SocketCanHelper() {
 }
 
-bool SocketCanHelper::isVirtual(std::string interface) const {
+bool SocketCanHelper::isVirtual() const {
 	
 	char resolvedPath[PATH_MAX];
 	
-	std::string path = SYS_CLASS_NET_PATH + interface;
+	std::string path = SYS_CLASS_NET_PATH + mInterface;
 	
 	realpath(path.c_str(), resolvedPath);
 	std::string realPath = resolvedPath;
@@ -93,7 +96,7 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 		}
 
 
-	    tmp = tmp->ifa_next;
+		tmp = tmp->ifa_next;
 	}
 
 	freeifaddrs(addrs);
@@ -104,19 +107,13 @@ std::set<std::string> SocketCanHelper::getCanIfaces() {
 
 }
 
-bool SocketCanHelper::isCompatible() {
-
-	return !getCanIfaces().empty();		//No interfaces available
-
-}
 
 
-
-bool SocketCanHelper::isUp(std::string interface) const {
+bool SocketCanHelper::isUp() const {
 	
 	char aux[1024];
 	
-	snprintf(aux, 1024, GET_IFACE_STAT_CMD, interface.c_str());
+	snprintf(aux, 1024, GET_IFACE_STAT_CMD, mInterface.c_str());
 	
 	FILE *fp = popen(aux, "r");
 	
@@ -133,11 +130,11 @@ bool SocketCanHelper::isUp(std::string interface) const {
 }
 
 
-bool SocketCanHelper::bringUp(std::string interface) const {
+bool SocketCanHelper::bringUp() const {
 	
 	char aux[1024];
 		
-	snprintf(aux, 1024, SET_IFACE_UP_CMD, interface.c_str());
+	snprintf(aux, 1024, SET_IFACE_UP_CMD, mInterface.c_str());
 		
 	int ret = system(aux);
 		
@@ -146,11 +143,11 @@ bool SocketCanHelper::bringUp(std::string interface) const {
 }
 
 
-bool SocketCanHelper::bringDown(std::string interface) const {
+bool SocketCanHelper::bringDown() const {
 	
 	char aux[1024];
 			
-	snprintf(aux, 1024, SET_IFACE_DOWN_CMD, interface.c_str());
+	snprintf(aux, 1024, SET_IFACE_DOWN_CMD, mInterface.c_str());
 		
 	int ret = system(aux);
 		
@@ -158,10 +155,10 @@ bool SocketCanHelper::bringDown(std::string interface) const {
 	
 }
 
-bool SocketCanHelper::setBitrate(std::string interface, u32 bitrate) const {
+bool SocketCanHelper::setBitrate(u32 bitrate) const {
 	char aux[1024];
 			
-	snprintf(aux, 1024, SET_IFACE_BITRATE_CMD, interface.c_str(), bitrate);
+	snprintf(aux, 1024, SET_IFACE_BITRATE_CMD, mInterface.c_str(), bitrate);
 		
 	int ret = system(aux);
 		
@@ -171,44 +168,113 @@ bool SocketCanHelper::setBitrate(std::string interface, u32 bitrate) const {
 
 bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 
-	if(!isUp(interface)) {		//Interface is down?
+	if(!isUp()) {		//Interface is down?
 		
-		if(!isVirtual(interface)) {		//Avoid setting bitrate for virtual interfaces...  
-			if(!setBitrate(interface, bitrate)) {
+		if(!isVirtual()) {		//Avoid setting bitrate for virtual interfaces...
+			if(!setBitrate(bitrate)) {
 				return false;	//Something went wrong
 			}
 		}
 
 		//Bring the interface up
-		if(!bringUp(interface)) {		
+		if(!bringUp()) {
 			return false;	//Something went wrong
 		}
 	}
+
+
+	//Initialize socket
+
+	ifreq ifr;
+	sockaddr_can addr;
+
+	memset(&ifr, 0, sizeof(ifreq));
+	memset(&addr, 0, sizeof(sockaddr_can));
+
+
+	/* open socket */
+	mSock = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
+	if(mSock < 0)
+	{
+		return false;
+	}
+
+	const int timestamp_flags = (SOF_TIMESTAMPING_SOFTWARE | \
+										SOF_TIMESTAMPING_RX_SOFTWARE | \
+										SOF_TIMESTAMPING_RAW_HARDWARE);
+
+	//Activate timestamp
+	if (setsockopt(mSock, SOL_SOCKET, SO_TIMESTAMPING,
+			&timestamp_flags, sizeof(timestamp_flags)) < 0) {
+		mTimeStamp = false;			//Option not supported by kernel. Timestamp cannot be obtained.
+	}
+
+	//Bind to socket to start receiving frames from the specified interface
+	addr.can_family = AF_CAN;
+	strncpy(ifr.ifr_name, interface.c_str(), IFNAMSIZ - 1);
+
+	if (ioctl(mSock, SIOCGIFINDEX, &ifr) < 0)
+	{
+		close(mSock);
+		mSock = -1;
+		return false;
+	}
+
+	addr.can_ifindex = ifr.ifr_ifindex;
+
+	if (bind(mSock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	{
+		close(mSock);
+		mSock = -1;
+		return false;
+	}
+
+
+	//Avoid receiving the same frame which is sent in the reception buffer
+
+	int recvOwnMsg = 0;
+
+	if(setsockopt(mSock, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &recvOwnMsg, sizeof(recvOwnMsg)) < 0) {
+		close(mSock);
+		mSock = -1;
+		return false;
+	}
+
+	mInterface = interface;
 
 	return true;
 
 }
 
-void SocketCanHelper::finalize(std::string interface) {
+void SocketCanHelper::finalize() {
+
+
+	int retVal = 0;
+
+	if(mSock != -1) {
+		retVal = close(mSock);
+		mSock = -1;
+	}
 
 	//Down interface
-	bringDown(interface);
+	bringDown();
 
 }
 
-bool SocketCanHelper::initialized(std::string interface) {
+bool SocketCanHelper::initialized() {
 
-	return isUp(interface);						//If the interface is already up, that means that it has been already initialized by
+	return isUp();						//If the interface is already up, that means that it has been already initialized by
 												//another application or by ourselves
 }
 
 
 ICanSender* SocketCanHelper::allocateCanSender() {
-	return new SocketCanSender;
+	return new SocketCanSender(mSock);
 }
 
 CommonCanReceiver* SocketCanHelper::allocateCanReceiver() {
-	return new SocketCanReceiver;
+	return new SocketCanReceiver(mSock, mTimeStamp);
 }
 
 } /* namespace Can */

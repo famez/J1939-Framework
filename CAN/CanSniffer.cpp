@@ -5,7 +5,8 @@
  *      Author: fernado
  */
 
-#include "CanSniffer.h"
+#include <CanSniffer.h>
+#include <Assert.h>
 
 using namespace Utils;
 
@@ -32,7 +33,7 @@ void CanSniffer::setFilters(std::set<CanFilter> filters) {
 }
 
 
-void CanSniffer::sniff(u32 timeout) {
+void CanSniffer::sniff(u32 timeout) const {
 
 	int result;
 	fd_set rdfs;
@@ -40,6 +41,10 @@ void CanSniffer::sniff(u32 timeout) {
 
 	CanFrame canFrame;
 	TimeStamp timestamp;
+
+	ASSERT(!mReceivers.empty());
+	ASSERT(mRcvCB != nullptr);
+	ASSERT(mTimeoutCB != nullptr);
 
 	do {
 

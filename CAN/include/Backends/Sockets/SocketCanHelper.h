@@ -11,26 +11,29 @@
 #include <set>
 #include <string>
 
-#include "../../ICanHelper.h"
+#include <ICanHelper.h>
 
 namespace Can {
 namespace Sockets {
 
 class SocketCanHelper : public Can::ICanHelper {
 private:
-	bool isUp(std::string interface) const;
-	bool bringUp(std::string interface) const;
-	bool bringDown(std::string interface) const;
-	bool setBitrate(std::string interface, u32 bitrate) const;	
-	bool isVirtual(std::string interface) const;
+
+	int mSock = -1;
+	bool mTimeStamp = true;
+	std::string mInterface;
+
+	bool isUp() const;
+	bool bringUp() const;
+	bool bringDown() const;
+	bool setBitrate(u32 bitrate) const;
+	bool isVirtual() const;
 
 public:
 	SocketCanHelper();
 	virtual ~SocketCanHelper();
 
-	std::set<std::string> getCanIfaces() override;
-
-	bool isCompatible() override;
+	static std::set<std::string> getCanIfaces();
 
 	std::string getBackend() override { return "SocketCan"; }
 
@@ -39,9 +42,9 @@ public:
 
 	bool initialize(std::string interface, u32 bitrate) override;
 
-	void finalize(std::string interface) override;
+	void finalize() override;
 
-	bool initialized(std::string interface) override;
+	bool initialized() override;
 
 };
 

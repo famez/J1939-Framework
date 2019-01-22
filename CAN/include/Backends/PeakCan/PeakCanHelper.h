@@ -11,22 +11,22 @@
 #include <set>
 #include <string>
 
-#include "../../ICanHelper.h"
+#include <ICanHelper.h>
+
+#include <Backends/PeakCan/PeakCanSymbols.h>
 
 
 namespace Can {
 namespace PeakCan {
 
 class PeakCanHelper : public Can::ICanHelper {
-
-
+private:
+	TPCANHandle mCurrentHandle;
 public:
 	PeakCanHelper();
 	virtual ~PeakCanHelper();
 
-	std::set<std::string> getCanIfaces();
-
-	bool isCompatible();
+	static std::set<std::string> getCanIfaces();
 
 	std::string getBackend() override { return "PeakCan"; }
 
@@ -35,9 +35,9 @@ public:
 
 	bool initialize(std::string interface, u32 bitrate) override;
 
-	void finalize(std::string interface) override;
+	void finalize() override;
 
-	bool initialized(std::string interface) override;
+	bool initialized();
 
 };
 

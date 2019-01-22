@@ -8,43 +8,48 @@
 #ifndef ICANHELPER_H_
 #define ICANHELPER_H_
 
-#include <set>
+#include <map>
 #include <string>
 
-#include "ICanSender.h"
-#include "CommonCanReceiver.h"
+#include <ICanSender.h>
+#include <CommonCanReceiver.h>
 
 namespace Can {
 
 class ICanHelper {
 
 private:
-	static std::set<ICanHelper*> mHelpers;
+	static std::map<std::string/*Interface*/, ICanHelper*> mHelpers;
 public:
 
 	ICanHelper() {}
 	virtual ~ICanHelper() {}
 
-	virtual std::set<std::string> getCanIfaces() = 0;
-	virtual bool isCompatible() = 0;		//Determines if the necessary software is installed to use the corresponding backend
+	static std::set<std::string> getInterfaces();
 	virtual std::string getBackend() = 0;
 
 	virtual bool initialize(std::string interface, u32 bitrate) = 0;
-	virtual void finalize(std::string interface) = 0;
-
-
-	//virtual u32 getBaudRate(std::string interface) = 0;
+	virtual void finalize() = 0;
 
 	/*
 	 * Determines if the corresponding interface is correctly initialized
 	 */
-	virtual bool initialized(std::string interface) = 0;
+	virtual bool initialized() = 0;
 
+	/*
+	 * Allocates a CanSender, the caller is in charge of the deallocation
+	 */
 	virtual ICanSender* allocateCanSender() = 0;
 
+	/*
+	 * Allocates a CanReceiver, the caller is in charge of the deallocation
+	 */
 	virtual CommonCanReceiver* allocateCanReceiver() = 0;
 
-	static const std::set<ICanHelper*>& getCanHelpers();
+	/*
+	 * Returns a set with all the available helpers. To free the helpers, call deallocateCanHelpers().
+	 */
+	static const std::map<std::string/*Interface*/, ICanHelper*>& createCanHelpers(u32 bitrate);
 
 	static void deallocateCanHelpers();
 

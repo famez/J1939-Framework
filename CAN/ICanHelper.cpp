@@ -5,36 +5,45 @@
  *      Author: famez
  */
 
-#include "ICanHelper.h"
+#include <ICanHelper.h>
 
-#include "Backends/PeakCan/PeakCanHelper.h"
-#include "Backends/Sockets/SocketCanHelper.h"
+#include <Backends/PeakCan/PeakCanHelper.h>
+#include <Backends/Sockets/SocketCanHelper.h>
 
 namespace Can {
 
+std::map<std::string/*Interface*/, ICanHelper*> ICanHelper::mHelpers;
 
-std::set<ICanHelper*> ICanHelper::mHelpers;
-
-const std::set<ICanHelper*>& ICanHelper::getCanHelpers() {
+const std::map<std::string/*Interface*/, ICanHelper*>& ICanHelper::createCanHelpers(u32 bitrate) {
 
 	if(mHelpers.empty()) {
 
-		//Determine the backend to use (SocketCan/PeakCan)
-		ICanHelper* canHelper = new Sockets::SocketCanHelper;
+		std::set<std::string> socketCanIfaces = Sockets::SocketCanHelper::getCanIfaces();
 
-		if(canHelper->isCompatible()) {
-			mHelpers.insert(canHelper);
-		} else {
-			delete canHelper;
+		for(auto iter = socketCanIfaces.begin(); iter != socketCanIfaces.end(); ++iter) {
+
+			ICanHelper* canHelper = new Sockets::SocketCanHelper;
+
+			if(canHelper->initialize(*iter, bitrate)) {
+				mHelpers[*iter] = canHelper;
+			} else {
+				delete canHelper;
+			}
+
+
 		}
 
+		std::set<std::string> peakCanIfaces = PeakCan::PeakCanHelper::getCanIfaces();
 
-		canHelper = new PeakCan::PeakCanHelper;
-		if(canHelper->isCompatible()) {
-			mHelpers.insert(canHelper);
+		for(auto iter = peakCanIfaces.begin(); iter != peakCanIfaces.end(); ++iter) {
 
-		} else {
-			delete canHelper;
+			ICanHelper* canHelper = new PeakCan::PeakCanHelper;
+
+			if(canHelper->initialize(*iter, bitrate)) {
+				mHelpers[*iter] = canHelper;
+			} else {
+				delete canHelper;
+			}
 		}
 
 	}
@@ -46,8 +55,27 @@ const std::set<ICanHelper*>& ICanHelper::getCanHelpers() {
 void ICanHelper::deallocateCanHelpers() {
 
 	for(auto iter = mHelpers.begin(); iter != mHelpers.end(); ++iter) {
-		delete *iter;
+		iter->second->finalize();
+		delete iter->second;
 	}
+
+	mHelpers.clear();
+
+}
+
+std::set<std::string> ICanHelper::getInterfaces() {
+
+	std::set<std::string> retVal;
+
+	std::set<std::string> socketCanIfaces = Sockets::SocketCanHelper::getCanIfaces();
+
+	retVal.insert(socketCanIfaces.begin(), socketCanIfaces.end());
+
+	std::set<std::string> peakCanIfaces = PeakCan::PeakCanHelper::getCanIfaces();
+
+	retVal.insert(peakCanIfaces.begin(), peakCanIfaces.end());
+
+	return retVal;
 
 }
 

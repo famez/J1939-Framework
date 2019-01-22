@@ -29,9 +29,18 @@ private:
 public:
 	CanSniffer() {}
 	CanSniffer(OnReceiveFramePtr recvCB, OnTimeoutPtr timeoutCB, void* data = nullptr);
+	CanSniffer(const CanFilter &other) = delete;
+	CanSniffer(CanFilter &&other) = delete;
 	virtual ~CanSniffer();
+
+	CanSniffer& operator=(const CanFilter &other) = delete;
+	CanSniffer& operator=(CanFilter &&other) = delete;
+
+	/*
+	 * Add a receiver from where to receive the frames. CanSniffer becomes the owner and will deallocate the receiver.
+	 */
 	void addReceiver(CommonCanReceiver *receiver) { mReceivers.push_back(receiver); }
-	void sniff(u32 timeout);
+	void sniff(u32 timeout) const;
 	void setFilters(std::set<CanFilter> filters);
 	int getNumberOfReceivers() const { return mReceivers.size(); }
 	void reset() { mRunning = true; }
