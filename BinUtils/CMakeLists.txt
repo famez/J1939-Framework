@@ -9,4 +9,4 @@ add_subdirectory(j1939Sender)
 add_subdirectory(j1939Sniffer)
 add_subdirectory(TRCDumper)
 add_subdirectory(TRCToCap)
-
+add_subdirectory(j1939AddrClaim)

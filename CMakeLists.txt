@@ -25,6 +25,7 @@ add_subdirectory(J1939)
 add_subdirectory(Database)
 add_subdirectory(BinUtils)
 add_subdirectory(GUI_WEB/backend)
+add_subdirectory(j1939AddressClaimer)
 
 
 include(GenerateExportHeader)
