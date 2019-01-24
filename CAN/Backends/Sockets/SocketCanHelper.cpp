@@ -168,6 +168,8 @@ bool SocketCanHelper::setBitrate(u32 bitrate) const {
 
 bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 
+	mInterface = interface;
+
 	if(!isUp()) {		//Interface is down?
 		
 		if(!isVirtual()) {		//Avoid setting bitrate for virtual interfaces...

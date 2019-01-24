@@ -121,8 +121,6 @@ std::map<u32/*Can ID*/, CanFrame> rcvFramesCache;
 std::map<u32/*Can ID*/, u32/*Count*/> rcvFramesCount;
 
 
-CanSniffer sniffer;
-
 int callback_http(struct lws *wsi, enum lws_callback_reasons reason,
 		void *user, void *in, size_t len) {
 	switch (reason) {
@@ -579,7 +577,7 @@ int main(int argc, char *argv[]) {
 
 	if(!database.parseJsonFile(DATABASE_PATH)) {
 		std::cerr << "Database not found in " << DATABASE_PATH << std::endl;
-		exit(4);
+		return 1;
 	}
 
 	const std::vector<GenericFrame>& ddbbFrames = database.getParsedFrames();
@@ -593,7 +591,13 @@ int main(int argc, char *argv[]) {
 	//Initialize can
 	CanEasy::initialize(BAUD_250K, onRcv, onTimeout);
 
-	CanSniffer& sniffer = CanEasy::getSniffer();
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
+
+	if(ifaces.empty()) {
+		std::cerr << "No interfaces initialized" << std::endl;
+		return 2;
+	}
+
 
 	
 	rxFrames["command"] = "check rx";
@@ -1002,6 +1006,8 @@ Json::Value frameToJson(const J1939Frame* frame) {
 
 void resetReceiver() {
 
+	CanSniffer& sniffer = CanEasy::getSniffer();
+
 	//Stop receive thread to clean the cache of received frames. Not done the first time.
 	if(rxThread.get()) {
 
@@ -1016,7 +1022,7 @@ void resetReceiver() {
 	//Once the cache is cleaned or it it the first initialization, reinitialize a new thread
 	sniffer.reset();
 
-	rxThread = std::unique_ptr<std::thread>(new std::thread([](){
+	rxThread = std::unique_ptr<std::thread>(new std::thread([&sniffer](){
 
 		sniffer.sniff(1000);
 
