@@ -28,12 +28,12 @@ void CanEasy::initialize(u32 bitrate, OnReceiveFramePtr recvCB, OnTimeoutPtr tim
 		mSenders[iter->first] = std::shared_ptr<ICanSender>(sender);
 
 		CommonCanReceiver* receiver = iter->second->allocateCanReceiver();
+		receiver->setInterface(iter->first);
 		mSniffer.addReceiver(receiver);
 
 		mInitializedIfaces.insert(iter->first);
 
 	}
-
 
 }
 

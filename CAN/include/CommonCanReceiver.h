@@ -28,7 +28,7 @@ public:
 	/*
 	 * Initializes the receiver to be used with the specified interface
 	 */
-	bool initialize(const std::string& interface);
+	bool setInterface(const std::string& interface);
 
 	/*
 	 * There is the default implementation which is based in a check in user space, but there are specific implementations that let delegate the work to kernel space

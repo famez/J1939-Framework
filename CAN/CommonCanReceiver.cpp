@@ -1,10 +1,9 @@
-
-#include "CommonCanReceiver.h"
+#include <CommonCanReceiver.h>
 
 
 namespace Can {
 
-bool CommonCanReceiver::initialize(const std::string& interface) {
+bool CommonCanReceiver::setInterface(const std::string& interface) {
 
 	mInterface = interface;
 
