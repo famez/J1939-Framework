@@ -106,7 +106,7 @@ main (int argc, char **argv)
 
 	canSniffer.setFilters(filters);
 
-	std::cout << "Source Address\tIN\tMC\tEI\tFI"
+	std::cout << "Interface\tSource Address\tIN\tMC\tEI\tFI"
 			"\tF\tVS\tVSI\tIG\tAAC" << std::endl << std::endl;
 
 	canSniffer.sniff(1000);
@@ -126,7 +126,7 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 		const EcuName &name = addrClaimFrame->getEcuName();
 
 		if(names.find(name) == names.end()) {		//Check if we have already shown the frame
-			std::cout << static_cast<u32>(j1939Frame->getSrcAddr()) << '\t' << '\t' << name.getIdNumber() << '\t'
+			std::cout << interface << '\t' << '\t' << static_cast<u32>(j1939Frame->getSrcAddr()) << '\t' << '\t' << name.getIdNumber() << '\t'
 					<< static_cast<u32>(name.getManufacturerCode()) << '\t' << static_cast<u32>(name.getEcuInstance()) << '\t'
 					<< static_cast<u32>(name.getFunctionInstance()) << '\t'
 					<< static_cast<u32>(name.getFunction()) << '\t' << static_cast<u32>(name.getVehicleSystem()) << '\t'
