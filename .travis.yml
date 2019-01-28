@@ -8,6 +8,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6
+      - libgtest-dev
       
 install:
   - pushd ~
@@ -24,7 +25,14 @@ install:
   - sudo make install
   - popd
   - popd
+  - pushd /usr/src/gtest
+  - sudo cmake CMakeLists.txt
+  - sudo make
+  - sudo cp *.a /usr/lib
+  - popd
+  
 
 script:
   - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake .
   - cmake --build .
+  - ./Tests/execTests
