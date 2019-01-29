@@ -13,7 +13,9 @@ include_directories(
  
 add_executable(execTests 
 			main.cpp 
-			genericframe_test.cpp)
+			genericframe_test.cpp
+			j1939Factory_test.cpp
+			)
 			
 			
 target_link_libraries(execTests 
