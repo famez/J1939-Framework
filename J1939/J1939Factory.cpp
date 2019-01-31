@@ -160,4 +160,17 @@ std::set<u32> J1939Factory::getAllRegisteredPGNs() const {
 
 }
 
+void J1939Factory::unRegisterFrame(u32 pgn) {
+
+	auto iter = mFrames.find(pgn);
+
+	if(iter != mFrames.end()) {
+
+		delete iter->second;
+		mFrames.erase(iter);
+
+	}
+
+}
+
 } /* namespace J1939 */

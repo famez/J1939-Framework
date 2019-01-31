@@ -86,6 +86,8 @@ public:
      */
     bool registerFrame(const J1939Frame&);
 
+    void unRegisterFrame(u32 pgn);
+
 
     void unregisterAllFrames();
 

@@ -1,37 +1,9 @@
 #include <gtest/gtest.h>
 
 #include <J1939Factory.h>
-#include <J1939Frame.h>
+#include <TestFrame.h>
 
 using namespace J1939;
-
-class TestFrame : public J1939Frame {
-private:
-	std::basic_string<u8> mRaw;
-protected:
-
-	void decodeData(const u8* buffer, size_t length) override {
-
-		mRaw.clear();
-		mRaw.append(buffer);
-
-	}
-
-	void encodeData(u8* buffer, size_t length) const  override {
-		memcpy(buffer, mRaw.c_str(), length);
-	}
-
-public:
-
-	TestFrame(u32 pgn) : J1939Frame(pgn) {}
-	virtual ~TestFrame() {}
-
-	const std::basic_string<u8> getRaw() const { return mRaw; }
-
-	size_t getDataLength() const override { return mRaw.size(); }
-
-	IMPLEMENT_CLONEABLE(J1939Frame,TestFrame);
-};
 
 class J1939Factory_test : public testing::Test
 {
@@ -57,7 +29,9 @@ virtual void TearDown()
 {
 
 	//Keep a clear state for the factory
-	J1939Factory::getInstance().unregisterAllFrames();
+	J1939Factory::getInstance().unRegisterFrame(0xDE00);
+	J1939Factory::getInstance().unRegisterFrame(0xAF00);
+	J1939Factory::getInstance().unRegisterFrame(0xFEEF);
 
 }
 };
