@@ -302,9 +302,11 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
 		return false;
 	}
 
-    SPNStatus spnStat(number.asUInt(), name.asString(), offset.asUInt(), bitOffset.asUInt(), bitSize.asUInt());
 
     //Check for added descriptions
+
+    SPNStatusSpec::DescMap valueToDesc;
+
     if(spn.isMember(STAT_DESCRIPTIONS_KEY)) {
         const Json::Value& descriptions = spn[STAT_DESCRIPTIONS_KEY];
 
@@ -312,9 +314,12 @@ bool J1939DataBase::parseSPNStatus(GenericFrame& frame, const Json::Value& spn) 
             if(descriptions[i].isNull()){
                 continue;
             }
-            spnStat.setValueDescription(i, descriptions[i].asString());
+
+            valueToDesc[i] = descriptions[i].asString();
         }
     }
+
+    SPNStatus spnStat(number.asUInt(), name.asString(), offset.asUInt(), bitOffset.asUInt(), bitSize.asUInt(), valueToDesc);
 
 	frame.registerSPN(spnStat);
 

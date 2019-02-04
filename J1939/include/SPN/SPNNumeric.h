@@ -10,20 +10,18 @@
 
 #include <SPN/SPN.h>
 
+#include <SPN/SPNSpec/SPNNumericSpec.h>
 
 namespace J1939 {
 
 class SPNNumeric: public SPN {
 private:
-	double mFormatGain;
-	double mFormatOffset;
-	u8 mByteSize;
-	std::string mUnits;
+	std::shared_ptr<const SPNNumericSpec> mNumSpec;
 	u32 mValue;
 
-
 public:
-    SPNNumeric(u32 number, const std::string& name = "", size_t offset = 0, double formatGain = 0, double formatOffset = 0, u8 byteSize = 0, const std::string& units = "");
+    SPNNumeric(u32 number, const std::string& name = "", size_t offset = 0,
+    		double formatGain = 0, double formatOffset = 0, u8 byteSize = 0, const std::string& units = "");
 	virtual ~SPNNumeric();
 
 	double getFormatedValue() const ;
@@ -35,31 +33,22 @@ public:
 
 	EType getType() const { return SPN_NUMERIC; }
 
-
-
 	u8 getByteSize() const {
-		return mByteSize;
+		return mNumSpec->getByteSize();
 	}
 
-    void setByteSize(u8 size) { mByteSize = size; }
 
 	double getFormatGain() const {
-		return mFormatGain;
+		return mNumSpec->getFormatGain();
 	}
-
-    void setFormatGain(double gain) { mFormatGain = gain; }
 
     double getFormatOffset() const {
-		return mFormatOffset;
+    	return mNumSpec->getFormatOffset();
 	}
-
-    void setFormatOffset(double formatOffset) { mFormatOffset = formatOffset; }
 
 	const std::string& getUnits() const {
-		return mUnits;
+		return mNumSpec->getUnits();
 	}
-
-    void setUnits(const std::string& units) { mUnits = units; }
 
 	u32 getValue() const {
 		return mValue;
@@ -73,7 +62,7 @@ public:
     /*
      * Returns the maximum value for the given spn
      */
-    u32 getMaxValue() const;
+    u32 getMaxValue() const { return mNumSpec->getMaxValue(); }
 
     std::string toString() override;
 

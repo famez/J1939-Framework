@@ -198,4 +198,16 @@ std::unique_ptr<J1939Frame> BamReassembler::dequeueReassembledFrame() {
 
 }
 
+void BamReassembler::clear() {
+
+	mFragments.clear();
+
+	mLastError = BAM_ERROR_OK;
+
+	std::queue<J1939Frame*> empty;
+	//Clear queue
+	std::swap(mReassembledFrames, empty);
+
+}
+
 } /* namespace J1939 */

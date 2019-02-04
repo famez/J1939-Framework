@@ -16,6 +16,7 @@ namespace J1939 {
 
 class SPNString: public SPN {
 private:
+	size_t mOffset = 0;
 	std::string mValue;
 
 public:
@@ -34,6 +35,12 @@ public:
 	std::string getValue() const { return mValue; }
 
 	void setValue(std::string value);
+
+	size_t getOffset() const override {		//SPNString have variable offsets
+		return mOffset;
+	}
+
+	void setOffset(size_t offset) override { mOffset = offset; }
 
 	IMPLEMENT_CLONEABLE(SPN, SPNString);
 

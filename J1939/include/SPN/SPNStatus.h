@@ -1,3 +1,4 @@
+
 /*
  * SPNStatus.h
  *
@@ -11,6 +12,7 @@
 #include <map>
 
 #include <SPN/SPN.h>
+#include <SPN/SPNSpec/SPNStatusSpec.h>
 
 namespace J1939 {
 
@@ -19,48 +21,33 @@ class SPNStatus: public SPN {
 public:
     typedef std::map<u8, std::string> DescMap;
 private:
-	u8 mBitOffset;
-	u8 mBitSize;
 	u8 mValue;
-
-    /*
-     * Convertion from the status number to its description
-     */
-    DescMap mValueToDesc;
+	std::shared_ptr<const SPNStatusSpec> mStatSpec;
 
 public:
-    SPNStatus(u32 number, const std::string& name = "", size_t offset = 0, u8 bitOffset = 0, u8 bitSize = 0);
+	SPNStatus(u32 number, const std::string& name = "", size_t offset = 0, u8 bitOffset = 0, u8 bitSize = 0, SPNStatusSpec::DescMap valueToDesc = SPNStatusSpec::DescMap());
 	virtual ~SPNStatus();
 
 
-    void decode(const u8* buffer, size_t length);
-    void encode(u8* buffer, size_t length) const;
+	void decode(const u8* buffer, size_t length);
+	void encode(u8* buffer, size_t length) const;
 
 	EType getType() const { return SPN_STATUS; }
 
-	u8 getBitOffset() const { return mBitOffset; }
-    void setBitOffset(u8 off) { mBitOffset = off; }
+	u8 getBitOffset() const { return mStatSpec->getBitOffset(); }
 
-	u8 getBitSize() const { return mBitSize; }
-    void setBitSize(u8 size) { mBitSize = size; }
+	u8 getBitSize() const { return mStatSpec->getBitSize(); }
 
 	u8 getValue() const { return mValue; }
 	bool setValue(u8 value);
 
-	u8 getBitMask() const { return (0xFF >> (8 - mBitSize)) << mBitOffset; }
 
+	std::string toString() override;
 
-    /*
-     * Methods to add/get descriptions over the different status numbers
-     */
-    void setValueDescription(u8 value, const std::string& desc);
-    std::string getValueDescription(u8 value) const;
-    void clearValueDescriptions();
-    DescMap getValueDescriptionsMap() const;
+	u8 getByteSize() const override { return 1; }		//Spn status has always size of 1
 
-    std::string toString() override;
-
-    u8 getByteSize() const override { return 1; }		//Spn status has always size of 1
+	std::string getValueDescription(u8 value) const { return mStatSpec->getValueDescription(value); }
+	DescMap getValueDescriptionsMap() const { return mStatSpec->getValueDescriptionsMap(); }
 
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 

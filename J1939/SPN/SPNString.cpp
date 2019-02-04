@@ -18,7 +18,7 @@
 
 namespace J1939 {
 
-SPNString::SPNString(u32 number, const std::string& name) : SPN(number, name, 0) {
+SPNString::SPNString(u32 number, const std::string& name) : SPN(number, name, 0/*Stub, not used by SPNString*/) {
 
 }
 

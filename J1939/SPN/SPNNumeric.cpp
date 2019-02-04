@@ -20,12 +20,13 @@
 
 namespace J1939 {
 
-SPNNumeric::SPNNumeric(u32 number, const std::string& name, size_t offset, double formatGain, double formatOffset, u8 byteSize, const std::string& units) :
-    SPN(number, name, offset),
-	 mFormatGain(formatGain), mFormatOffset(formatOffset), mByteSize(byteSize), mUnits(units), mValue(0xFFFFFFFF) {
+SPNNumeric::SPNNumeric(u32 number, const std::string& name,
+		size_t offset, double formatGain, double formatOffset, u8 byteSize, const std::string& units) :
+    SPN(number, name, offset), mValue(0xFFFFFFFF) {
 
-	ASSERT(byteSize > 0)
-	ASSERT(byteSize <= SPN_NUMERIC_MAX_BYTE_SYZE)
+	mNumSpec = std::make_shared<SPNNumericSpec>(
+		SPNNumericSpec(formatGain, formatOffset, byteSize, units)
+	);
 
 }
 
@@ -36,11 +37,11 @@ SPNNumeric::~SPNNumeric() {
 
 void SPNNumeric::decode(const u8* buffer, size_t length) {
 
-    if(mByteSize > length || mByteSize > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
+    if(getByteSize() > length || getByteSize() > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
         throw J1939DecodeException("[SPNNumeric::decode] Spn length is bigger than expected");
     }
 	mValue = 0;
-    for(int i = 0; i < mByteSize; ++i) {
+    for(int i = 0; i < getByteSize(); ++i) {
 		mValue |= (buffer[i] << (i * 8));
 	}
 }
@@ -48,11 +49,11 @@ void SPNNumeric::decode(const u8* buffer, size_t length) {
 
 void SPNNumeric::encode(u8* buffer, size_t length) const {
 
-    if(mByteSize > length || mByteSize > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
+    if(getByteSize() > length || getByteSize() > SPN_NUMERIC_MAX_BYTE_SYZE) {       //mValue can hold only 4 bytes cause it is of type u32
         throw J1939EncodeException("[SPNNumeric::encode] Spn length is bigger than expected");
     }
 
-    for(int i = 0; i < mByteSize; ++i) {
+    for(int i = 0; i < getByteSize(); ++i) {
         buffer[i] = ((mValue >> (i * 8)) & 0xFF);
     }
 
@@ -62,14 +63,14 @@ double SPNNumeric::getFormatedValue() const {
 	double aux = mValue;
 
 	//Apply gain and offset
-	return aux * mFormatGain + mFormatOffset;
+	return aux * getFormatGain() + getFormatOffset();
 }
 
 bool SPNNumeric::setFormattedValue(double value) {
 
-	double aux = (value - mFormatOffset) / mFormatGain;
+	double aux = (value - getFormatOffset()) / getFormatGain();
 
-	u64 threshold = (((u64)(1)) << (mByteSize*8));
+	u64 threshold = (((u64)(1)) << (getByteSize()*8));
 
 	if(aux >= 0 && (aux < threshold)) {
 		mValue = static_cast<u32>(aux);
@@ -78,18 +79,13 @@ bool SPNNumeric::setFormattedValue(double value) {
 	return false;
 }
 
-u32 SPNNumeric::getMaxValue() const {
-    return 0xFFFFFFFF >> (4 - mByteSize) * 8;
-}
-
-
 std::string SPNNumeric::toString() {
 
 	std::string retval = SPN::toString();
 
 	std::stringstream sstr;
 
-	sstr << " -> Value: " << getFormatedValue() << " " << mUnits << std::endl;
+	sstr << " -> Value: " << getFormatedValue() << " " << getUnits() << std::endl;
 
 	retval += sstr.str();
 	return retval;

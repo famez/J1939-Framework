@@ -79,7 +79,7 @@ public:
 
 	size_t handleFrame(const J1939Frame&);
 
-	void clearStatus();
+	void clear();
     void setError(EBamError status) { mLastError = status; }
 
     EBamError getLastError() { return mLastError; }

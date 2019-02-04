@@ -19,12 +19,13 @@
 
 namespace J1939 {
 
-SPNStatus::SPNStatus(u32 number, const std::string& name, size_t offset, u8 bitOffset, u8 bitSize) : SPN(number, name, offset), mBitOffset(bitOffset), mBitSize(bitSize) {
+SPNStatus::SPNStatus(u32 number, const std::string& name, size_t offset, u8 bitOffset, u8 bitSize, SPNStatusSpec::DescMap valueToDesc) : SPN(number, name, offset) {
 
-	ASSERT(mBitSize > 0)
-	ASSERT(mBitOffset + mBitSize <= 8)
+	mStatSpec = std::make_shared<SPNStatusSpec>(
+			SPNStatusSpec(bitOffset, bitSize, valueToDesc)
+			);
 
-	mValue = (0xFF >> (8 - mBitSize));		//Always initialized to invalid value
+	mValue = (0xFF >> (8 - getBitSize()));		//Always initialized to invalid value
 
 }
 
@@ -34,23 +35,23 @@ SPNStatus::~SPNStatus() {
 
 void SPNStatus::decode(const u8* buffer, size_t) {
 
-    if(mBitOffset > 7 || mBitSize > 8 || mBitOffset + mBitSize > 8) {
+    if(getBitOffset() > 7 || getBitSize() > 8 || getBitOffset() + getBitSize() > 8) {
         throw J1939DecodeException("[SPNStatus::decode] Format incorrect to decode properly this spn");
     }
 
-	u8 mask = 0xFF >> (8 - mBitSize);
-	mValue = ((*buffer >> mBitOffset) & mask);
+	u8 mask = 0xFF >> (8 - getBitSize());
+	mValue = ((*buffer >> getBitOffset()) & mask);
 }
 
 
 void SPNStatus::encode(u8* buffer, size_t) const {
 
-    if(mBitOffset > 7 || mBitSize > 8 || mBitOffset + mBitSize > 8) {
+    if(getBitOffset() > 7 || getBitSize() > 8 || getBitOffset() + getBitSize() > 8) {
         throw J1939EncodeException("[SPNStatus::encode] Format incorrect to encode properly this spn");
     }
 
-    u8 mask = (0xFF >> (8 - mBitSize)) << mBitOffset;
-    u8 value = mValue << mBitOffset;
+    u8 mask = (0xFF >> (8 - getBitSize())) << getBitOffset();
+    u8 value = mValue << getBitOffset();
 
     if((value & mask) != value) {
         throw J1939EncodeException("[SPNStatus::encode] Value to encode is bigger than expected");
@@ -64,36 +65,6 @@ void SPNStatus::encode(u8* buffer, size_t) const {
 
 }
 
-void SPNStatus::setValueDescription(u8 value, const std::string& desc) {
-
-    mValueToDesc[value] = desc;
-
-}
-
-
-std::string SPNStatus::getValueDescription(u8 value) const {
-
-    std::string retVal;
-
-    auto iter = mValueToDesc.find(value);
-
-    if(iter != mValueToDesc.end()) {
-        retVal = iter->second;
-    }
-
-    return retVal;
-}
-
-void SPNStatus::clearValueDescriptions() {
-
-    mValueToDesc.clear();
-
-}
-
-
-SPNStatus::DescMap SPNStatus::getValueDescriptionsMap() const {
-    return mValueToDesc;
-}
 
 std::string SPNStatus::toString() {
 
@@ -101,7 +72,9 @@ std::string SPNStatus::toString() {
 
 	std::stringstream sstr;
 
-	sstr << " -> Status: " << ((mValueToDesc.find(mValue) != mValueToDesc.end()) ? mValueToDesc[mValue] : "") <<
+	SPNStatusSpec::DescMap valueToDesc = getValueDescriptionsMap();
+
+	sstr << " -> Status: " << ((valueToDesc.find(mValue) != valueToDesc.end()) ? valueToDesc[mValue] : "") <<
 			" (" << static_cast<u32>(mValue) << ")" << std::endl;
 
 	retval += sstr.str();
@@ -111,7 +84,7 @@ std::string SPNStatus::toString() {
 
 bool SPNStatus::setValue(u8 value) {
 
-	if(value < (1 << mBitSize)) {
+	if(value < (1 << getBitSize())) {
 		mValue = value;
 		return true;
 	}

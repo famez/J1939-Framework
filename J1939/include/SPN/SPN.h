@@ -1,17 +1,20 @@
 /*
- * ISPN.h
+ * SPN.h
  *
  *  Created on: Oct 24, 2017
  *      Author: root
  */
 
-#ifndef ISPN_H_
-#define ISPN_H_
+#ifndef SPN_H_
+#define SPN_H_
 
+#include <memory>
 #include <string>
 
 #include <Types.h>
 #include <ICloneable.h>
+
+#include <SPN/SPNSpec/SPNSpec.h>
 
 namespace J1939 {
 
@@ -26,9 +29,7 @@ public:
 	};
 
 private:
-    u32 mSPNNumber;
-	std::string mName;
-	size_t mOffset;
+	std::shared_ptr<const SPNSpec> mSpec;
 protected:
 	GenericFrame *mOwner = nullptr;		//Owner of this spn
 
@@ -36,28 +37,18 @@ public:
     SPN(u32 number, const std::string& name, size_t offset);
 	virtual ~SPN();
 
-	size_t getOffset() const {
-		return mOffset;
+	virtual size_t getOffset() const {
+		return mSpec->getOffset();
 	}
 
-	void setOffset(size_t offset) {
-		mOffset = offset;
-	}
+	virtual void setOffset(size_t offset) {}		//Do nothing
 
 	u32 getSpnNumber() const {
-		return mSPNNumber;
-	}
-
-	void setSpnNumber(u32 spnNumber) {
-		mSPNNumber = spnNumber;
+		return mSpec->getSpnNumber();
 	}
 
 	const std::string& getName() const {
-		return mName;
-	}
-
-	void setName(const std::string& name) {
-		mName = name;
+		return mSpec->getName();
 	}
 
 	void setOwner(GenericFrame* owner) { mOwner = owner; }
@@ -77,4 +68,4 @@ public:
 
 } /* namespace J1939 */
 
-#endif /* ISPN_H_ */
+#endif /* SPN_H_ */
