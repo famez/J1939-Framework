@@ -10,11 +10,13 @@ include_directories(
 			${J1939_SOURCE_DIR}/include 
 			${Can_SOURCE_DIR}/include 
 			${Common_SOURCE_DIR}/include 
-			${J1939AddressClaimer_SOURCE_DIR}/include)
+			${J1939AddressClaimer_SOURCE_DIR}/include
+			)
  
 add_executable(execTests 
 			main.cpp 
 			TestFrame.cpp
+			SPN_test.cpp
 			genericframe_test.cpp
 			j1939Factory_test.cpp
 			BAM_test.cpp

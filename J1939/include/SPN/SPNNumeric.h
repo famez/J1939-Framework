@@ -24,7 +24,7 @@ public:
     		double formatGain = 0, double formatOffset = 0, u8 byteSize = 0, const std::string& units = "");
 	virtual ~SPNNumeric();
 
-	double getFormatedValue() const ;
+	double getFormattedValue() const ;
 
 	bool setFormattedValue(double value);
 

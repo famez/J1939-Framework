@@ -27,32 +27,40 @@ virtual void SetUp()
 	ccvs.registerSPN(spnNum);
 
 	{
-		SPNStatus spnStat(597, "Brake Switch", 3, 4, 2);
+		SPNStatusSpec::DescMap valueToDesc;
+		valueToDesc[0] = "Pedal Released";
+		valueToDesc[1] = "Pedal Depressed";
+		valueToDesc[2] = "Error";
+		valueToDesc[3] = "Not Available";
 
-		spnStat.setValueDescription(0, "Pedal Released");
-		spnStat.setValueDescription(1, "Pedal Depressed");
-		spnStat.setValueDescription(2, "Error");
-		spnStat.setValueDescription(3, "Not Available");
-
-		ccvs.registerSPN(spnStat);
-	}
-
-	{
-		SPNStatus spnStat(598, "Clutch Switch", 3, 6, 2);
-
-		spnStat.setValueDescription(0, "Pedal Released");
-		spnStat.setValueDescription(1, "Pedal Depressed");
-		spnStat.setValueDescription(2, "Error");
-		spnStat.setValueDescription(3, "Not Available");
+		SPNStatus spnStat(597, "Brake Switch", 3, 4, 2, valueToDesc);
 
 		ccvs.registerSPN(spnStat);
 	}
 
 	{
-		SPNStatus spnStat(976, "PTO State", 6, 0, 5);
 
-		spnStat.setValueDescription(0, "Off");
-		spnStat.setValueDescription(5, "Set");
+		SPNStatusSpec::DescMap valueToDesc;
+
+		valueToDesc[0] = "Pedal Released";
+		valueToDesc[1] = "Pedal Depressed";
+		valueToDesc[2] = "Error";
+		valueToDesc[3] = "Not Available";
+
+		SPNStatus spnStat(598, "Clutch Switch", 3, 6, 2, valueToDesc);
+
+		ccvs.registerSPN(spnStat);
+	}
+
+	{
+
+		SPNStatusSpec::DescMap valueToDesc;
+
+		valueToDesc[0] = "Off";
+		valueToDesc[5] = "Set";
+
+		SPNStatus spnStat(976, "PTO State", 6, 0, 5, valueToDesc);
+
 
 		ccvs.registerSPN(spnStat);
 	}
@@ -191,7 +199,7 @@ TEST_F(GenericFrame_test, decode) {
 
 	const SPNNumeric* wheelSpeed = static_cast<SPNNumeric*>(ccvs.getSPN(84));
 
-	ASSERT_EQ(wheelSpeed->getFormatedValue(), 80);
+	ASSERT_EQ(wheelSpeed->getFormattedValue(), 80);
 
 	{
 		const SPNStatus* brakeSwitch = static_cast<SPNStatus*>(ccvs.getSPN(597));

@@ -59,7 +59,7 @@ void SPNNumeric::encode(u8* buffer, size_t length) const {
 
 }
 
-double SPNNumeric::getFormatedValue() const {
+double SPNNumeric::getFormattedValue() const {
 	double aux = mValue;
 
 	//Apply gain and offset
@@ -85,7 +85,7 @@ std::string SPNNumeric::toString() {
 
 	std::stringstream sstr;
 
-	sstr << " -> Value: " << getFormatedValue() << " " << getUnits() << std::endl;
+	sstr << " -> Value: " << getFormattedValue() << " " << getUnits() << std::endl;
 
 	retval += sstr.str();
 	return retval;
