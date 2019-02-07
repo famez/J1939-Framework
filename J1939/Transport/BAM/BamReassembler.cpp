@@ -137,6 +137,8 @@ size_t BamReassembler::handleFrame(const J1939Frame& frame) {
 
 		const TPCMFrame& connFrame = mFragments[srcAddr].getCmFrame();
 
+		expectedSize = connFrame.getTotalMsgSize();
+
 		if((connFrame.getTotalPackets() >= sq) && (mFragments[srcAddr].getLastSQ() + 1 == sq) ) {
 			mFragments[srcAddr].addDtFrame(*data);
 		} else {
@@ -167,8 +169,6 @@ size_t BamReassembler::handleFrame(const J1939Frame& frame) {
 
 			setError(BAM_ERROR_OK);
 		}
-
-		expectedSize = connFrame.getTotalMsgSize();
 
 	}	break;
 
