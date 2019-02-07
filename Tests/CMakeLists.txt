@@ -16,7 +16,8 @@ include_directories(
 add_executable(execTests 
 			main.cpp 
 			TestFrame.cpp
-			SPN_test.cpp
+			SPNNumeric_test.cpp
+			SPNStatus_test.cpp
 			genericframe_test.cpp
 			j1939Factory_test.cpp
 			BAM_test.cpp
