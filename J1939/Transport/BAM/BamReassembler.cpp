@@ -35,6 +35,7 @@ BamReassembler::BamReassembler() : mLastError(BAM_ERROR_OK) {
 }
 
 BamReassembler::~BamReassembler() {
+	clear();
 }
 
 void BamReassembler::reassemble(const BAMFragments& fragments, u8** data, size_t& length) {
@@ -188,13 +189,13 @@ size_t BamReassembler::handleFrame(const J1939Frame& frame) {
 
 std::unique_ptr<J1939Frame> BamReassembler::dequeueReassembledFrame() {
 
-    J1939Frame* retVal = NULL;
+	J1939Frame* retVal = NULL;
 
 	retVal = mReassembledFrames.front();
 	mReassembledFrames.pop();
 
 
-    return std::unique_ptr<J1939Frame>(retVal);
+	return std::unique_ptr<J1939Frame>(retVal);
 
 }
 
@@ -204,9 +205,11 @@ void BamReassembler::clear() {
 
 	mLastError = BAM_ERROR_OK;
 
-	std::queue<J1939Frame*> empty;
 	//Clear queue
-	std::swap(mReassembledFrames, empty);
+	while(!mReassembledFrames.empty()) {
+		delete mReassembledFrames.front();
+		mReassembledFrames.pop();
+	}
 
 }
 
