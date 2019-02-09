@@ -18,6 +18,7 @@ add_executable(execTests
 			TestFrame.cpp
 			SPNNumeric_test.cpp
 			SPNStatus_test.cpp
+			SPNString_test.cpp
 			genericframe_test.cpp
 			j1939Factory_test.cpp
 			BAM_test.cpp
