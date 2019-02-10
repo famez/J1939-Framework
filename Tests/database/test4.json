@@ -1,0 +1,141 @@
+[
+	{
+		"name" : "Frame1",
+		"pgn" : 65000,
+		"length" : 0,
+		"spns" : 
+		[
+			{
+				"name" : "spn_string1",
+				"number" : 30,
+				"type" : 2
+			},
+			{
+				"name" : "spn_string2",
+				"number" : 62,
+				"type" : 2
+			},
+			{
+				"name" : "spn_string3",
+				"number" : 72,
+				"type" : 2
+			}
+		]
+	},
+	{
+		"name" : "Frame2",
+		"pgn" : 65235,
+		"length" : 0,
+		"spns" : 
+		[
+			
+			{
+				"byteSize" : 3,
+				"formatGain" : 0.55,
+				"formatOffset" : -200,
+				"name" : "spn_number1",
+				"number" : 260,
+				"offset" : 2,
+				"type" : 4,
+				"units" : "%"
+			},
+			{
+				"bitOffset" : 2,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"description 1",
+					"description 2",
+					"description 3",
+					"description 4"
+				],
+				"name" : "spn_status1",
+				"number" : 2323,
+				"offset" : 5,
+				"type" : 1
+			}
+		]
+	},
+	{
+		"name" : "Frame3",
+		"pgn" : 65262,
+		"length" : 0,
+		"spns" : 
+		[
+			
+			{
+				"byteSize" : 3,
+				"formatGain" : 0.55,
+				"formatOffset" : -200,
+				"name" : "spn_number2",
+				"number" : 150,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "%"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 10,
+				"formatOffset" : 200,
+				"name" : "spn_number3",
+				"number" : 320,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "Pa"
+			}
+		]
+	},
+	{
+		"name" : "Frame4",
+		"pgn" : 44288,
+		"length" : 6,
+		"spns" : 
+		[
+			
+			{
+				"bitOffset" : 0,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"description 1",
+					"description 2",
+					"description 3",
+					"description 4"
+				],
+				"name" : "spn_status2",
+				"number" : 2424,
+				"offset" : 2,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 2,
+				"bitSize" : 3,
+				"descriptions" : 
+				[
+					"description 1",
+					"description 2",
+					"description 3",
+					"description 4",
+					"description 5",
+					"description 6",
+					"description 7",
+					"description 8"
+				],
+				"name" : "spn_status3",
+				"number" : 2525,
+				"offset" : 2,
+				"type" : 1
+			},
+			{
+				"bitOffset" : 2,
+				"bitSize" : 4,
+				"name" : "spn_status4",
+				"number" : 5151,
+				"offset" : 1,
+				"type" : 1
+			}
+
+
+		]
+	}
+]

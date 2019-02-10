@@ -378,5 +378,12 @@ void J1939DataBase::addFrame(const GenericFrame& frame) {
 
 }
 
+void J1939DataBase::clear() {
+
+	mFrames.clear();
+	mErrorCode = ERROR_OK;
+
+}
+
 } /* namespace J1939 */
 //Json::CharReaderBuilder rbuilder;

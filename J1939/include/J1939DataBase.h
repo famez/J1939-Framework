@@ -60,6 +60,8 @@ public:
 
 	EErrorCode getLastError() { return mErrorCode; }
 
+	void clear();
+
 };
 
 } /* namespace J1939 */
