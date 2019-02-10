@@ -13,7 +13,7 @@ TEST(J1939DataBase_test, readDataBase) {
 	//Load database
 	J1939DataBase ddbb;
 
-	ASSERT_FALSE(ddbb.parseJsonFile("database/test_not_found.json"));
+	ASSERT_FALSE(ddbb.parseJsonFile("Tests/database/test_not_found.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_FILE_NOT_FOUND);
 
@@ -21,7 +21,7 @@ TEST(J1939DataBase_test, readDataBase) {
 
 
 	//Right bracket removed in line 86 and comma added in line 136.
-	ASSERT_FALSE(ddbb.parseJsonFile("database/test1.json"));
+	ASSERT_FALSE(ddbb.parseJsonFile("Tests/database/test1.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_JSON_SYNTAX);
 
@@ -29,7 +29,7 @@ TEST(J1939DataBase_test, readDataBase) {
 
 
 	//PGN key removed in line 61 and SPNs is an object in line 63 instead of array
-	ASSERT_FALSE(ddbb.parseJsonFile("database/test2.json"));
+	ASSERT_FALSE(ddbb.parseJsonFile("Tests/database/test2.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_UNEXPECTED_TOKENS);
 
@@ -37,7 +37,7 @@ TEST(J1939DataBase_test, readDataBase) {
 
 
 	//Bytesize = 8 in line 67 and bytesize = 9 in line 77.
-	ASSERT_FALSE(ddbb.parseJsonFile("database/test3.json"));
+	ASSERT_FALSE(ddbb.parseJsonFile("Tests/database/test3.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_OUT_OF_RANGE);
 
@@ -45,7 +45,7 @@ TEST(J1939DataBase_test, readDataBase) {
 
 
 	//Type 4 in line 39
-	ASSERT_FALSE(ddbb.parseJsonFile("database/test4.json"));
+	ASSERT_FALSE(ddbb.parseJsonFile("Tests/database/test4.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_UNKNOWN_SPN_TYPE);
 
@@ -53,7 +53,7 @@ TEST(J1939DataBase_test, readDataBase) {
 
 
 	//Database OK
-	ASSERT_TRUE(ddbb.parseJsonFile("database/test5.json"));
+	ASSERT_TRUE(ddbb.parseJsonFile("Tests/database/test5.json"));
 
 	ASSERT_EQ(ddbb.getLastError(), J1939DataBase::ERROR_OK);
 
