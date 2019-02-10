@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 
+#include <Assert.h>
 #include <Utils.h>
 
 #include <FMS/TellTale/FMS1Frame.h>
@@ -24,7 +25,10 @@ FMS1Frame::FMS1Frame() : J1939Frame(FMS1_PGN), mBlockID(0) {
 
 
 FMS1Frame::FMS1Frame(u8 blockID) : J1939Frame(FMS1_PGN), mBlockID(blockID) {
+
 	mName = FMS1_NAME;
+
+	ASSERT(mBlockID < NUMBER_OF_BLOCKS);
 
 	for(u8 i = mBlockID * TTSS_PER_BLOCK + 1; i < (mBlockID + 1) * TTSS_PER_BLOCK + 1; ++i) {
 		mTTSs[i] = TellTale(i, TellTale::TTS_STATUS_NOT_AVAILABLE);
