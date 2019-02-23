@@ -206,4 +206,34 @@ std::string GenericFrame::toString() {
 	return retVal;
 }
 
+std::set<SPN*> GenericFrame::compare(const std::string& newData, const std::string oldData) {
+
+	std::set<SPN*> retVal;
+
+	for(auto iter = mSPNs.begin(); iter != mSPNs.end(); ++iter) {
+
+		size_t maxLength = iter->second->getOffset() + iter->second->getByteSize();
+
+		if(newData.size() >= maxLength || oldData.size() >= maxLength) {
+
+			if(memcmp(newData.c_str() + iter->second->getOffset(), oldData.c_str() + iter->second->getOffset(),
+					iter->second->getByteSize()) != 0) {		//SPNs differ
+
+				retVal.insert(iter->second);
+
+			}
+
+		} else {
+			//If length not respected we consider the SPN has changed
+			//(there are missing bytes in one of the strings)
+
+			retVal.insert(iter->second);
+		}
+
+	}
+
+	return retVal;
+
+}
+
 } /* namespace J1939 */

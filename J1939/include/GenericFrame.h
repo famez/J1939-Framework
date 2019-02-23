@@ -19,7 +19,7 @@ namespace J1939 {
 class GenericFrame : public J1939Frame {
 private:
 	size_t mLength;
-	std::map<u32, SPN*> mSPNs;
+	std::map<u32/*SpnNumber*/, SPN*> mSPNs;
 protected:
 	virtual void decodeData(const u8* buffer, size_t length);
 	virtual void encodeData(u8* buffer, size_t length) const;
@@ -50,6 +50,8 @@ public:
 
 	std::set<u32> getSPNNumbers() const;
 
+	std::map<u32/*SpnNumber*/, SPN*> getSPNs() { return mSPNs; };
+
 	virtual size_t getDataLength() const;
 
 	void setLength(size_t length) { mLength = length; }
@@ -59,6 +61,11 @@ public:
     bool isGenericFrame() const { return true; }
 
     virtual std::string toString();
+
+    /*
+     * Returns a set of SPNs that have changed with respect to the data
+     */
+    std::set<SPN*> compare(const std::string& newData, const std::string oldData);
 
 	IMPLEMENT_CLONEABLE(J1939Frame,GenericFrame);
 };
