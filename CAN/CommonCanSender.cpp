@@ -79,23 +79,23 @@ bool CommonCanSender::finalize() {
 	return true;
 }
 
-bool CommonCanSender::sendFrame(CanFrame frame, u32 period) {
+bool CommonCanSender::sendFrame(CanFrame frame, u32 period, OnSendCallback callback) {
 
 	std::vector<CanFrame> frames;
 	frames.push_back(frame);
 
-	sendFrames(frames, period);
+	sendFrames(frames, period, callback);
 
 	return true;
 
 }
 
-bool CommonCanSender::sendFrames(std::vector<CanFrame> frames, u32 period) {
+bool CommonCanSender::sendFrames(std::vector<CanFrame> frames, u32 period, OnSendCallback callback) {
 
 
 	if(frames.empty())	return false;
 
-	CanFrameRing ring(period);
+	CanFrameRing ring(period, callback);
 
 	ring.setFrames(frames);
 
@@ -163,7 +163,15 @@ void CommonCanSender::run() {
 			elapsed = abs(Utils::getElapsedMillis(&start, &now));
 
 			if((start.tv_nsec == 0 && start.tv_sec == 0) || (elapsed >= ring->getCurrentPeriod())) {
-				_sendFrame(ring->getCurrentFrame());		//Backend in charge of sending the frame
+
+				CanFrame& toSend = ring->getCurrentFrame();
+				if(ring->getCallback()) {
+					std::string data;
+					ring->getCallback()(toSend.getId(), data);
+					toSend.setData(data);
+				}
+
+				_sendFrame(toSend);		//Backend in charge of sending the frame
 				ring->shift();		//Move to the next frame
 
 				current = Utils::addMillis(&start, ring->getCurrentPeriod());		//Calculate the time in which the frame should have been sent

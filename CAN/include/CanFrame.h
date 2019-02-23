@@ -24,6 +24,7 @@ private:
 
 public:
 	CanFrame();
+	CanFrame(bool extFormat, u32 id) : mExtendedFormat(extFormat), mId(id) {}
 	CanFrame(bool extFormat, u32 id, const std::string& data) : mExtendedFormat(extFormat), mId(id) { setData(data); }
 	virtual ~CanFrame();
 

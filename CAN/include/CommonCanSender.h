@@ -19,7 +19,7 @@
 #include <time.h>
 
 
-#include "ICanSender.h"
+#include <ICanSender.h>
 
 
 namespace Can {
@@ -34,8 +34,9 @@ private:
 		timespec mTxTimestamp;
 		u32 mPeriod;
 		size_t mCurrentpos;
+		OnSendCallback mCallback;
 	public:
-		CanFrameRing(u32 period) : mPeriod(period), mCurrentpos(0) { mTxTimestamp = {0, 0}; }
+		CanFrameRing(u32 period, OnSendCallback callback = OnSendCallback()) : mPeriod(period), mCurrentpos(0), mCallback(callback) { mTxTimestamp = {0, 0}; }
 		~CanFrameRing() {}
 		CanFrameRing(const CanFrameRing& other) 				= default;
 		CanFrameRing& operator=(const CanFrameRing& other) 		= delete;
@@ -49,9 +50,11 @@ private:
 		void pushFrame(const CanFrame& frame);
 		void setFrames(const std::vector<CanFrame>&);
 		void shift();
-		const CanFrame& getCurrentFrame() const { return mFrames[mCurrentpos]; }
+		CanFrame& getCurrentFrame() { return mFrames[mCurrentpos]; }
 		u32 getCurrentPeriod() const;
 		const std::vector<CanFrame>& getFrames() const { return mFrames; }
+
+		const OnSendCallback& getCallback() { return mCallback; }
 
 	};
 
@@ -70,8 +73,8 @@ public:
 	//ICanSender implementation
 	bool initialize();
 	bool finalize();
-	bool sendFrame(CanFrame frame, u32 period);
-	bool sendFrames(std::vector<CanFrame> frames, u32 period);
+	bool sendFrame(CanFrame frame, u32 period, OnSendCallback callback = OnSendCallback());
+	bool sendFrames(std::vector<CanFrame> frames, u32 period, OnSendCallback callback = OnSendCallback());
 
 	/*
 	 * Sends the frame given as argument to the CAN network only once.

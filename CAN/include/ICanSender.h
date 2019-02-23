@@ -13,10 +13,14 @@
 
 #include <Types.h>
 
-#include "CanFrame.h"
+#include <CanFrame.h>
+
+#include <functional>
 
 
 namespace Can {
+
+typedef std::function<void(u32, std::string&)> OnSendCallback;
 
 class ICanSender {
 public:
@@ -26,7 +30,7 @@ public:
 	/**
 	 * Sends a frame through the can interface with the specified period
 	 */
-	virtual bool sendFrame(CanFrame frame, u32 period) = 0;
+	virtual bool sendFrame(CanFrame frame, u32 period, OnSendCallback callback = OnSendCallback()) = 0;
 	
 	/**
 	 * Stops sending the frame whose id matches the given argument
@@ -37,7 +41,7 @@ public:
 	/*
 	 * Sends periodically a set of frames within the given period in the order defined in the vector. 
 	 */
-	virtual bool sendFrames(std::vector<CanFrame> frames, u32 period) = 0;
+	virtual bool sendFrames(std::vector<CanFrame> frames, u32 period, OnSendCallback callback = OnSendCallback()) = 0;
 	
 	virtual void sendFrameOnce(const CanFrame& frame) = 0;
 
