@@ -51,6 +51,8 @@ public:
 		return mSpec->getName();
 	}
 
+	std::shared_ptr<const SPNSpec> getSpec() const { return mSpec; }
+
 	void setOwner(GenericFrame* owner) { mOwner = owner; }
 
 	//To implement by inherited classes

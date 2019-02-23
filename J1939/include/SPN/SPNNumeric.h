@@ -58,7 +58,6 @@ public:
         mValue = value;
     }
 
-
     /*
      * Returns the maximum value for the given spn
      */
@@ -66,9 +65,9 @@ public:
 
     std::string toString() override;
 
+    std::shared_ptr<const SPNNumericSpec> getNumericSpec() const { return mNumSpec; }
 
 	IMPLEMENT_CLONEABLE(SPN, SPNNumeric);
-
 
 };
 

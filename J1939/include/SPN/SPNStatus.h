@@ -49,6 +49,8 @@ public:
 	std::string getValueDescription(u8 value) const { return mStatSpec->getValueDescription(value); }
 	DescMap getValueDescriptionsMap() const { return mStatSpec->getValueDescriptionsMap(); }
 
+	std::shared_ptr<const SPNStatusSpec> getStatusSpec() const { return mStatSpec; }
+
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 
 };
