@@ -5,6 +5,7 @@
  *      Author: famez
  */
 
+#include <chrono>
 
 #include "Utils.h"
 
@@ -49,6 +50,67 @@ TimeStamp TimeStamp::operator-(const TimeStamp& other) const {
 	retVal.mMicroSec = retVal.mMicroSec - other.mMicroSec;
 
 	return retVal;
+
+}
+
+TimeStamp TimeStamp::operator+(const TimeStamp& other) const {
+
+	TimeStamp retVal(*this);
+
+	retVal.mSeconds = retVal.mSeconds + other.mSeconds;
+	retVal.mMicroSec = retVal.mMicroSec + other.mMicroSec;
+
+	if(retVal.mMicroSec > 1000000) {
+		retVal.mMicroSec -= 1000000;
+		++retVal.mSeconds;
+	}
+
+	return retVal;
+
+}
+
+bool TimeStamp::operator>(const TimeStamp& other) const {
+
+	if(mSeconds > other.mSeconds)		return true;
+
+	if(mSeconds == other.mSeconds && mMicroSec > other.mMicroSec)		return true;
+
+	return false;
+}
+
+bool TimeStamp::operator<(const TimeStamp& other) const {
+
+	if(mSeconds < other.mSeconds)		return true;
+
+	if(mSeconds == other.mSeconds && mMicroSec < other.mMicroSec)		return true;
+
+	return false;
+
+}
+
+TimeStamp TimeStamp::operator-(u32 millis) const {
+
+	TimeStamp aux(millis/1000, (millis%1000)*1000);
+
+	return (*this - aux);
+}
+
+
+TimeStamp TimeStamp::operator+(u32 millis) const {
+
+	TimeStamp aux(millis/1000, (millis%1000)*1000);
+
+	return (*this + aux);
+
+}
+
+TimeStamp TimeStamp::now() {
+
+	auto now = std::chrono::steady_clock::now();
+	auto duration = now.time_since_epoch();
+	auto micro = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+
+	return TimeStamp(micro.count() / 1000000, micro.count() % 1000000);
 
 }
 

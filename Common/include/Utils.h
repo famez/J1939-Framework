@@ -41,6 +41,13 @@ public:
 
 
 	TimeStamp operator-(const TimeStamp& other) const;
+	TimeStamp operator+(const TimeStamp& other) const;
+	TimeStamp operator-(u32 millis) const;
+	TimeStamp operator+(u32 millis) const;
+	bool operator>(const TimeStamp& other) const;
+	bool operator<(const TimeStamp& other) const;
+
+	static TimeStamp now();
 
 };
 
