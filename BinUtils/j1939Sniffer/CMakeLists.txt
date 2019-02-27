@@ -31,7 +31,7 @@ install (TARGETS j1939Sniffer
 else(CURSES_FOUND)
 
 message(WARNING "-- NCURSES is not available")
-message(WARNING "-- Project " ${CMAKE_PROJECT_NAME} " is skipped...")
+message(WARNING "-- Project " ${PROJECT_NAME} " is skipped...")
 message(WARNING "-- Try to install ncurses and run cmake again...")
 
 endif(CURSES_FOUND)
