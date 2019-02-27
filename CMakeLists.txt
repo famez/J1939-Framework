@@ -11,7 +11,6 @@ set(CMAKE_MODULE_PATH "./cmake/;${CMAKE_MODULE_PATH}")
 
 find_package (Threads REQUIRED)
 find_package (jsoncpp REQUIRED)
-find_package (LibWebSockets REQUIRED)
 
 
 set (CMAKE_CXX_STANDARD 11)
@@ -24,9 +23,24 @@ add_subdirectory(CAN)
 add_subdirectory(J1939)
 add_subdirectory(Database)
 add_subdirectory(BinUtils)
-add_subdirectory(GUI_WEB/backend)
 add_subdirectory(j1939AddressClaimer)
 add_subdirectory(Tests)
+
+find_package (LibWebSockets)
+
+if(LIBWEBSOCKETS_FOUND)
+
+message("-- LibWebSockets is available")
+
+message("-- Project j1939GUI will be built")
+
+add_subdirectory(GUI_WEB/backend)
+
+else(LIBWEBSOCKETS_FOUND)
+
+message("-- Project " ${PROJECT_NAME} " will not be built")
+
+endif(LIBWEBSOCKETS_FOUND)
 
 
 include(GenerateExportHeader)
