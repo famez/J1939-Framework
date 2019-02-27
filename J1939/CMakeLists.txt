@@ -17,6 +17,7 @@ add_library(J1939 SHARED
 	./SPN/SPNSpec/SPNSpec.cpp
 	./SPN/SPNSpec/SPNNumericSpec.cpp
 	./SPN/SPNSpec/SPNStatusSpec.cpp
+	./SPN/SPNHistory.cpp
 	./J1939DataBase.cpp
 	./J1939Frame.cpp
 	./Addressing/AddressClaimFrame.cpp
