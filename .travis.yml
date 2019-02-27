@@ -9,6 +9,8 @@ addons:
     packages:
       - g++-6
       - libgtest-dev
+      - protobuf-compiler
+      - libprotobuf-dev
       
 install:
   - pushd ~
