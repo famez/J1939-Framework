@@ -78,6 +78,17 @@ public:
 	 */
 	std::vector<Sample> getWindow(const Utils::TimeStamp& timeStamp, u32 milliseconds, u32 samples) const;
 
+	std::shared_ptr<const SPNSpec> getGeneralSpec() const {
+		return mGeneralSpec;
+	}
+
+	std::shared_ptr<const SPNNumericSpec> getNumericSpec() const {
+		return mSpecificSpec.numeric;
+	}
+
+	std::shared_ptr<const SPNStatusSpec> getStatusSpec() const {
+		return mSpecificSpec.status;
+	}
 
 };
 

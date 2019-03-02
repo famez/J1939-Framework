@@ -57,6 +57,11 @@ public:
      */
     u32 getMaxValue() const;
 
+    double formatValue(u32 value) const;
+
+    double getMaxFormattedValue() const { return formatValue(getMaxValue()); }
+    double getMinFormattedValue() const { return formatValue(0); }
+
 
 };
 

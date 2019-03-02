@@ -32,11 +32,19 @@ SPNNumericSpec::~SPNNumericSpec() {
 
 }
 
-
 u32 SPNNumericSpec::getMaxValue() const {
-    return 0xFFFFFFFF >> (4 - mByteSize) * 8;
+    return 0xFAFFFFFF >> (4 - mByteSize) * 8;
 }
 
+
+double SPNNumericSpec::formatValue(u32 value) const {
+
+	double aux = value;
+
+	//Apply gain and offset
+	return aux * mFormatGain + mFormatOffset;
+
+}
 
 
 } /* namespace J1939 */
