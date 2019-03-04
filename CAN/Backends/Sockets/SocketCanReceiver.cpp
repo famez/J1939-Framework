@@ -119,27 +119,10 @@ bool SocketCanReceiver::receive(CanFrame& canFrame, TimeStamp& timestamp) {
 
 					timespec *stamp = (struct timespec *)CMSG_DATA(cmsg);
 
-					/*
-					 * stamp[0] is the software timestamp
-					 * stamp[1] is deprecated
-					 * stamp[2] is the raw hardware timestamp
-					 * See chapter 2.1.2 Receive timestamps in
-					 * linux/Documentation/networking/timestamping.txt
-					 */
+					//Take timestamp from software
 
-					if(stamp[2].tv_sec == 0 && stamp[2].tv_nsec == 0) {
-
-						//There is no hardware timestamp available
-						//Take timestamp from software
-
-						timestamp.setSeconds(stamp[0].tv_sec);
-						timestamp.setMicroSec(stamp[0].tv_nsec/1000);
-					} else {
-
-						//Hardware timestamp
-						timestamp.setSeconds(stamp[2].tv_sec);
-						timestamp.setMicroSec(stamp[2].tv_nsec/1000);
-					}
+					timestamp.setSeconds(stamp[0].tv_sec);
+					timestamp.setMicroSec(stamp[0].tv_nsec/1000);
 
 				}
 			}
