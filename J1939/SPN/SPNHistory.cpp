@@ -5,6 +5,8 @@
  *      Author: fernando
  */
 
+#include <algorithm>
+
 #include <SPN/SPNHistory.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
@@ -87,31 +89,32 @@ std::vector<SPNHistory::Sample> SPNHistory::getWindow(const Utils::TimeStamp& ti
 	if(mSamples.size() < 2)			return window;
 
 	u32 period = milliseconds / samples;
+
+
 	Utils::TimeStamp current = timeStamp - milliseconds;
+
 
 	//Get the beginning
 	Sample sample(current, static_cast<u8>(0));
 
-	size_t pos = std::lower_bound(mSamples.begin(), mSamples.end(), sample) - mSamples.begin();
+	size_t pos = std::upper_bound(mSamples.begin(), mSamples.end(), sample) - mSamples.begin();
 
-	if(pos > 0)		pos = 0;
-
-
-	while(pos+1 < mSamples.size() && current < timeStamp) {
-
-		do {
-			Sample mySample(mSamples[pos]);
-			mySample.setTimeStamp(current);		//Modify timestamp
-
-			window.push_back(mySample);
-
-			current = current + period;
+	if(pos != 0)	--pos;		//Start with the sample whose timestamp is lower or equals to the beginning of the window
 
 
-		} while(current < mSamples[pos+1].getTimeStamp());
+	while(current <= timeStamp) {
+
+		Sample mySample(mSamples[pos]);
+		mySample.setTimeStamp(current);		//Modify timestamp
 
 
-		++pos;
+		window.push_back(mySample);
+
+		current = current + period;
+
+		if(pos+1 < mSamples.size() && current >= mSamples[pos+1].getTimeStamp()) {
+			++pos;
+		}
 
 	}
 
