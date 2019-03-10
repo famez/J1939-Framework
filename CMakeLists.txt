@@ -27,20 +27,21 @@ add_subdirectory(j1939AddressClaimer)
 add_subdirectory(Tests)
 
 find_package (LibWebSockets)
+find_package(Protobuf)
 
-if(LIBWEBSOCKETS_FOUND)
+if(LIBWEBSOCKETS_FOUND AND PROTOBUF_FOUND)
 
-message("-- LibWebSockets is available")
+message("-- LibWebSockets  and protobuf are available")
 
 message("-- Project j1939GUI will be built")
 
 add_subdirectory(GUI_WEB/backend)
 
-else(LIBWEBSOCKETS_FOUND)
+else(LIBWEBSOCKETS_FOUND AND PROTOBUF_FOUND)
 
 message("-- Project " ${PROJECT_NAME} " will not be built")
 
-endif(LIBWEBSOCKETS_FOUND)
+endif(LIBWEBSOCKETS_FOUND AND PROTOBUF_FOUND)
 
 
 include(GenerateExportHeader)
