@@ -44,8 +44,11 @@ public:
 	TimeStamp operator+(const TimeStamp& other) const;
 	TimeStamp operator-(u32 millis) const;
 	TimeStamp operator+(u32 millis) const;
+	bool operator==(const TimeStamp& other) const { return (mSeconds == other.mSeconds && mMicroSec == other.mMicroSec); };
 	bool operator>(const TimeStamp& other) const;
 	bool operator<(const TimeStamp& other) const;
+	bool operator<=(const TimeStamp& other) const;
+	bool operator>=(const TimeStamp& other) const;
 
 	static TimeStamp now();
 

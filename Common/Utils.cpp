@@ -88,6 +88,14 @@ bool TimeStamp::operator<(const TimeStamp& other) const {
 
 }
 
+bool TimeStamp::operator<=(const TimeStamp& other) const {
+	return !(*this > other);
+}
+
+bool TimeStamp::operator>=(const TimeStamp& other) const {
+	return !(*this < other);
+}
+
 TimeStamp TimeStamp::operator-(u32 millis) const {
 
 	TimeStamp aux(millis/1000, (millis%1000)*1000);
