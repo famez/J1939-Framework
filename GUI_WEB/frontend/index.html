@@ -199,6 +199,9 @@
 						</span>
 						<span ng-show="spn.units">{{ spn.units }}</span>
 					</td>
+					<td>
+						<button ng-click="showGraph(id, spn.number, spn.name)">Graph</button>
+					</td>
 				
 				</tr>
 			</table>
@@ -427,6 +430,12 @@ app.controller('J1939', ['$scope', '$interval', '$filter', function($scope, $int
 		var jsonReq = JSON.stringify(request);
 		webSocket.send(jsonReq);
 
+	}
+
+	$scope.showGraph = function(id, spn, name) {
+
+		window.open('graph.html?id=' + id + '&spn=' + spn,'targetWindow',
+		   'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=800,height=500');
 	}
 
 	var webSocket;

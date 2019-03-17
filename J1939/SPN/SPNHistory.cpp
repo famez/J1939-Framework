@@ -107,12 +107,13 @@ std::vector<SPNHistory::Sample> SPNHistory::getWindow(const Utils::TimeStamp& ti
 		Sample mySample(mSamples[pos]);
 		mySample.setTimeStamp(current);		//Modify timestamp
 
-
 		window.push_back(mySample);
 
 		current = current + period;
 
-		if(pos+1 < mSamples.size() && current >= mSamples[pos+1].getTimeStamp()) {
+		while(pos+1 < mSamples.size() && current >= mSamples[pos+1].getTimeStamp()) {
+
+			//TODO check variation of more of 10% and maximums and minimums.
 			++pos;
 		}
 

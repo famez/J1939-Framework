@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message Graph {
+
+	string title = 1;
+	int32 number = 2;
+	Axis axisX = 3;
+	Axis axisY = 4;
+	repeated Sample samples = 5;
+
+	message Sample {
+		double x = 1;
+		double y = 2;
+	}
+
+}
+
+message Axis {
+	string units = 1;
+	double max = 2;
+	double min = 3;
+}

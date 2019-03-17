@@ -32,6 +32,8 @@ extern "C" {
 //Can includes
 #include <CanEasy.h>
 
+#include "graph.h"
+
 
 #ifndef DATABASE_PATH
 #define DATABASE_PATH		"/etc/j1939/frames.json"
@@ -82,7 +84,11 @@ static struct lws_protocols protocols[] = {
 	}, {
 			"j1939-protocol", callback_j1939, 0,
 			J1939_RX_BUFFER_BYTES,
-	}, { NULL, NULL, 0, 0 } /* terminator */
+	}, {
+			"graph-protocol", callback_graph, sizeof(void*),		//Enough to store our pointer to graph
+			J1939_RX_BUFFER_BYTES,
+	},
+	{ NULL, NULL, 0, 0 } /* terminator */
 };
 
 
@@ -240,10 +246,6 @@ int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
 	return 0;
 }
 
-enum protocols {
-	PROTOCOL_HTTP = 0, PROTOCOL_EXAMPLE, PROTOCOL_COUNT
-};
-
 
 bool processRequest(const Json::Value& request, Json::Value& response) {
 
@@ -272,11 +274,13 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 
 			std::unique_ptr<J1939Frame> frame = J1939Factory::getInstance().getJ1939Frame(*pgn);
 
+			//Only add to the list if it is a generic frame
 
-			response["data"][i]["pgn"] = std::to_string(*pgn);
-			response["data"][i]["name"] = frame->getName();
-
-			++i;
+			if(frame->isGenericFrame()) {
+				response["data"][i]["pgn"] = std::to_string(*pgn);
+				response["data"][i]["name"] = frame->getName();
+				++i;
+			}
 
 		}
 		return true;
@@ -290,7 +294,7 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 
 		std::unique_ptr<J1939Frame> frameToAdd = J1939Factory::getInstance().getJ1939Frame(pgn);
 
-		if(!frameToAdd.get()) {
+		if(!frameToAdd || !frameToAdd->isGenericFrame()) {
 			lwsl_err("Frame not recognized...\n");
 			return false;
 		}
@@ -849,7 +853,7 @@ void unsendFrameThroughInterface(const J1939Frame* j1939Frame, const std::string
 }
 
 
-void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface, void*) {
+void onRcv(const CanFrame& frame, const TimeStamp& ts, const std::string& interface, void*) {
 	
 	rxLock.lock();
 	rxFrames["rx"][std::to_string(frame.getId())]["count"] = ++rcvFramesCount[frame.getId()];
@@ -898,20 +902,35 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 		}
 
 	} else {
-		
+
+		//Store in the history
+		if(j1939Frame->isGenericFrame()) {
+			GenericFrame *genFrame = static_cast<GenericFrame *>(j1939Frame.get());
+
+			std::set<SPN*> spns = genFrame->compare(frame.getData(), rcvFramesCache[frame.getId()].getData());
+
+			for(auto iter = spns.begin(); iter != spns.end(); ++iter) {
+				std::cout << "SPN " << (*iter)->getSpnNumber() << " changed" << std::endl;
+
+				saveToHistory(j1939Frame->getIdentifier(), **iter, ts);
+			}
+		}
+
 		//Only save in cache unfragmented frames to avoid filtering frames that are part of BAM protocol. 
 		//Frames whose length is bigger than 8 bytes are not cached, because the TX rate is usually several seconds. 
 		rcvFramesCache[frame.getId()] = frame;
 	}
 	
 	//At this point we have either a simple frame or a reassembled frame.
-	
+
+
 	u32 j1939ID = j1939Frame->getIdentifier();
 	
 	rxLock.lock();
 	rxFrames["rx"][std::to_string(j1939ID)]["frame"] = frameToJson(j1939Frame.get());
 	rxLock.unlock();
 	
+
 }
 
 
