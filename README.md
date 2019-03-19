@@ -27,4 +27,6 @@ Steps can be found in travis.yml file.
 
 ## J1939GUI
 
+![alt text](https://github.com/famez/J1939-Framework/blob/master/Graph.png)
+
 ![alt text](https://github.com/famez/J1939-Framework/blob/master/GUI_WEB/J1939GUI.png)
