@@ -31,11 +31,21 @@ find_package(Protobuf)
 
 if(LIBWEBSOCKETS_FOUND AND PROTOBUF_FOUND)
 
-message("-- LibWebSockets  and protobuf are available")
+message("-- LibWebSockets and protobuf are available")
+message("-- Protobuf version ${Protobuf_VERSION}")
+
+if("${Protobuf_VERSION}" VERSION_GREATER_EQUAL "3.0.0")
 
 message("-- Project j1939GUI will be built")
-
 add_subdirectory(GUI_WEB/backend)
+
+else()
+
+message("-- Protobuf version must be equals to or greater than 3.0.0")
+
+endif()
+
+
 
 else(LIBWEBSOCKETS_FOUND AND PROTOBUF_FOUND)
 
