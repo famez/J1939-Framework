@@ -146,19 +146,10 @@ main (int argc, char **argv)
 	//Convert the introduced string to a number to be interpreted by the frame factory when using it.
 	u32 formattedId = std::stoul(id, nullptr, 16);
 
-	//Read database if available
-	J1939DataBase database;
 
-	if(!database.parseJsonFile(DATABASE_PATH)) {
+	if(!J1939Factory::getInstance().registerDatabaseFrames(DATABASE_PATH)) {
 		std::cerr << "Database not found in " << DATABASE_PATH << std::endl;
 		exit(4);
-	}
-
-	const std::vector<GenericFrame>& ddbbFrames = database.getParsedFrames();
-
-	//Register all the frames listed in the database
-	for(auto iter = ddbbFrames.begin(); iter != ddbbFrames.end(); ++iter) {
-		J1939Factory::getInstance().registerFrame(*iter);
 	}
 
 	//The rest is easy

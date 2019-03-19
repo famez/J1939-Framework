@@ -7,6 +7,7 @@
 
 #include <J1939Factory.h>
 #include <J1939Frame.h>
+#include <J1939DataBase.h>
 
 #include <Transport/TPCMFrame.h>
 #include <Transport/TPDTFrame.h>
@@ -15,6 +16,7 @@
 #include <Frames/RequestFrame.h>
 #include <FMS/TellTale/FMS1Frame.h>
 #include <Diagnosis/Frames/DM1.h>
+
 
 
 
@@ -171,6 +173,25 @@ void J1939Factory::unRegisterFrame(u32 pgn) {
 
 	}
 
+}
+
+bool J1939Factory::registerDatabaseFrames(const std::string& file) {
+
+	//Read database if available
+	J1939DataBase database;
+
+	if(!database.parseJsonFile(file)) {
+		return false;
+	}
+
+	const std::vector<GenericFrame>& ddbbFrames = database.getParsedFrames();
+
+	//Register all the frames listed in the database
+	for(auto iter = ddbbFrames.begin(); iter != ddbbFrames.end(); ++iter) {
+		registerFrame(*iter);
+	}
+
+	return true;
 }
 
 } /* namespace J1939 */

@@ -88,6 +88,7 @@ public:
 
     void unRegisterFrame(u32 pgn);
 
+    bool registerDatabaseFrames(const std::string& ddbbFile);
 
     void unregisterAllFrames();
 
