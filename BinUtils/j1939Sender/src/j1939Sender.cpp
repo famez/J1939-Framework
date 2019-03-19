@@ -177,6 +177,7 @@ void parseListFramesCommand();
 void parseListInterfacesCommand();
 void parseSendFrameCommand(std::list<std::string> arguments);
 void parseSendTTSCommand(std::list<std::string> arguments);
+void parseUnsendTTSCommand();
 void parseExecCommand(std::list<std::string> arguments);
 void parseUnsendFrameCommand(std::list<std::string> arguments);
 void parseAddDtcCommand(std::list<std::string> arguments);
@@ -366,7 +367,8 @@ void registerCommands() {
 	).addSubCommand(
 			CommandHelper(EXEC_TOKEN, parseExecCommand)
 	).addSubCommand(
-			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand))
+			CommandHelper(UNSEND_TOKEN).addSubCommand(CommandHelper(FRAME_TOKEN, parseUnsendFrameCommand)).
+					addSubCommand(CommandHelper(TTS_TOKEN, parseUnsendTTSCommand))
 	).addSubCommand(
 			CommandHelper(ADD_TOKEN).addSubCommand(CommandHelper(DTC_TOKEN, parseAddDtcCommand))
 	).addSubCommand(
@@ -677,6 +679,29 @@ void parseListTTSCommand(std::list<std::string> arguments) {
 			}
 
 		}
+
+	}
+
+}
+
+
+void parseUnsendTTSCommand() {
+
+	std::vector<u32> ids;
+
+	for(auto iter = fms1Frames.begin(); iter != fms1Frames.end(); ++iter) {
+
+		ids.push_back(iter->getIdentifier());
+
+	}
+
+	const std::set<std::string>& ifaces = CanEasy::getInitializedCanIfaces();
+
+	for(auto iter = ifaces.begin(); iter != ifaces.end(); ++iter) {
+
+		std::shared_ptr<ICanSender> sender = CanEasy::getSender(*iter);
+
+		sender->unSendFrames(ids);
 
 	}
 
@@ -1094,8 +1119,6 @@ void parseListInterfacesCommand() {
 	}
 
 }
-
-
 
 void parseSendFrameCommand(std::list<std::string> arguments) {
 
