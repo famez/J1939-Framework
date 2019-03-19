@@ -41,12 +41,17 @@ FMS1Frame::~FMS1Frame() {
 void FMS1Frame::decodeData(const u8* buffer, size_t length) {
 
 	if(length != FMS1_FRAME_LENGTH) {		//Check the length first
-		throw  J1939DecodeException("[FMS1Frame::decodeData] Buffer length does "
+		throw J1939DecodeException("[FMS1Frame::decodeData] Buffer length does "
 				"not match the expected length. Buffer length:" + std::to_string(length) + ". Expected length: " + std::to_string(FMS1_FRAME_LENGTH));
 	}
 
+	u8 blockID = buffer[0] & BLOCKID_MASK;
 
-	mBlockID = buffer[0] & BLOCKID_MASK;
+	if(blockID >= NUMBER_OF_BLOCKS) {
+		throw J1939DecodeException(std::string("[FMS1Frame::decodeData] Block ID higher than the maximum permitted. Max: ") + std::to_string(NUMBER_OF_BLOCKS -1));
+	}
+
+	mBlockID = blockID;
 
 	u8 tts1Number = TTSS_PER_BLOCK * mBlockID + 1;
 	TellTale tts1(tts1Number, (buffer[0] >> TTS_HIGH_PART_SHIFT) & TTS_MASK);
