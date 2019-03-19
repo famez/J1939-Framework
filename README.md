@@ -9,12 +9,21 @@ The framework has been developed in C++ in a Linux distribution and compiled usi
 
 ## Installing and compiling
 
-Requirements:
-
+# Requirements:
+General:
 - Linux distribution with SocketCan support.
 - Cmake 3.5.1 or higher.
-- LibWebSockets
 - JsonCpp
+
+j1939Gui (if the dependencies are not satified, this application is not compiled):
+- libwebsockets
+- protobuf >= 3.0.0
+
+j1939Decoder (if the dependencies are not satified, this application is not compiled):
+- ncurses
+
+TRCToCap (if the dependencies are not satified, this application is not compiled):
+- glib2.0
 
 Steps:
 
