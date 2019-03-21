@@ -38,14 +38,15 @@ spn_graph.prototype.draw = function() {
 
 	var maxAxisX = this.xspec.max - this.xspec.min;
 	var maxAxisY = this.yspec.max - this.yspec.min;
+	var i;
 
 	ctx.font = "20px Arial";
 	
 	//Clear canvas for redrawing
 	ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = "black";
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "grey";
 
 	//Draw X axis
 	ctx.beginPath();
@@ -55,12 +56,18 @@ spn_graph.prototype.draw = function() {
 
 	
 	//Draw x units
-	ctx.fillText("Time " + maxAxisX + " " + this.xspec.units, this.graphRect.x + this.graphRect.w/2, 3/2 * this.graphRect.y + this.graphRect.h);
+	ctx.fillText(this.xspec.units, 3/2 * this.graphRect.x + this.graphRect.w, this.graphRect.y + this.graphRect.h);
 
-	//Draw y max and min
-	ctx.fillText("" + Math.round(this.yspec.max * 100) / 100 + " " + this.yspec.units, this.graphRect.x/2, this.graphRect.y/2);
-	ctx.fillText("" + Math.round(this.yspec.min * 100) / 100 + " " + this.yspec.units, this.graphRect.x/2, 3/2 * this.graphRect.y + this.graphRect.h);
-	
+	//Draw y units
+	ctx.fillText(this.yspec.units, this.graphRect.x/3, this.graphRect.y/2);
+
+	ctx.font = "15px Arial";
+
+	//Draw some values along the y axis
+	var numYVal = 5;
+	for(i = 0; i <= numYVal; ++i) {
+		ctx.fillText("" + (Math.round((i * maxAxisY / numYVal + this.yspec.min) * 100) / 100), this.graphRect.x/4, this.graphRect.y + this.graphRect.h * (1 - i/numYVal));
+	}
 
 	//Draw Y axis
 	ctx.beginPath();
@@ -68,10 +75,18 @@ spn_graph.prototype.draw = function() {
 	ctx.lineTo(this.graphRect.x + this.graphRect.w, this.graphRect.y + this.graphRect.h);
 	ctx.stroke();
 
+
+	//Draw some values along the x axis
+	var numXVal = 7;
+	for(i = 0; i <= numXVal; ++i) {
+		ctx.fillText("" + (Math.round((i * maxAxisX / numXVal + this.xspec.min) * 1000) / 1000), this.graphRect.x + this.graphRect.w * i/numYVal, 
+			3/2 * this.graphRect.y + this.graphRect.h);
+	}
+
 	//Draw plots
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = "grey";
-	var i;
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "black";
+	
 	
 
 	for (i = 0; i < this.plots.length - 1; i++) {

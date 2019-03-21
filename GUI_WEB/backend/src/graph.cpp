@@ -19,6 +19,7 @@ typedef struct {
 	bool toSend;
 } UserData;
 
+TimeStamp startUpTime = TimeStamp::now();
 
 void saveToHistory(u32 id, const SPN& spn, const TimeStamp& timestamp) {
 
@@ -163,16 +164,20 @@ Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period) {
 
 	Axis *axisX = graph.mutable_axisx();
 
+	//Timestamps since epoch
 	TimeStamp current = TimeStamp::now();
 	TimeStamp start = current - period;
 
+	//Timestamps since the beginning of the application
+	TimeStamp relCurrent = current - startUpTime;
+	TimeStamp relStart = start - startUpTime;
 
 	//X axis which is the timestamp in seconds.
 	axisX->set_units("s");
-	axisX->set_max((double)(current.getSeconds()) +
-			(double)(current.getMicroSec()) /1000000);
-	axisX->set_min((double)(start.getSeconds()) +
-			(double)(start.getMicroSec()) /1000000);
+	axisX->set_max((double)(relCurrent.getSeconds()) +
+			(double)(relCurrent.getMicroSec()) /1000000);
+	axisX->set_min((double)(relStart.getSeconds()) +
+			(double)(relStart.getMicroSec()) /1000000);
 
 	Axis *axisY = graph.mutable_axisy();
 
@@ -188,14 +193,14 @@ Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period) {
 
 		Graph_Sample *sample = graph.add_samples();
 
-		sample->set_x((double)(iter->getTimeStamp().getSeconds()) +
-				(double)(iter->getTimeStamp().getMicroSec()) /1000000);
+		TimeStamp relTime = iter->getTimeStamp() - startUpTime;
+
+		sample->set_x((double)(relTime.getSeconds()) +
+				(double)(relTime.getMicroSec()) /1000000);
 
 		sample->set_y(iter->getNumeric());
 
 	}
-	
-
 
 	return graph;
 

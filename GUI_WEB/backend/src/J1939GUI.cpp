@@ -301,8 +301,6 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 
 		framesToSend.push_back(frameToAdd.release());
 
-
-
 		return true;
 	}
 
@@ -910,8 +908,6 @@ void onRcv(const CanFrame& frame, const TimeStamp& ts, const std::string& interf
 			std::set<SPN*> spns = genFrame->compare(frame.getData(), rcvFramesCache[frame.getId()].getData());
 
 			for(auto iter = spns.begin(); iter != spns.end(); ++iter) {
-				std::cout << "SPN " << (*iter)->getSpnNumber() << " changed" << std::endl;
-
 				saveToHistory(j1939Frame->getIdentifier(), **iter, ts);
 			}
 		}
