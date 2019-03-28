@@ -153,11 +153,27 @@ public:
      *
      */
 
-    void copy(const J1939Frame& other);
+    virtual void copy(const J1939Frame& other);
 
     virtual bool isGenericFrame() const { return false; }
 
-    virtual std::string toString();
+    /*
+	 * Returns a string with the following information:
+	 * Name
+	 * PGN
+	 * Source Address
+	 * PDU format
+	 * Dest Address
+	 * Priority
+	 */
+
+	std::string getHeader() const;
+
+    /*
+     * Returns a string with the header and further details (generally the contents of the frame, such as SPNs if it applies)
+     */
+    virtual std::string toString() const { return getHeader(); }
+
 
 };
 

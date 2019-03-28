@@ -66,7 +66,7 @@ void SPNStatus::encode(u8* buffer, size_t) const {
 }
 
 
-std::string SPNStatus::toString() {
+std::string SPNStatus::toString() const {
 
 	std::string retval = SPN::toString();
 
@@ -89,6 +89,14 @@ bool SPNStatus::setValue(u8 value) {
 		return true;
 	}
 	return false;
+}
+
+void SPNStatus::copy(const SPN& other) {
+
+	const SPNStatus *numOther = static_cast<const SPNStatus *>(&other);
+
+	mValue = numOther->mValue;
+
 }
 
 } /* namespace J1939 */

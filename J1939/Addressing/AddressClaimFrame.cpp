@@ -84,7 +84,7 @@ void AddressClaimFrame::encodeData(u8* buffer, size_t length) const {
 
 }
 
-std::string AddressClaimFrame::toString() {
+std::string AddressClaimFrame::toString() const {
 
 	std::string retVal = J1939Frame::toString();
 	std::stringstream sstr;

@@ -79,7 +79,7 @@ bool SPNNumeric::setFormattedValue(double value) {
 	return false;
 }
 
-std::string SPNNumeric::toString() {
+std::string SPNNumeric::toString() const {
 
 	std::string retval = SPN::toString();
 
@@ -92,5 +92,12 @@ std::string SPNNumeric::toString() {
 
 }
 
+void SPNNumeric::copy(const SPN& other) {
+
+	const SPNNumeric *numOther = static_cast<const SPNNumeric *>(&other);
+
+	mValue = numOther->mValue;
+
+}
 
 } /* namespace J1939 */

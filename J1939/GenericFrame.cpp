@@ -196,7 +196,7 @@ bool GenericFrame::deleteSPN(u32 number) {
     return false;
 }
 
-std::string GenericFrame::toString() {
+std::string GenericFrame::toString() const {
 
 	std::string retVal = J1939Frame::toString();
 
@@ -233,6 +233,30 @@ std::set<SPN*> GenericFrame::compare(const std::string& newData, const std::stri
 	}
 
 	return retVal;
+
+}
+
+void GenericFrame::copy(const J1939Frame& other) {
+
+	if(!other.isGenericFrame()) {		//Nothing to do
+		return;
+	}
+
+	const GenericFrame *genOther = static_cast<const GenericFrame*>(&other);
+
+	auto otherIter = genOther->mSPNs.begin();
+
+	for(auto iter = mSPNs.begin(); iter != mSPNs.end(); ++iter) {
+
+		if(otherIter == genOther->mSPNs.end() || otherIter->second->getSpec() != iter->second->getSpec()) {
+			return;
+		}
+
+		iter->second->copy(*(otherIter->second));
+
+		++otherIter;
+
+	}
 
 }
 

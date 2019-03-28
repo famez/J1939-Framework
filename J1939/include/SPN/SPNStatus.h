@@ -42,7 +42,7 @@ public:
 	bool setValue(u8 value);
 
 
-	std::string toString() override;
+	std::string toString() const override;
 
 	u8 getByteSize() const override { return 1; }		//Spn status has always size of 1
 
@@ -50,6 +50,8 @@ public:
 	DescMap getValueDescriptionsMap() const { return mStatSpec->getValueDescriptionsMap(); }
 
 	std::shared_ptr<const SPNStatusSpec> getStatusSpec() const { return mStatSpec; }
+
+	void copy(const SPN& other) override;
 
 	IMPLEMENT_CLONEABLE(SPN, SPNStatus);
 

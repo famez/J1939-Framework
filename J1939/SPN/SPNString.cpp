@@ -82,7 +82,7 @@ void SPNString::encode(u8* buffer, size_t length) const {
 }
 
 
-std::string SPNString::toString() {
+std::string SPNString::toString() const {
 
 	std::string retval = SPN::toString();
 
@@ -92,6 +92,15 @@ std::string SPNString::toString() {
 
 	retval += sstr.str();
 	return retval;
+
+}
+
+
+void SPNString::copy(const SPN& other) {
+
+	const SPNString *numOther = static_cast<const SPNString *>(&other);
+
+	mValue = numOther->mValue;
 
 }
 

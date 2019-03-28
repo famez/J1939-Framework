@@ -134,9 +134,7 @@ void J1939Frame::copy(const J1939Frame& other) {
 
 }
 
-
-std::string J1939Frame::toString() {
-
+std::string J1939Frame::getHeader() const {
 
 	std::stringstream sstr;
 

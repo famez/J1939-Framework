@@ -28,7 +28,7 @@ public:
 
 	EType getType() const { return SPN_STRING; }
 
-	std::string toString() override;
+	std::string toString() const override;
 
 	u8 getByteSize() const override { return mValue.size() + 1; }		//Include the * terminator
 
@@ -41,6 +41,8 @@ public:
 	}
 
 	void setOffset(size_t offset) override { mOffset = offset; }
+
+	void copy(const SPN& other) override;
 
 	IMPLEMENT_CLONEABLE(SPN, SPNString);
 

@@ -60,12 +60,14 @@ public:
 
     bool isGenericFrame() const { return true; }
 
-    virtual std::string toString();
+    virtual std::string toString() const;
 
     /*
      * Returns a set of SPNs that have changed with respect to the data
      */
     std::set<SPN*> compare(const std::string& newData, const std::string oldData);
+
+    void copy(const J1939Frame& other) override;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,GenericFrame);
 };

@@ -52,7 +52,7 @@ void RequestFrame::encodeData(u8* buffer, size_t length) const {
 
 }
 
-std::string RequestFrame::toString() {
+std::string RequestFrame::toString() const {
 
 	std::string retVal = J1939Frame::toString();
 	std::stringstream sstr;

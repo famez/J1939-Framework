@@ -36,7 +36,7 @@ SPN::~SPN() {
 
 }
 
-std::string SPN::toString() {
+std::string SPN::toString() const {
 
 	std::stringstream sstr;
 

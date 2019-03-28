@@ -100,7 +100,7 @@ void FMS1Frame::encodeData(u8* buffer, size_t length) const {
 
 }
 
-std::string FMS1Frame::toString() {
+std::string FMS1Frame::toString() const {
 
 	std::string retVal = J1939Frame::toString();
 

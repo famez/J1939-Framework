@@ -228,5 +228,5 @@ void onRcv(const CanFrame& frame, const TimeStamp&, const std::string& interface
 
 
 bool onTimeout() {
-
+	return true;
 }

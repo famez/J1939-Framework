@@ -55,7 +55,7 @@ public:
 
 	size_t getDataLength() const override { return FMS1_FRAME_LENGTH; }
 
-	std::string toString() override;
+	std::string toString() const override;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,FMS1Frame);
 };

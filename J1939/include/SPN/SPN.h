@@ -62,9 +62,11 @@ public:
     virtual void decode(const u8* buffer, size_t length) = 0;
     virtual void encode(u8* buffer, size_t length) const = 0;
 
-	virtual std::string toString();
+	virtual std::string toString() const;
 
 	virtual u8 getByteSize() const = 0;
+
+	virtual void copy(const SPN& other) = 0;
 
 };
 

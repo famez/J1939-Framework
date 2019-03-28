@@ -35,7 +35,7 @@ public:
 
 	void setRequestPGN(u32 requestPGN) { mRequestPGN = requestPGN; }
 
-	std::string toString();
+	std::string toString() const;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,RequestFrame);
 

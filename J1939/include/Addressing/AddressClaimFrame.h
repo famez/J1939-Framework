@@ -179,7 +179,7 @@ public:
 
 	const EcuName& getEcuName() { return mEcuName; }
 
-	std::string toString();
+	std::string toString() const;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,AddressClaimFrame);
 

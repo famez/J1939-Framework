@@ -35,12 +35,12 @@ public:
 
 	bool deleteDTC(size_t pos) { if(pos >= mDtcs.size()) return false; mDtcs.erase(mDtcs.begin() + pos); return true; }
 
-	bool setDTC(size_t pos, DTC&& dtc) { if(pos >= mDtcs.size()) return false; mDtcs[pos] = dtc; }
+	bool setDTC(size_t pos, DTC&& dtc) { if(pos >= mDtcs.size()) return false; mDtcs[pos] = dtc; return true; }
 
 	const std::vector<DTC>& getDTCs() const { return mDtcs; }
 
 	size_t getDataLength() const override;
-	std::string toString() override;
+	std::string toString() const override;
 
 	IMPLEMENT_CLONEABLE(J1939Frame,DM1);
 };

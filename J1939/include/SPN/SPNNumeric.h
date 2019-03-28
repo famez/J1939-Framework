@@ -63,9 +63,11 @@ public:
      */
     u32 getMaxValue() const { return mNumSpec->getMaxValue(); }
 
-    std::string toString() override;
+    std::string toString() const override;
 
     std::shared_ptr<const SPNNumericSpec> getNumericSpec() const { return mNumSpec; }
+
+    void copy(const SPN& other) override;
 
 	IMPLEMENT_CLONEABLE(SPN, SPNNumeric);
 

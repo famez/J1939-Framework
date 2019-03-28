@@ -107,7 +107,7 @@ size_t DM1::getDataLength() const {
 
 }
 
-std::string DM1::toString() {
+std::string DM1::toString() const {
 
 	std::string retVal = GenericFrame::toString();
 
