@@ -29,6 +29,10 @@ Steps:
 
 Steps can be found in travis.yml file.
     
+## TRCPlayer
+
+![alt text](https://github.com/famez/J1939-Framework/blob/master/BinUtils/TRCPlayer/TRCPlayer.png)
+
     
 ## Wireshark dissector
 
