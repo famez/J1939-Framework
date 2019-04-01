@@ -22,12 +22,101 @@
 <body>
 
 
-<canvas id="myCanvas">
+<canvas id="myCanvas" onmousedown="mouseDown()" onmouseup="mouseUp()" onmousemove="mouseMove(event)">
 Your browser does not support the HTML5 canvas tag.
 </canvas>
 
 </body>
 <script type="text/javascript">
+	
+	var mouse_down = false;
+	var scroll_time;
+	var interval;
+	var prev_pos;
+
+	var proto_grath;
+	var proto_axis;
+	var proto_array;
+	var array_buffer;
+
+	var my_graph = new spn_graph(70, "myCanvas");
+
+	var file_reader = new FileReader();
+
+	function graph_request(time) {
+
+		time = time || 0;
+		//JSon request
+		var request = { "command" : "get graph", 
+				"spn" : spn,
+				"id" : id,					
+				"period" : 100000,
+				"samples" : 500,
+				"time" : time			
+				 };
+		var jsonReq = JSON.stringify(request);
+		webSocket.send(jsonReq);
+	}
+
+
+	function mouseDown() {
+		console.log("mouseDown");
+
+		var spec = my_graph.get_xspec();
+
+		//Graph not printed even once
+		if (typeof spec === 'undefined') {
+			return;
+		}
+
+		mouse_down = true;
+		
+		prev_pos = {x: event.clientX, y: event.clientY};
+
+		scroll_time = spec.max;
+
+		//Do not show plots, only the axis which change
+		my_graph.clear_plots();
+		
+		//Stop periodic request
+		if (typeof interval !== 'undefined') {
+			clearInterval(interval);
+			interval =  undefined;
+		}
+	}
+
+	function mouseUp() {
+		console.log("mouseUp");
+		
+		if(mouse_down) {
+			
+			//Refresh the graph with the correct time
+			graph_request(scroll_time);
+			mouse_down = false;
+		}
+
+	}
+
+	function mouseMove(event) {
+		console.log("mouseMove");
+		if(mouse_down) {
+			var spec = my_graph.get_xspec();
+			var graphRect = my_graph.get_graphRect();
+			var diff_time = spec.max - spec.min;
+			scroll_time = diff_time * (prev_pos.x - event.clientX) / graphRect.w + spec.max;
+
+			//Modify graph spec reference directly
+			spec.min = scroll_time - diff_time;			
+			spec.max = scroll_time;
+
+			//Do not show plots, only the axis which change
+			my_graph.draw();
+
+			prev_pos = {x: event.clientX, y: event.clientY};
+
+		}
+
+	}
 
 	function findGetParameter(parameterName) {
 		var result = null,
@@ -42,14 +131,7 @@ Your browser does not support the HTML5 canvas tag.
 		return result;
 	}
 
-	var proto_grath;
-	var proto_axis;
-	var proto_array;
-	var array_buffer;
-
-	var my_graph = new spn_graph(70, "myCanvas");
-
-	var file_reader = new FileReader();
+	
 
 	file_reader.onload = function(event) {
 		array_buffer = event.target.result;
@@ -106,18 +188,7 @@ Your browser does not support the HTML5 canvas tag.
 
 			//Request graph painting every 500 millis
 
-			setInterval(function() {
-				//JSon request
-				var request = { "command" : "get graph", 
-						"spn" : spn,
-						"id" : id,					
-						"period" : 100000,
-						"samples" : 500					
-						 };
-				var jsonReq = JSON.stringify(request);
-				webSocket.send(jsonReq);
-
-			}, 2000);
+			interval = setInterval(graph_request, 2000);
 		   
 		};
 

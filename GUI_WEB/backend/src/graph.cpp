@@ -7,7 +7,7 @@
 #include "graph.h"
 #include "graph.pb.h"
 
-Graph getGraphFromSPN(u32 id, u32 spn, u32 samples, u32 period);
+Graph getGraphFromSPN(u32 id, u32 spn, u32 samples, u32 period, double time);
 
 using namespace J1939;
 using namespace Utils;
@@ -91,7 +91,14 @@ int callback_graph(struct lws *wsi, enum lws_callback_reasons reason,
 
 						if(rcvjson["samples"] > 10000)	rcvjson["samples"] = 10000;		//No more than 10000 samples
 
-						userData->graph = getGraphFromSPN(rcvjson["id"].asUInt(), rcvjson["spn"].asUInt(), rcvjson["samples"].asUInt(), rcvjson["period"].asUInt());
+						double time = 0;
+
+						if(rcvjson.isMember("time") && rcvjson["time"].isDouble()) {
+							time = rcvjson["time"].asDouble();
+						}
+
+						userData->graph = getGraphFromSPN(rcvjson["id"].asUInt(), rcvjson["spn"].asUInt(), rcvjson["samples"].asUInt(), rcvjson["period"].asUInt(),
+								time);
 						userData->toSend = true;
 						lws_callback_on_writable_all_protocol(lws_get_context(wsi),
 								lws_get_protocol(wsi));
@@ -140,7 +147,7 @@ int callback_graph(struct lws *wsi, enum lws_callback_reasons reason,
 }
 
 
-Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period) {
+Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period, double time) {
 
 	Graph graph;
 
@@ -156,7 +163,7 @@ Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period) {
 
 	SPNHistory& history = iter->second;
 
-	//At the moment, only visulize Numeric SPN
+	//At the moment, only visualize Numeric SPN
 	if(history.getNumericSpec() == nullptr)		return graph;
 
 
@@ -165,9 +172,20 @@ Graph getGraphFromSPN(u32 id, u32 spn, u32 number, u32 period) {
 	Axis *axisX = graph.mutable_axisx();
 
 	//Timestamps since epoch
-	TimeStamp current = TimeStamp::now();
+	TimeStamp current;
+
+	if(time > 0) {		//A specific time has been requested
+		//Time is relative to the start up of the program. Current is relative to the epoch time.
+		//We need to add startUpTime.
+		current = startUpTime + TimeStamp(time, (u32)(time * 1000000) % 1000000);
+	} else {
+		//Retrieve the last stored values
+		current = TimeStamp::now();
+	}
+
 	TimeStamp start = current - period;
 
+	std::cout << "current. Sec: " << current.getSeconds() << "Micro: " << current.getMicroSec() << std::endl;
 	//Timestamps since the beginning of the application
 	TimeStamp relCurrent = current - startUpTime;
 	TimeStamp relStart = start - startUpTime;

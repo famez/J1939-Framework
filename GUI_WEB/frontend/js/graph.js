@@ -18,6 +18,19 @@ spn_graph.prototype.set_plots = function(plots) {
 
 }
 
+spn_graph.prototype.clear_plots = function(plots) {
+	this.plots = [];
+}
+
+
+spn_graph.prototype.get_xspec = function() {
+	return this.xspec;
+}
+
+spn_graph.prototype.get_graphRect = function() {
+	return this.graphRect;
+}
+
 spn_graph.prototype.set_xspec = function(xspec) {		//To change the minumum and maximum values of the x axis
 
 	if(xspec.min < xspec.max) {
