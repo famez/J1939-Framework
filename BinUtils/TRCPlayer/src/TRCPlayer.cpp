@@ -185,38 +185,47 @@ int main(int argc, char **argv) {
 
 		progress = width * reader.getCurrentPos() / reader.getNumberOfFrames();
 
-		//Try to print frames
-		std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
-					getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());
+		try {
 
-		if(!j1939Frame)		continue;							//Frame not registered in the factory.
+			//Try to print frames
+			std::unique_ptr<J1939Frame> j1939Frame = J1939Factory::getInstance().
+						getJ1939Frame(frame.getId(), (const u8*)(frame.getData().c_str()), frame.getData().size());
 
-		if(reassembler.toBeHandled(*j1939Frame)) {				//Check if the frame is part of a fragmented frame (BAM protocol)
-			//Actually it is, reassembler will handle it.
-			reassembler.handleFrame(*j1939Frame);
+			if(j1939Frame) {							//Frame registered in the factory?
 
-			if(reassembler.reassembledFramesPending()) {
+				if(reassembler.toBeHandled(*j1939Frame)) {				//Check if the frame is part of a fragmented frame (BAM protocol)
+					//Actually it is, reassembler will handle it.
+					reassembler.handleFrame(*j1939Frame);
 
-				j1939Frame = reassembler.dequeueReassembledFrame();
+					if(reassembler.reassembledFramesPending()) {
 
-			} else {
-				continue;				//Frame handled by reassembler but the original frame to be reassembled is not complete.
+						j1939Frame = reassembler.dequeueReassembledFrame();
+
+					} else {
+						continue;				//Frame handled by reassembler but the original frame to be reassembled is not complete.
+					}
+				}
+
+				//Check if it is already added.
+				auto iter = mapFrames.find(j1939Frame->getIdentifier());
+
+				if(iter != mapFrames.end()) {
+
+					iter->second->copy(*j1939Frame);		//Update frame
+
+				} else {
+					//Add frame to the list
+					mapFrames[j1939Frame->getIdentifier()] = j1939Frame.get();
+					vectorFrames.push_back(std::make_pair(false, j1939Frame.release()));
+
+				}
+
 			}
+
+		} catch (J1939DecodeException &) {
+			//Decode exception, skip frame. Add handler so that the program keeps running.
 		}
 
-		//Check if it is already added.
-		auto iter = mapFrames.find(j1939Frame->getIdentifier());
-
-		if(iter != mapFrames.end()) {
-
-			iter->second->copy(*j1939Frame);		//Update frame
-
-		} else {
-			//Add frame to the list
-			mapFrames[j1939Frame->getIdentifier()] = j1939Frame.get();
-			vectorFrames.push_back(std::make_pair(false, j1939Frame.release()));
-
-		}
 
 		TimeStamp elapsed = TimeStamp::now() - lastPrintTime;
 
