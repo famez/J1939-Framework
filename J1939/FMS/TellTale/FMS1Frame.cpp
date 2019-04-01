@@ -18,7 +18,7 @@
 
 namespace J1939 {
 
-FMS1Frame::FMS1Frame() : J1939Frame(FMS1_PGN), mBlockID(0) {
+FMS1Frame::FMS1Frame() : J1939Frame(FMS1_PGN), mBlockID(NUMBER_OF_BLOCKS) {
 	mName = FMS1_NAME;
 
 }
@@ -51,6 +51,13 @@ void FMS1Frame::decodeData(const u8* buffer, size_t length) {
 		throw J1939DecodeException(std::string("[FMS1Frame::decodeData] Block ID higher than the maximum permitted. Max: ") + std::to_string(NUMBER_OF_BLOCKS -1));
 	}
 
+	//If block ID changes, clear mTTSs to not accumulate the previous decoded TTSs
+	//related to the previous block.
+
+	if(mBlockID != blockID) {
+		mTTSs.clear();
+	}
+
 	mBlockID = blockID;
 
 	u8 tts1Number = TTSS_PER_BLOCK * mBlockID + 1;
@@ -68,8 +75,6 @@ void FMS1Frame::decodeData(const u8* buffer, size_t length) {
 		mTTSs[ttsHighPartNumber] = TellTale(ttsHighPartNumber, ttsHighPartStatus);
 
 	}
-
-
 
 }
 
