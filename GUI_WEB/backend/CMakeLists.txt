@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 
 project(j1939GUI)
 
+set (GUI_SERVER_DIR "/var/www/j1939gui")
+
+add_definitions(-DHTTP_DIR="${GUI_SERVER_DIR}")
+
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS graph.proto)
 
 add_executable(j1939GUI 
@@ -10,6 +14,7 @@ add_executable(j1939GUI
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
+
 
 #Visible for frontend
 configure_file(graph.proto ../frontend/graph.proto COPYONLY)
@@ -29,3 +34,7 @@ target_link_libraries(j1939GUI
 
 install (TARGETS j1939GUI
     DESTINATION bin)
+
+install (DIRECTORY ../frontend/
+	DESTINATION ${GUI_SERVER_DIR})
+    

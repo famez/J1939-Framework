@@ -126,8 +126,33 @@ std::map<u32/*Can ID*/, CanFrame> rcvFramesCache;
 //To track how many frames have been received
 std::map<u32/*Can ID*/, u32/*Count*/> rcvFramesCount;
 
+static const lws_protocol_vhost_options mimetypes= {
+		nullptr,
+		nullptr,
+		".proto", ""
+				"application/x-protobuf"
+};
 
-int callback_http(struct lws *wsi, enum lws_callback_reasons reason,
+//Used to serve files from http server
+static const lws_http_mount mount = {
+	/* .mount_next */			NULL,		/* linked-list "next" */
+	/* .mountpoint */			"/",		/* mountpoint URL */
+	/* .origin */				HTTP_DIR,  /* serve from dir */
+	/* .def */					"index.html",	/* default filename */
+	/* .cgienv */				nullptr,
+	/* .extra_mimetypes */		&mimetypes,		//Register proto file as a mimetype
+	/* .cgi_timeout */			0,
+	/* .cache_max_age */		0,
+	/* .cache_reusable */		0,
+	/* .cache_revalidate */		0,
+	/* .cache_intermediaries */	0,
+	/* .origin_protocol */		LWSMPRO_FILE,	/* files in a dir */
+	/* .mountpoint_len */		1,		/* char count */
+};
+
+
+
+int callback_http(lws *wsi, enum lws_callback_reasons reason,
 		void *user, void *in, size_t len) {
 	switch (reason) {
 	case LWS_CALLBACK_HTTP:
@@ -139,7 +164,7 @@ int callback_http(struct lws *wsi, enum lws_callback_reasons reason,
 	return 0;
 }
 
-int callback_j1939(struct lws *wsi, enum lws_callback_reasons reason,
+int callback_j1939(lws *wsi, enum lws_callback_reasons reason,
 		void *user, void *in, size_t len) {
 
 
@@ -557,7 +582,7 @@ bool processRequest(const Json::Value& request, Json::Value& response) {
 
 int main(int argc, char *argv[]) {
 	
-	struct lws_context_creation_info info;
+	lws_context_creation_info info;
 	
 	showRaw = false;
 	
@@ -565,10 +590,11 @@ int main(int argc, char *argv[]) {
 
 	info.port = 8000;
 	info.protocols = protocols;
+	info.mounts = &mount;
 	info.gid = -1;
 	info.uid = -1;
 
-	struct lws_context *context = lws_create_context(&info);
+	lws_context *context = lws_create_context(&info);
 
 	//lws_set_log_level(LLL_INFO | LLL_ERR | LLL_WARN | LLL_NOTICE, NULL);
 
