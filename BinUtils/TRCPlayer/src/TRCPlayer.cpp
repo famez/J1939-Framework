@@ -170,7 +170,11 @@ int main(int argc, char **argv) {
 				if(currentSel + 1 < vectorFrames.size())		++currentSel;
 				break;
 			case '\n':			//Key Enter. Show details of frame when it is selected (or hide them)
-				vectorFrames[currentSel].first = !vectorFrames[currentSel].first;
+
+				if(!vectorFrames.empty()) {
+					vectorFrames[currentSel].first = !vectorFrames[currentSel].first;
+				}
+
 				break;
 			default:		//To skip printFrames if key not detected
 				continue;
@@ -239,6 +243,15 @@ int main(int argc, char **argv) {
 
 	//Finalize ncurses
 	endwin();
+
+	//Free frames
+	for(auto iter = vectorFrames.begin(); iter != vectorFrames.end(); ++iter) {
+		delete iter->second;
+	}
+
+
+	//Finalize CanEasy
+	CanEasy::finalize();
 
 }
 
