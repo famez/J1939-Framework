@@ -16,6 +16,14 @@
 			margin: 0;
 			overflow: hidden;
 		}
+
+		button {
+		     margin-top: 1px;
+		     margin-right: 2px;
+		     position:absolute;
+		     top:0;
+		     right:0px;
+		}
 	</style>
 
 </head>
@@ -25,6 +33,8 @@
 <canvas id="myCanvas" onmousedown="mouseDown()" onmouseup="mouseUp()" onmousemove="mouseMove(event)">
 Your browser does not support the HTML5 canvas tag.
 </canvas>
+
+<button type="button" onclick="periodic_graph_request()">Auto Refresh</button>
 
 </body>
 <script type="text/javascript">
@@ -42,6 +52,15 @@ Your browser does not support the HTML5 canvas tag.
 	var my_graph = new spn_graph(70, "myCanvas");
 
 	var file_reader = new FileReader();
+
+	function periodic_graph_request() {
+		graph_request();
+		
+		if (typeof interval === 'undefined') {
+			interval = setInterval(graph_request, 2000);
+		}
+		
+	}
 
 	function graph_request(time) {
 
@@ -186,7 +205,7 @@ Your browser does not support the HTML5 canvas tag.
 
 		    	console.log("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
 
-			//Request graph painting every 500 millis
+			//Request graph painting every 2000 millis
 
 			interval = setInterval(graph_request, 2000);
 		   
