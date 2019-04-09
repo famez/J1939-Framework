@@ -85,7 +85,7 @@ std::string SPNNumeric::toString() const {
 
 	std::stringstream sstr;
 
-	sstr << " -> Value: " << getFormattedValue() << " " << getUnits() << std::endl;
+	sstr << " -> Value: " << std::fixed << getFormattedValue() << " " << getUnits() << std::endl;
 
 	retval += sstr.str();
 	return retval;
