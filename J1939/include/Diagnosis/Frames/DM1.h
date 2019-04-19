@@ -42,6 +42,8 @@ public:
 	size_t getDataLength() const override;
 	std::string toString() const override;
 
+	void copy(const J1939Frame& other) override;
+
 	IMPLEMENT_CLONEABLE(J1939Frame,DM1);
 };
 

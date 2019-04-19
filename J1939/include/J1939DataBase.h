@@ -31,7 +31,9 @@ public:
 		ERROR_JSON_SYNTAX,			//The syntax of the json file is not correct
 		ERROR_UNEXPECTED_TOKENS,	//There are tokens in json file that do not match with the expected ones
 		ERROR_OUT_OF_RANGE,			//There is at least one value that exceeds the permitted range of values
-		ERROR_UNKNOWN_SPN_TYPE		//The type of spn is not recognized
+		ERROR_UNKNOWN_SPN_TYPE,		//The type of spn is not recognized
+		ERROR_FORBIDDEN_TOKEN,		//A token that should not be present in the database which is reserved for internal use in the software
+									//and could cause misbehaviour (example: PGN=FECA which corresponds to reserved PGN for DM1 frame, casts to this class are done after verifying the PGN)
 	};
 
 private:

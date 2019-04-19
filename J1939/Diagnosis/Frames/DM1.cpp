@@ -119,4 +119,18 @@ std::string DM1::toString() const {
 	return retVal;
 }
 
+
+void DM1::copy(const J1939Frame& other) {
+
+	GenericFrame::copy(other);
+
+	//Verify that we deal with a DM1 frame
+	if(other.getPGN() == getPGN()) {
+
+		const DM1 *otherDM1 = static_cast<const DM1 *>(&other);
+		mDtcs = otherDM1->mDtcs;
+
+	}
+}
+
 } /* namespace J1939 */

@@ -11,6 +11,8 @@
 #include <fstream>
 #include <streambuf>
 
+#include <Diagnosis/Frames/DM1.h>
+
 #include "GenericFrame.h"
 #include "SPN/SPNNumeric.h"
 #include "SPN/SPNStatus.h"
@@ -87,7 +89,18 @@ bool J1939DataBase::parseJsonFile(const std::string& file) {
 			return false;
 		}
 
-		GenericFrame frame(jsonFrame[PGN_KEY].asUInt());
+        u32 pgn = jsonFrame[PGN_KEY].asUInt();
+
+        switch(pgn) {
+        case DM1_PGN:		//Not permitted this token. Dangerous for the good performance of the software.
+        	mErrorCode = ERROR_FORBIDDEN_TOKEN;
+        	return false;
+        default:
+        	break;
+
+        }
+
+		GenericFrame frame(pgn);
 
         if(jsonFrame.isMember(NAME_KEY) && jsonFrame[NAME_KEY].isString()) {      //Optional
             frame.setName(jsonFrame[NAME_KEY].asString());
