@@ -129,27 +129,12 @@ std::map<u32/*Can ID*/, u32/*Count*/> rcvFramesCount;
 static const lws_protocol_vhost_options mimetypes= {
 		nullptr,
 		nullptr,
-		".proto", ""
-				"application/x-protobuf"
+		".proto",
+		"application/x-protobuf"
 };
 
 //Used to serve files from http server
-static const lws_http_mount mount = {
-	/* .mount_next */			NULL,		/* linked-list "next" */
-	/* .mountpoint */			"/",		/* mountpoint URL */
-	/* .origin */				HTTP_DIR,  /* serve from dir */
-	/* .def */					"index.html",	/* default filename */
-	/* .cgienv */				nullptr,
-	/* .extra_mimetypes */		&mimetypes,		//Register proto file as a mimetype
-	/* .cgi_timeout */			0,
-	/* .cache_max_age */		0,
-	/* .cache_reusable */		0,
-	/* .cache_revalidate */		0,
-	/* .cache_intermediaries */	0,
-	/* .origin_protocol */		LWSMPRO_FILE,	/* files in a dir */
-	/* .mountpoint_len */		1,		/* char count */
-};
-
+static lws_http_mount mount;
 
 
 int callback_http(lws *wsi, enum lws_callback_reasons reason,
@@ -588,6 +573,15 @@ int main(int argc, char *argv[]) {
 	
 	memset(&info, 0, sizeof(info));
 
+	memset(&mount, 0, sizeof(mount));
+
+	mount.mountpoint = "/";
+	mount.origin = HTTP_DIR;
+	mount.def = "index.html";
+	mount.extra_mimetypes = &mimetypes;
+	mount.origin_protocol = LWSMPRO_FILE;
+	mount.mountpoint_len = 1;
+
 	info.port = 8000;
 	info.protocols = protocols;
 	info.mounts = &mount;
@@ -597,6 +591,8 @@ int main(int argc, char *argv[]) {
 	lws_context *context = lws_create_context(&info);
 
 	//lws_set_log_level(LLL_INFO | LLL_ERR | LLL_WARN | LLL_NOTICE, NULL);
+
+	lwsl_info("LWSMPRO_FILE: %d", LWSMPRO_FILE);
 
 	//Initialization of J1939 Framework
 
