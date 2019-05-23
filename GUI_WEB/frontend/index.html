@@ -204,6 +204,14 @@
 					</td>
 				
 				</tr>
+				
+				<tr ng-repeat="dtc in frame.dtcs">
+					<td>DTC</td>
+					<td>SPN: {{ dtc.spn }}</td>
+					<td>FMI: {{ dtc.fmi }}</td>
+					<td>OC: {{ dtc.oc }}</td>
+				</tr>
+				
 			</table>
 			  
 		    </li>

@@ -23,6 +23,7 @@ extern "C" {
 #include <GenericFrame.h>
 #include <Transport/BAM/BamFragmenter.h>
 #include <Transport/BAM/BamReassembler.h>
+#include <Diagnosis/Frames/DM1.h>
 #include <SPN/SPNNumeric.h>
 #include <SPN/SPNStatus.h>
 #include <SPN/SPNString.h>
@@ -1013,7 +1014,6 @@ Json::Value frameToJson(const J1939Frame* frame) {
 
 				}
 
-
 			}	break;
 
 			case SPN::SPN_STRING: {
@@ -1035,7 +1035,27 @@ Json::Value frameToJson(const J1939Frame* frame) {
 		}
 
 	}
-	
+
+	if(frame->getPGN() == DM1_PGN) {
+
+		const DM1* dm1 = static_cast<const DM1*>(frame);
+
+		const std::vector<DTC>& dtcs = dm1->getDTCs();
+
+		unsigned int i = 0;
+
+		for(auto dtc = dtcs.begin(); dtc != dtcs.end(); ++dtc) {
+
+			jsonVal["dtcs"][i]["spn"] = dtc->getSpn();
+			jsonVal["dtcs"][i]["fmi"] = static_cast<u32>(dtc->getFmi());
+			jsonVal["dtcs"][i]["oc"] = static_cast<u32>(dtc->getOc());
+
+			++i;
+
+		}
+
+	}
+
 	return jsonVal;
 	
 }
