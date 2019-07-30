@@ -59,7 +59,35 @@ cmake --build .
 sudo make install
 
 ```
-    
+
+# Usage with SocketCan:
+
+To make SocketCan available in your system, you should execute the following commands:
+
+```bash
+sudo apt-get install can-utils
+```
+
+To enable the drivers if they not enabled by default:
+
+```bash
+sudo modprobe can
+sudo modprobe vcan
+```
+
+To generate a virtual interface for test purposes.
+
+```bash
+sudo ip link add name vcan0 type vcan
+```
+
+To test over vcan0.
+
+```bash
+./Scripts/gear_level.sh vcan0 | j1939Sender --silent --file Scripts/define_frames.j1939
+candump vcan0
+```
+
 ## TRCPlayer
 
 ![alt text](https://github.com/famez/J1939-Framework/blob/master/BinUtils/TRCPlayer/TRCPlayer.png)
