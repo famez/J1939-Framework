@@ -35,25 +35,30 @@ The framework has been developed in C++ in a Linux distribution and compiled usi
 
 ## Installing and compiling
 
-# Requirements:
-General:
-- Linux distribution with SocketCan support.
-- Cmake 3.5.1 or higher.
-- JsonCpp
+# Installation:
+Ubuntu 18.10 or higher
+```bash
 
-j1939Gui (if the dependencies are not satified, this application is not compiled):
-- libwebsockets
-- protobuf >= 3.0.0
+sudo apt-get install libgtest-dev protobuf-compiler libprotobuf-dev libncurses-dev libwebsockets cmake
+cd /usr/src/gtest
+sudo env "PATH=$PATH" cmake CMakeLists.txt
+sudo make
+sudo cp *.a /usr/lib
+git clone https://github.com/open-source-parsers/jsoncpp.git
 
-j1939Decoder (if the dependencies are not satified, this application is not compiled):
-- ncurses
+ 
+cd jsoncpp
+git checkout 863aa36165acfdbaf22447f4934f5adc327692a0
+cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
+sudo make install
+cd ~
+git clone https://github.com/famez/J1939-Framework.git
+cd J1939-Framework
+cmake . 
+cmake --build .
+sudo make install
 
-TRCToCap (if the dependencies are not satified, this application is not compiled):
-- glib2.0
-
-Steps:
-
-Steps can be found in travis.yml file.
+```
     
 ## TRCPlayer
 
