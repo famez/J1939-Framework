@@ -396,7 +396,7 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 		gboolean update_col_info = TRUE;
 		guint32 frag_data_len = 0;
 
-		if(!pinfo->fd->flags.visited) {		//Only treat the frames if it is the first time we see them!!!
+		if(!pinfo->fd->visited) {		//Only treat the frames if it is the first time we see them!!!
 
 			try {
 
@@ -522,8 +522,8 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 			const SPNNumeric *spnNum = (SPNNumeric *)(spn);
 
 			ti = proto_tree_add_double_format(spn_tree, spnNumToHinfoId[*iter], tvb, spn->getOffset(),
-					spnNum->getByteSize(), spnNum->getFormatedValue(), "%s: %.10g %s",
-					spn->getName().c_str(), spnNum->getFormatedValue(), spnNum->getUnits().c_str());
+					spnNum->getByteSize(), spnNum->getFormattedValue(), "%s: %.10g %s",
+					spn->getName().c_str(), spnNum->getFormattedValue(), spnNum->getUnits().c_str());
 
 		}	break;
 		case SPN::SPN_STATUS: {

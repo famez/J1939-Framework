@@ -1,8 +1,4 @@
-/*
- * Do not modify this file. Changes will be overwritten.
- *
- * Generated automatically from /home/fernado/wireshark-2.6.1/tools/make-plugin-reg.py.
- */
+
 
 #include "config.h"
 
@@ -17,8 +13,8 @@
 void proto_register_j1939(void);
 void proto_reg_handoff_j1939(void);
 
-WS_DLL_PUBLIC_DEF const gchar plugin_version[] = PLUGIN_VERSION;
-WS_DLL_PUBLIC_DEF const gchar plugin_release[] = VERSION_RELEASE;
+WS_DLL_PUBLIC_DEF const gchar plugin_version[] = "1.0.0";
+WS_DLL_PUBLIC_DEF const gchar plugin_release[] = "1.0.0";
 
 WS_DLL_PUBLIC void plugin_register(void);
 
