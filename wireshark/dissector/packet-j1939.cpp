@@ -6,6 +6,8 @@ extern "C" {
 #include <epan/address_types.h>
 #include <wsutil/pint.h>
 
+
+
 //For BAM reassemble
 #include <epan/reassemble.h>
 
@@ -14,7 +16,7 @@ void proto_reg_handoff_j1939(void);
 
 }
 
-
+#include <iostream>
 #include <J1939Factory.h>
 #include <J1939Frame.h>
 #include <J1939DataBase.h>
@@ -259,6 +261,7 @@ void proto_reg_handoff_j1939(void) {
 
 	std::set<u32> pgns = J1939Factory::getInstance().getAllRegisteredPGNs();
 
+	
 
 	//Register dissectors for all the known frames
 	for(auto pgn = pgns.begin(); pgn != pgns.end(); ++pgn) {
@@ -334,28 +337,46 @@ void proto_reg_handoff_j1939(void) {
 
 int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
+
 	proto_item *ti;
 	proto_tree *j1939_tree;
 
 	//Get the buffer from the upper layer so that we can obtain the ID for the Can Frame
 	tvbuff_t *canIdTvb = tvb_get_ds_tvb(tvb);
-
+	
 	//Obtain the length of the concerning frame
 	guint32 data_length = tvb_reported_length(tvb);
 
 	//Allocate a buffer where to store the DLC (payload of the can frame)
 	guint8* content = (guint8*)wmem_alloc(pinfo->pool, data_length);
 
-    //Obtain the can id
-    guint32 canId = tvb_get_ntohl(canIdTvb, 0);
+	//Obtain the can id
+	
+	guint32 canId;
 
-    //Obtain the payload of the Can Frame
+	if(tvb_reported_length(canIdTvb) >= 20) {		//Not reassembled frames
+		guint32 leCanId = tvb_get_ntohl(canIdTvb, 0x10);
+		canId = (leCanId >> 24) | ((leCanId >> 8)&0xFF00) | ((leCanId << 8)&0xFF0000) | ((leCanId << 24) &0xFF000000);
+	} else if(tvb_reported_length(canIdTvb) >= 4) {		//For reassembled frames
+		canId = tvb_get_ntohl(canIdTvb, 0);
+	} else {
+		std::cout << "tvb buffer too short" << std::endl;
+		return -1;	
+	}
+
+	canId &= 0x1FFFFFFF;
+	
+	
+	
+	//Obtain the payload of the Can Frame
 	tvb_memcpy(tvb, content, 0, data_length);
 
 	//Generate the frame from the frame factory. As arguments, we pass the ID, the data and the length.
 	std::unique_ptr<J1939Frame> frame = J1939Factory::getInstance().getJ1939Frame(canId, content, data_length);
 
+
 	if(!frame.get()) {			//Bad decoding...
+		std::cout << "dissect_J1939 error" << std::endl;
 		return -1;
 	}
 
@@ -378,11 +399,15 @@ int dissect_J1939(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void*) {
 
 	if(frame->isGenericFrame()) {		//If the frame is a generic frame (this means that it contains several defined SPNs), call a proper function to handle it
 		GenericFrame * genFrame = (GenericFrame *)(frame.get());
-
 		dissect_generic_frame(tvb, j1939_tree, ti, genFrame);
 
 
 	} else if(bamReassembler.toBeHandled(*frame)) {		//This frame is part of BAM protocol
+
+
+		if(tvb_get_guint8(canIdTvb, 1) == 1) {
+			return 0;		//Broadcast frames are not reassembled
+		}
 
 		//We let our reassembler to handle them
 		guint expected_size = 0;
@@ -518,7 +543,6 @@ void dissect_generic_frame(tvbuff_t *tvb, proto_tree *j1939_tree, proto_item *ti
 
 		switch(spn->getType()) {
 		case SPN::SPN_NUMERIC: {
-
 			const SPNNumeric *spnNum = (SPNNumeric *)(spn);
 
 			ti = proto_tree_add_double_format(spn_tree, spnNumToHinfoId[*iter], tvb, spn->getOffset(),
