@@ -252,6 +252,7 @@ bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 void SocketCanHelper::finalize() {
 	
 	if(mSock != -1) {
+		close(mSock);
 		mSock = -1;
 	}
 
