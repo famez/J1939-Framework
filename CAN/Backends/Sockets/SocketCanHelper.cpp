@@ -250,12 +250,9 @@ bool SocketCanHelper::initialize(std::string interface, u32 bitrate) {
 }
 
 void SocketCanHelper::finalize() {
-
-
-	int retVal = 0;
-
+	
 	if(mSock != -1) {
-		retVal = close(mSock);
+		close(mSock);
 		mSock = -1;
 	}
 
