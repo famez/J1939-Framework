@@ -1097,5 +1097,284 @@
 				"units" : "kph"
 			}
 		]
+	},
+	{
+		"name" : "TCI3",
+		"pgn" : 65177,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.0078125,
+				"formatOffset" : -250.0,
+				"name" : "Engine Turbocharger 1 Compressor Inlet Pressure",
+				"number" : 1176,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kPa"
+			}
+		]
+	},
+	{
+		"name" : "TCI2",
+		"pgn" : 65178,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.03125,
+				"formatOffset" : -273.0,
+				"name" : "Engine Turbocharger 1 Compressor Inlet Temperature",
+				"number" : 1172,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "°C"
+			}
+		]
+	},
+	{
+		"name" : "VEP1",
+		"pgn" : 65271,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.05,
+				"formatOffset" : 0.0,
+				"name" : "Battery Potential / Power Input 1",
+				"number" : 168,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "V"
+			}
+		]
+	},
+	{
+		"name" : "WFI",
+		"pgn" : 65279,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"bitOffset" : 0,
+				"bitSize" : 2,
+				"descriptions" : 
+				[
+					"No",
+					"Yes",
+					"Error",
+					"Not available"
+				],
+				"name" : "Water In Fuel Indicator",
+				"number" : 97,
+				"offset" : 0,
+				"type" : 1
+			}
+		]
+	},
+	{
+		"name" : "AAI",
+		"pgn" : 65164,
+		"length" : 8,
+		"spns" :
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 1,
+				"formatOffset" : -40.0,
+				"name" : "Auxiliary Temperature 1",
+				"number" : 441,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "°C"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 1,
+				"formatOffset" : -40.0,
+				"name" : "Auxiliary Temperature 2",
+				"number" : 442,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "°C"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 16.0,
+				"formatOffset" : 0.0,
+				"name" : "Auxiliary Pressure #1",
+				"number" : 1387,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 16.0,
+				"formatOffset" : 0.0,
+				"name" : "Auxiliary Pressure #2",
+				"number" : 1388,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.1,
+				"formatOffset" : 0.0,
+				"name" : "Auxiliary Pressure #2",
+				"number" : 1388,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0.0,
+				"name" : "Relative Humidity",
+				"number" : 354,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "%"
+			}
+		]
+	},
+	{
+		"name" : "EI",
+		"pgn" : 65170,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 1,
+				"formatGain" : 4.0,
+				"formatOffset" : 0.0,
+				"name" : "Engine Pre-filter Oil Pressure",
+				"number" : 1208,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.0078125,
+				"formatOffset" : -250.0,
+				"name" : "Engine Exhaust Gas Pressure",
+				"number" : 1209,
+				"offset" : 1,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 1,
+				"formatGain" : 0.4,
+				"formatOffset" : 0.0,
+				"name" : "Engine Fuel Rack Position",
+				"number" : 1210,
+				"offset" : 3,
+				"type" : 0,
+				"units" : "%"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.05,
+				"formatOffset" : 0.0,
+				"name" : "Engine Gas Mass Flow Rate 1",
+				"number" : 1241,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "kg/h"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.5,
+				"formatOffset" : 0.0,
+				"name" : "Instantaneous Estimated Brake Power",
+				"number" : 1242,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "kW"
+			}
+		]
+	},
+	{
+		"name" : "LFI",
+		"pgn" : 65203,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 4,
+				"formatGain" : 0.5,
+				"formatOffset" : 0.0,
+				"name" : "Total Engine PTO Governor Fuel Used",
+				"number" : 1028,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "L"
+			},
+			{
+				"byteSize" : 4,
+				"formatGain" : 0.05,
+				"formatOffset" : 0.0,
+				"name" : "Trip Average Fuel Rate",
+				"number" : 1029,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "L"
+			}
+		]
+	},
+	{
+		"name" : "EFL/P2",
+		"pgn" : 65243,
+		"length" : 8,
+		"spns" : 
+		[
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0.0,
+				"name" : "Engine Injection Control Pressure",
+				"number" : 164,
+				"offset" : 0,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0.0,
+				"name" : "Engine Injector Metering Rail 1 Pressure",
+				"number" : 157,
+				"offset" : 2,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0.0,
+				"name" : "Engine Injector Timing Rail 1 Pressure",
+				"number" : 156,
+				"offset" : 4,
+				"type" : 0,
+				"units" : "kPa"
+			},
+			{
+				"byteSize" : 2,
+				"formatGain" : 0.00390625,
+				"formatOffset" : 0.0,
+				"name" : "Engine Injector Metering Rail 2 Pressure",
+				"number" : 1349,
+				"offset" : 6,
+				"type" : 0,
+				"units" : "kPa"
+			}
+		]
 	}
 ]
