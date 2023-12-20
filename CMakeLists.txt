@@ -22,7 +22,7 @@ add_subdirectory(Common)
 add_subdirectory(CAN)
 add_subdirectory(J1939)
 add_subdirectory(Database)
-add_subdirectory(BinUtils)
+# add_subdirectory(BinUtils) #build fails and is unnecessary
 add_subdirectory(j1939AddressClaimer)
 add_subdirectory(Tests)
 
