@@ -57,21 +57,17 @@ void GenericFrame::recalculateStringOffsets() {
 }
 
 void GenericFrame::decodeData(const u8* buffer, size_t length) {
+  const u8* spnBuf;
+  size_t offset;
 
-	const u8* spnBuf;
-	size_t offset;
+  for(auto spn = mSPNs.begin(); spn != mSPNs.end(); ++spn) {
+    offset = spn->second->getOffset();
 
-    for(auto spn = mSPNs.begin(); spn != mSPNs.end(); ++spn) {
-
-    	offset = spn->second->getOffset();
-
-    	if(offset >= length) {
-			throw J1939DecodeException("[GenericFrame::decodeData] Offset of spn is higher than frame length");
-		}
-
-        spnBuf = buffer + offset;
-        spn->second->decode(spnBuf, length - offset);
-	}
+    if(offset < length) {
+      spnBuf = buffer + offset;
+      spn->second->decode(spnBuf, length - offset);
+    }
+  }
 
 }
 
