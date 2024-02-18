@@ -36,8 +36,7 @@ J1939Factory::~J1939Factory() {
 
 void J1939Factory::unregisterAllFrames() {
     for(std::map<u32, J1939Frame*>::const_iterator iter = mFrames.begin(); iter != mFrames.end(); iter++) {
-        if(iter->second)
-            delete iter->second;
+        delete iter->second;
     }
     mFrames.clear();
 }

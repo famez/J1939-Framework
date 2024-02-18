@@ -71,14 +71,11 @@ public:
 
 	inline static void releaseInstance()
 	{
-		if(mInstance)
-		{
-			delete mInstance;
-			mInstance = NULL;
+		delete mInstance;
+		mInstance = NULL;
 #ifdef SINGLETON_DEBUG
 			printf("[ISingleton] Instance released for class %s\n", typeid(T).name());
 #endif
-		}
 	}
 };
 
